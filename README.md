@@ -1,1 +1,1 @@
-# ParticleBasedAmbientOcclusionRendering
+# AmbientOcclusionRendering
