@@ -19,7 +19,6 @@
 #include <kvs/ShaderSource>
 #include <AmbientOcclusionRendering/Lib/PolygonToPolygon.h>
 #include <AmbientOcclusionRendering/Lib/SSAOPolygonRenderer.h>
-#include "SSAORenderer.h"
 
 
 int main( int argc, char** argv )
@@ -49,7 +48,6 @@ int main( int argc, char** argv )
     }
 
     typedef AmbientOcclusionRendering::SSAOPolygonRenderer Renderer;
-//    typedef kvs::glew::SSAORenderer Renderer;
     Renderer* renderer = new Renderer();
 
     screen.registerObject( polygon, renderer );
