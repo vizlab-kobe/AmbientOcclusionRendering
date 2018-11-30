@@ -2,3 +2,4 @@
 *.o
 *.kvs
 App/ScreenSpaceAmbientOcclusion/ScreenSpaceAmbientOcclusion
+*.a

@@ -16,34 +16,16 @@
 #include <kvs/glut/Application>
 #include <kvs/glut/Screen>
 #include <kvs/PolygonImporter>
-#include "PolygonToPolygon.h"
+#include <kvs/ShaderSource>
+#include <AmbientOcclusionRendering/Lib/PolygonToPolygon.h>
+#include <AmbientOcclusionRendering/Lib/SSAOPolygonRenderer.h>
 #include "SSAORenderer.h"
-#include "SSAOPolygonRenderer.h"
 
-/*
-kvs::glew::SSAORenderer* ssao_renderer = NULL;
-class KeyPressEvent : public kvs::KeyPressEventListener
-{
-    void update( kvs::KeyEvent* event )
-    {
-        switch ( event->key() )
-        {
-        //case kvs::Key::o:
-            //screen()->controlTarget() = kvs::ScreenBase::TargetObject; break;
-        //case kvs::Key::l:
-            //screen()->controlTarget() = kvs::ScreenBase::TargetLight; break;
-        case kvs::Key::d:
-            ssao_renderer->enableDebugDraw(); break;
-        case kvs::Key::D:
-            ssao_renderer->disableDebugDraw(); break;
-        default: break;
-        }
-    }
-};
-*/
 
 int main( int argc, char** argv )
 {
+    kvs::ShaderSource::AddSearchPath("../../Lib");
+
     if ( argc < 2 )
     {
         kvsMessageError( "Please input Polygon file path." );
@@ -53,10 +35,6 @@ int main( int argc, char** argv )
     kvs::glut::Application app( argc, argv );
     kvs::glut::Screen screen( &app );
     screen.setTitle( "Screen Space Ambient Occlusion" );
-
-//    KeyPressEvent key_press_event;
-//    screen.addEvent( &key_press_event );
-
     screen.show();
 
     kvs::PolygonObject* polygon = new kvs::PolygonImporter( argv[1] );
@@ -76,5 +54,5 @@ int main( int argc, char** argv )
 
     screen.registerObject( polygon, renderer );
 
-    return( app.run() );
+    return app.run();
 }
