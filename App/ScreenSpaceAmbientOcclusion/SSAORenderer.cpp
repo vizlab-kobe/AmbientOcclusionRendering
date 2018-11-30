@@ -25,7 +25,7 @@ namespace kvs
 namespace glew
 {
 
-SSAORenderer::SSAORenderer( void ) :
+SSAORenderer::SSAORenderer() :
     m_ref_polygon( NULL ),
     m_shader( NULL )
 {
@@ -33,7 +33,7 @@ SSAORenderer::SSAORenderer( void ) :
     this->setShader( kvs::Shader::Phong() );
 }
 
-SSAORenderer::~SSAORenderer( void )
+SSAORenderer::~SSAORenderer()
 {
     if ( m_shader )
     {
@@ -42,7 +42,7 @@ SSAORenderer::~SSAORenderer( void )
     }
 }
 
-void SSAORenderer::initialize( void )
+void SSAORenderer::initialize()
 {
     m_is_debug_draw = false;
 
@@ -92,12 +92,12 @@ void SSAORenderer::attachPolygonObject( const kvs::PolygonObject* polygon )
     }
 }
 
-void SSAORenderer::enableDebugDraw( void )
+void SSAORenderer::enableDebugDraw()
 {
     m_is_debug_draw = true;
 }
 
-void SSAORenderer::disableDebugDraw( void )
+void SSAORenderer::disableDebugDraw()
 {
     m_is_debug_draw = false;
 }
@@ -336,63 +336,6 @@ void SSAORenderer::draw_buffer_object()
     glDisableClientState( GL_NORMAL_ARRAY );
     if ( has_colors ) glDisableClientState( GL_COLOR_ARRAY );
     glDisableClientState( GL_VERTEX_ARRAY );
-
-    // bounding box 
-    const kvs::Vector3f center = m_ref_polygon->objectCenter();
-    const kvs::Vector3f min_object_coord = m_ref_polygon->minObjectCoord();
-    const kvs::Vector3f max_object_coord = m_ref_polygon->maxObjectCoord();
-    const kvs::Vector3f length = max_object_coord - min_object_coord;
-    const kvs::Vector3f min_coord = center - 3 * kvs::Vector3f( kvs::Math::Max( length.x(), length.y(), length.z() ) );
-    const kvs::Vector3f max_coord = center + 3 * kvs::Vector3f( kvs::Math::Max( length.x(), length.y(), length.z() ) );
-
-    glColor4ub( 192, 192, 192, 255 );
-    glBegin( GL_TRIANGLE_STRIP );
-        glNormal3f( 0.0f, 1.0f, 0.0f );
-        glVertex3f( min_coord.x(), min_coord.y(), min_coord.z() );
-        glVertex3f( min_coord.x(), min_coord.y(), max_coord.z() );
-        glVertex3f( max_coord.x(), min_coord.y(), min_coord.z() );
-        glVertex3f( max_coord.x(), min_coord.y(), max_coord.z() );
-    glEnd();
-
-    glBegin( GL_TRIANGLE_STRIP );
-        glNormal3f( 0.0f, - 1.0f, 0.0f );
-        glVertex3f( min_coord.x(), max_coord.y(), min_coord.z() );
-        glVertex3f( min_coord.x(), max_coord.y(), max_coord.z() );
-        glVertex3f( max_coord.x(), max_coord.y(), min_coord.z() );
-        glVertex3f( max_coord.x(), max_coord.y(), max_coord.z() );
-    glEnd();
-
-    glBegin( GL_TRIANGLE_STRIP );
-        glNormal3f( 1.0f, 0.0f, 0.0f );
-        glVertex3f( min_coord.x(), min_coord.y(), min_coord.z() );
-        glVertex3f( min_coord.x(), max_coord.y(), min_coord.z() );
-        glVertex3f( min_coord.x(), min_coord.y(), max_coord.z() );
-        glVertex3f( min_coord.x(), max_coord.y(), max_coord.z() );
-    glEnd();
-
-    glBegin( GL_TRIANGLE_STRIP );
-        glNormal3f( - 1.0f, 0.0f, 0.0f );
-        glVertex3f( max_coord.x(), min_coord.y(), min_coord.z() );
-        glVertex3f( max_coord.x(), max_coord.y(), min_coord.z() );
-        glVertex3f( max_coord.x(), min_coord.y(), max_coord.z() );
-        glVertex3f( max_coord.x(), max_coord.y(), max_coord.z() );
-    glEnd();
-
-    glBegin( GL_TRIANGLE_STRIP );
-        glNormal3f( 0.0f, 0.0f, 1.0f );
-        glVertex3f( min_coord.x(), min_coord.y(), min_coord.z() );
-        glVertex3f( min_coord.x(), max_coord.y(), min_coord.z() );
-        glVertex3f( max_coord.x(), min_coord.y(), min_coord.z() );
-        glVertex3f( max_coord.x(), max_coord.y(), min_coord.z() );
-    glEnd();
-
-    glBegin( GL_TRIANGLE_STRIP );
-        glNormal3f( 0.0f, 0.0f, - 1.0f );
-        glVertex3f( min_coord.x(), min_coord.y(), max_coord.z() );
-        glVertex3f( min_coord.x(), max_coord.y(), max_coord.z() );
-        glVertex3f( max_coord.x(), min_coord.y(), max_coord.z() );
-        glVertex3f( max_coord.x(), max_coord.y(), max_coord.z() );
-    glEnd();
 }
 
 void SSAORenderer::initialize_shaders( void )

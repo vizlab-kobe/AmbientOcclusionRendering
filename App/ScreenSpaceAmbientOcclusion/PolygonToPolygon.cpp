@@ -11,12 +11,11 @@
  *  $Id$
  */
 /*****************************************************************************/
-
 #include "PolygonToPolygon.h"
-
 #include <map>
 
-namespace kvs
+
+namespace AmbientOcclusionRendering
 {
 
 /*===========================================================================*/
@@ -24,7 +23,7 @@ namespace kvs
  *  @brief  Constructs a new PolygonToPolygon class.
  */
 /*===========================================================================*/
-PolygonToPolygon::PolygonToPolygon( void ) :
+PolygonToPolygon::PolygonToPolygon():
     kvs::FilterBase()
 {
 }
@@ -35,7 +34,7 @@ PolygonToPolygon::PolygonToPolygon( void ) :
  *  @param  object [in] pointer to a polygon data
  */
 /*===========================================================================*/
-PolygonToPolygon::PolygonToPolygon( const kvs::PolygonObject* object ) :
+PolygonToPolygon::PolygonToPolygon( const kvs::PolygonObject* object ):
     kvs::FilterBase()
 {
     this->exec( object );
@@ -46,7 +45,7 @@ PolygonToPolygon::PolygonToPolygon( const kvs::PolygonObject* object ) :
  *  @brief  Destructs the PolygonToPolygon class.
  */
 /*===========================================================================*/
-PolygonToPolygon::~PolygonToPolygon( void )
+PolygonToPolygon::~PolygonToPolygon()
 {
 }
 
@@ -61,19 +60,17 @@ PolygonToPolygon::SuperClass* PolygonToPolygon::exec( const kvs::ObjectBase* obj
 {
     if ( !object )
     {
-      //BaseClass::m_is_success = false;
       BaseClass::setSuccess( false );
         kvsMessageError( "Input object is NULL." );
-        return( NULL );
+        return NULL;
     }
 
     const kvs::PolygonObject* polygon = kvs::PolygonObject::DownCast( object );
     if ( !polygon )
     {
-      //        BaseClass::m_is_success = false;
-	BaseClass::setSuccess( false );
+        BaseClass::setSuccess( false );
         kvsMessageError( "Input object is not supported." );
-        return( NULL );
+        return NULL;
     }
 
     if ( polygon->polygonType() == kvs::PolygonObject::Triangle )
@@ -83,16 +80,15 @@ PolygonToPolygon::SuperClass* PolygonToPolygon::exec( const kvs::ObjectBase* obj
     }
     else
     {
-      //  BaseClass::m_is_success = false;
-	BaseClass::setSuccess( false );
+        BaseClass::setSuccess( false );
         kvsMessageError( "Input polygon type is not supported." );
-        return( NULL );
+        return NULL;
     }
 
     SuperClass::updateMinMaxCoords();
-    //BaseClass::m_is_success = true;
     BaseClass::setSuccess( true );
-    return( this );
+
+    return this;
 }
 
 /*===========================================================================*/
@@ -103,9 +99,9 @@ PolygonToPolygon::SuperClass* PolygonToPolygon::exec( const kvs::ObjectBase* obj
 /*===========================================================================*/
 void PolygonToPolygon::calculate_triangle_connections( const kvs::PolygonObject* object )
 {
-    const size_t nvertices = object->nvertices();
-    const size_t npolygons = object->nconnections();
-    const size_t ncolors = object->ncolors();
+    const size_t nvertices = object->numberOfVertices();
+    const size_t npolygons = object->numberOfConnections();
+    const size_t ncolors = object->numberOfColors();
     if ( npolygons > 0 && nvertices != 3 * npolygons )
     {
         SuperClass::setCoords( object->coords() );
@@ -114,8 +110,7 @@ void PolygonToPolygon::calculate_triangle_connections( const kvs::PolygonObject*
         SuperClass::setPolygonType( kvs::PolygonObject::Triangle );
         SuperClass::setColorType( kvs::PolygonObject::VertexColor );
         if ( ncolors == nvertices ) SuperClass::setColors( object->colors() );
-        else                        SuperClass::setColor( object->color() );
-
+        else SuperClass::setColor( object->color() );
         return;
     }
 
@@ -129,13 +124,13 @@ void PolygonToPolygon::calculate_triangle_connections( const kvs::PolygonObject*
 
     for ( size_t i = 0; i < nvertices / 3; i++ )
     {
-        kvs::Vector3f vertex[3];
+        kvs::Vec3 vertex[3];
         kvs::RGBColor color[3];
         bool has_vertex[3];
         size_t index[3];
         for ( size_t j = 0; j < 3; j++ )
         {
-            vertex[j] = kvs::Vector3f( p_coords + i * 9 + j * 3 );
+            vertex[j] = kvs::Vec3( p_coords + i * 9 + j * 3 );
             has_vertex[j] = false;
             index[j] = 0;
             if ( has_colors )
@@ -195,7 +190,7 @@ void PolygonToPolygon::calculate_triangle_connections( const kvs::PolygonObject*
     SuperClass::setPolygonType( kvs::PolygonObject::Triangle );
     SuperClass::setColorType( kvs::PolygonObject::VertexColor );
     if ( has_colors ) SuperClass::setColors( kvs::ValueArray<kvs::UInt8>( colors ) );
-    else              SuperClass::setColor( object->color() );
+    else SuperClass::setColor( object->color() );
 }
 
 /*===========================================================================*/
@@ -203,10 +198,10 @@ void PolygonToPolygon::calculate_triangle_connections( const kvs::PolygonObject*
  *  @brief  Calculate triangle polygon normals.
  */
 /*===========================================================================*/
-void PolygonToPolygon::calculate_triangle_normals( void )
+void PolygonToPolygon::calculate_triangle_normals()
 {
-    const size_t nvertices = SuperClass::nvertices();
-    const size_t npolygons = SuperClass::nconnections();
+    const size_t nvertices = SuperClass::numberOfVertices();
+    const size_t npolygons = SuperClass::numberOfConnections();
     const float* p_coords = SuperClass::coords().pointer();
     const unsigned int* p_connections = SuperClass::connections().pointer();
 
@@ -216,11 +211,11 @@ void PolygonToPolygon::calculate_triangle_normals( void )
     for ( size_t i = 0; i < npolygons; i++ )
     {
         size_t index[3];
-        kvs::Vector3f vertex[3];
+        kvs::Vec3 vertex[3];
         for ( size_t j = 0; j < 3; j++ )
         {
             index[j] = p_connections[ 3 * i + j ];
-            vertex[j] = kvs::Vector3f( p_coords + 3 * index[j] );
+            vertex[j] = kvs::Vec3( p_coords + 3 * index[j] );
         }
 
         const kvs::Vector3f normal( ( vertex[1] - vertex[0] ).cross( vertex[2] - vertex[0] ) );
@@ -236,7 +231,7 @@ void PolygonToPolygon::calculate_triangle_normals( void )
     const float* p_normals = normals.pointer();
     for ( size_t i = 0; i < nvertices; i++ )
     {
-        kvs::Vector3f normal( p_normals + i * 3 );
+        kvs::Vec3 normal( p_normals + i * 3 );
         normal.normalize();
         normals[ i * 3     ] = normal.x();
         normals[ i * 3 + 1 ] = normal.y();
@@ -247,5 +242,4 @@ void PolygonToPolygon::calculate_triangle_normals( void )
     SuperClass::setNormalType( kvs::PolygonObject::VertexNormal );
 }
 
-} // end of namespace kvs
-
+} // end of namespace AmbientOcclusionRendering

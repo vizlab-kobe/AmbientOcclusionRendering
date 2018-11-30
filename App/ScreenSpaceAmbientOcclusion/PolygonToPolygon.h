@@ -11,55 +11,36 @@
  *  $Id$
  */
 /****************************************************************************/
-
-#ifndef KVS__POLYGON_TO_POLYGON_H_INCLUDE
-#define KVS__POLYGON_TO_POLYGON_H_INCLUDE
-
+#pragma once
 #include <kvs/PolygonObject>
-#include <kvs/ClassName>
 #include <kvs/Module>
 #include <kvs/FilterBase>
 
-namespace kvs
+
+namespace AmbientOcclusionRendering
 {
 
-/*==========================================================================*/
+/*===========================================================================*/
 /**
- *  Polygon to polygon class.
+ *  @brief  PolygonToPolygon class
  */
-/*==========================================================================*/
+/*===========================================================================*/
 class PolygonToPolygon : public kvs::FilterBase, public kvs::PolygonObject
 {
-
-    // Class name.
-    kvsClassName( kvs::PolygonToPolygon );
-
-    // Module information.
-    kvsModuleCategory( Filter );
+    kvsModule( AmbientOcclusionRendering::PolygonToPolygon, Filter );
     kvsModuleBaseClass( kvs::FilterBase );
     kvsModuleSuperClass( kvs::PolygonObject );
 
 public:
-
-    PolygonToPolygon( void );
-
+    PolygonToPolygon();
     PolygonToPolygon( const kvs::PolygonObject* object );
-
-    virtual ~PolygonToPolygon( void );
-
-public:
+    virtual ~PolygonToPolygon();
 
     SuperClass* exec( const kvs::ObjectBase* object );
 
 private:
-
     void calculate_triangle_connections( const kvs::PolygonObject* object );
-
-    void calculate_triangle_normals( void );
-
+    void calculate_triangle_normals();
 };
 
-} // end of namespace kvs
-
-#endif // KVS__POLYGON_TO_POLYGON_H_INCLUDE
-
+} // end of namespace AmbientOcclusionRendering

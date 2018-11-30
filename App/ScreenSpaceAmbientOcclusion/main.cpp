@@ -18,19 +18,20 @@
 #include <kvs/PolygonImporter>
 #include "PolygonToPolygon.h"
 #include "SSAORenderer.h"
+#include "SSAOPolygonRenderer.h"
 
+/*
 kvs::glew::SSAORenderer* ssao_renderer = NULL;
-
 class KeyPressEvent : public kvs::KeyPressEventListener
 {
     void update( kvs::KeyEvent* event )
     {
         switch ( event->key() )
         {
-            /*case kvs::Key::o:
-              screen()->controlTarget() = kvs::ScreenBase::TargetObject; break;
-              case kvs::Key::l:
-              screen()->controlTarget() = kvs::ScreenBase::TargetLight; break;*/
+        //case kvs::Key::o:
+            //screen()->controlTarget() = kvs::ScreenBase::TargetObject; break;
+        //case kvs::Key::l:
+            //screen()->controlTarget() = kvs::ScreenBase::TargetLight; break;
         case kvs::Key::d:
             ssao_renderer->enableDebugDraw(); break;
         case kvs::Key::D:
@@ -39,6 +40,7 @@ class KeyPressEvent : public kvs::KeyPressEventListener
         }
     }
 };
+*/
 
 int main( int argc, char** argv )
 {
@@ -52,19 +54,27 @@ int main( int argc, char** argv )
     kvs::glut::Screen screen( &app );
     screen.setTitle( "Screen Space Ambient Occlusion" );
 
-    KeyPressEvent key_press_event;
-    screen.addEvent( &key_press_event );
+//    KeyPressEvent key_press_event;
+//    screen.addEvent( &key_press_event );
 
     screen.show();
 
-    kvs::PolygonObject* original_polygon = new kvs::PolygonImporter( argv[1] );
-    kvs::PolygonObject* polygon = new kvs::PolygonToPolygon( original_polygon );
-    delete original_polygon;
-//    kvs::PolygonObject* polygon = original_polygon;
+    kvs::PolygonObject* polygon = new kvs::PolygonImporter( argv[1] );
 
-    ssao_renderer = new kvs::glew::SSAORenderer();
+    const size_t nvertices = polygon->numberOfVertices();
+    const size_t npolygons = polygon->numberOfConnections();
+    if ( npolygons > 0 && nvertices != 3 * npolygons )
+    {
+        kvs::PolygonObject* temp = new AmbientOcclusionRendering::PolygonToPolygon( polygon );
+        delete polygon;
+        polygon = temp;
+    }
 
-    screen.registerObject( polygon, ssao_renderer );
+    typedef AmbientOcclusionRendering::SSAOPolygonRenderer Renderer;
+//    typedef kvs::glew::SSAORenderer Renderer;
+    Renderer* renderer = new Renderer();
+
+    screen.registerObject( polygon, renderer );
 
     return( app.run() );
 }
