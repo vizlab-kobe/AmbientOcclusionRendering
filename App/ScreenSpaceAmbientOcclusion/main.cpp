@@ -25,19 +25,12 @@ int main( int argc, char** argv )
 {
     kvs::ShaderSource::AddSearchPath("../../Lib");
 
-    if ( argc < 2 )
-    {
-        kvsMessageError( "Please input Polygon file path." );
-        return(0);
-    }
-
     kvs::glut::Application app( argc, argv );
     kvs::glut::Screen screen( &app );
     screen.setTitle( "Screen Space Ambient Occlusion" );
     screen.show();
 
     kvs::PolygonObject* polygon = new kvs::PolygonImporter( argv[1] );
-
     const size_t nvertices = polygon->numberOfVertices();
     const size_t npolygons = polygon->numberOfConnections();
     if ( npolygons > 0 && nvertices != 3 * npolygons )
