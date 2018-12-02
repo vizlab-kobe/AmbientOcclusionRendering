@@ -1,4 +1,4 @@
 #!/bin/sh
 PROGRAM=${PWD##*/}
 
-./$PROGRAM ~/Work/Data/KVSData/bunny.ply
+./$PROGRAM ~/Work/GitHub/KVS.data/bunny.ply

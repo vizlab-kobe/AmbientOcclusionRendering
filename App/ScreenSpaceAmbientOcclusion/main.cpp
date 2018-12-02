@@ -2,21 +2,12 @@
 /**
  *  @file   main.cpp
  *  @author Naohisa Sakamoto
- *  @brief  Simple SSAO implementation using KVS.
- */
-/*----------------------------------------------------------------------------
- *
- *  Copyright (c) Visualization Laboratory, Kyoto University.
- *  All rights reserved.
- *  See http://www.viz.media.kyoto-u.ac.jp/kvs/copyright/ for details.
- *
- *  $Id$
  */
 /*****************************************************************************/
 #include <kvs/glut/Application>
 #include <kvs/glut/Screen>
-#include <kvs/PolygonImporter>
 #include <kvs/ShaderSource>
+#include <kvs/PolygonImporter>
 #include <AmbientOcclusionRendering/Lib/PolygonToPolygon.h>
 #include <AmbientOcclusionRendering/Lib/SSAOPolygonRenderer.h>
 
