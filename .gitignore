@@ -3,3 +3,4 @@
 *.kvs
 App/ScreenSpaceAmbientOcclusion/ScreenSpaceAmbientOcclusion
 *.a
+App/SSAOStylizedLineRendering/SSAOStylizedLineRendering
