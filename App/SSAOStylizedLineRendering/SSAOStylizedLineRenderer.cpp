@@ -220,6 +220,31 @@ kvs::ValueArray<kvs::Real32> QuadVertexTexCoords(
     return texcoords;
 }
 
+inline void Draw()
+{
+    kvs::OpenGL::WithPushedMatrix p1( GL_MODELVIEW );
+    p1.loadIdentity();
+    {
+        kvs::OpenGL::WithPushedMatrix p2( GL_PROJECTION );
+        p2.loadIdentity();
+        {
+            kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
+            kvs::OpenGL::WithDisabled d1( GL_DEPTH_TEST );
+            kvs::OpenGL::WithDisabled d2( GL_LIGHTING );
+            kvs::OpenGL::WithEnabled e1( GL_TEXTURE_2D );
+            {
+                kvs::OpenGL::Begin( GL_QUADS );
+                kvs::OpenGL::Color( kvs::Vec4::All( 1.0 ) );
+                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
+                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 1 ), kvs::Vec2( 0, 1 ) );
+                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 0 ), kvs::Vec2( 0, 0 ) );
+                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 0 ), kvs::Vec2( 1, 0 ) );
+                kvs::OpenGL::End();
+            }
+        }
+    }
+}
+
 }
 
 
@@ -286,6 +311,7 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
         this->create_buffer_object( line );
         this->create_shape_texture();
         this->create_diffuse_texture();
+        this->create_framebuffer( m_width, m_height );
     }
 
     const bool window_resized = m_width != width || m_height != height;
@@ -293,19 +319,26 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     {
         m_width = width;
         m_height = height;
+        this->update_framebuffer( m_width, m_height );
     }
 
     const bool object_changed = m_object != object;
     if ( object_changed )
     {
         m_object = object;
-        m_shader_program.release();
+        m_shader_geom_pass.release();
+        m_shader_occl_pass.release();
         this->create_shader_program();
         this->create_buffer_object( line );
     }
 
+    // Ambient occlusion.
+    this->render_geometry_pass( line );
+    this->render_occlusion_pass();
+
+/*
     kvs::VertexBufferObject::Binder bind0( m_vbo );
-    kvs::ProgramObject::Binder bind1( m_shader_program );
+    kvs::ProgramObject::Binder bind1( m_shader_geom_pass );
 
     kvs::Texture::Binder unit0( m_shape_texture, 0 );
     kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
@@ -315,11 +348,11 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
         const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
         const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
         const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-        m_shader_program.setUniform( "ModelViewMatrix", M );
-        m_shader_program.setUniform( "ProjectionMatrix", P );
-        m_shader_program.setUniform( "NormalMatrix", N );
-        m_shader_program.setUniform( "shape_texture", 0 );
-        m_shader_program.setUniform( "diffuse_texture", 1 );
+        m_shader_geom_pass.setUniform( "ModelViewMatrix", M );
+        m_shader_geom_pass.setUniform( "ProjectionMatrix", P );
+        m_shader_geom_pass.setUniform( "NormalMatrix", N );
+        m_shader_geom_pass.setUniform( "shape_texture", 0 );
+        m_shader_geom_pass.setUniform( "diffuse_texture", 1 );
 
         const size_t nvertices = line->numberOfVertices() * 2;
         const size_t coord_size = nvertices * 3 * sizeof( kvs::Real32 );
@@ -378,6 +411,7 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
         // Disable texcoords.
         KVS_GL_CALL( glDisableClientState( GL_TEXTURE_COORD_ARRAY ) );
     }
+*/
 
     BaseClass::stopTimer();
 }
@@ -389,31 +423,42 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
 /*===========================================================================*/
 void SSAOStylizedLineRenderer::create_shader_program()
 {
-    kvs::ShaderSource vert( "stylized_line.vert" );
-    kvs::ShaderSource frag( "stylized_line.frag" );
-    if ( isEnabledShading() )
+    // Build SSAO shader for geometry-pass (1st pass).
     {
-        switch ( m_shader->type() )
-        {
-        case kvs::Shader::LambertShading: frag.define("ENABLE_LAMBERT_SHADING"); break;
-        case kvs::Shader::PhongShading: frag.define("ENABLE_PHONG_SHADING"); break;
-        case kvs::Shader::BlinnPhongShading: frag.define("ENABLE_BLINN_PHONG_SHADING"); break;
-        default: break; // NO SHADING
-        }
+        kvs::ShaderSource vert( "SSAO_stylized_geom_pass.vert" );
+        kvs::ShaderSource frag( "SSAO_stylized_geom_pass.frag" );
 
-        if ( kvs::OpenGL::Boolean( GL_LIGHT_MODEL_TWO_SIDE ) == GL_TRUE )
-        {
-            frag.define("ENABLE_TWO_SIDE_LIGHTING");
-        }
+        m_shader_geom_pass.build( vert, frag );
     }
 
-    m_shader_program.build( vert, frag );
-    m_shader_program.bind();
-    m_shader_program.setUniform( "shading.Ka", m_shader->Ka );
-    m_shader_program.setUniform( "shading.Kd", m_shader->Kd );
-    m_shader_program.setUniform( "shading.Ks", m_shader->Ks );
-    m_shader_program.setUniform( "shading.S",  m_shader->S );
-    m_shader_program.unbind();
+    // Build SSAO shader for occlusion-pass (2nd pass).
+    {
+        kvs::ShaderSource vert( "SSAO_stylized_occl_pass.vert" );
+        kvs::ShaderSource frag( "SSAO_stylized_occl_pass.frag" );
+        if ( isEnabledShading() )
+        {
+            switch ( m_shader->type() )
+            {
+            case kvs::Shader::LambertShading: frag.define("ENABLE_LAMBERT_SHADING"); break;
+            case kvs::Shader::PhongShading: frag.define("ENABLE_PHONG_SHADING"); break;
+            case kvs::Shader::BlinnPhongShading: frag.define("ENABLE_BLINN_PHONG_SHADING"); break;
+            default: break; // NO SHADING
+            }
+
+            if ( kvs::OpenGL::Boolean( GL_LIGHT_MODEL_TWO_SIDE ) == GL_TRUE )
+            {
+                frag.define("ENABLE_TWO_SIDE_LIGHTING");
+            }
+        }
+
+        m_shader_occl_pass.build( vert, frag );
+        m_shader_occl_pass.bind();
+        m_shader_occl_pass.setUniform( "shading.Ka", m_shader->Ka );
+        m_shader_occl_pass.setUniform( "shading.Kd", m_shader->Kd );
+        m_shader_occl_pass.setUniform( "shading.Ks", m_shader->Ks );
+        m_shader_occl_pass.setUniform( "shading.S",  m_shader->S );
+        m_shader_occl_pass.unbind();
+    }
 }
 
 /*===========================================================================*/
@@ -541,6 +586,222 @@ void SSAOStylizedLineRenderer::create_diffuse_texture()
     m_diffuse_texture.setMinFilter( GL_LINEAR );
     m_diffuse_texture.setPixelFormat( GL_RGB, GL_RGB, GL_UNSIGNED_BYTE );
     m_diffuse_texture.create( 1, 1, diffuse.data() );
+}
+
+void SSAOStylizedLineRenderer::create_framebuffer( const size_t width, const size_t height )
+{
+    m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
+    m_color_texture.setWrapT( GL_CLAMP_TO_EDGE );
+    m_color_texture.setMagFilter( GL_LINEAR );
+    m_color_texture.setMinFilter( GL_LINEAR );
+    m_color_texture.setPixelFormat( GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE );
+    m_color_texture.create( width, height );
+
+    m_position_texture.setWrapS( GL_CLAMP_TO_EDGE );
+    m_position_texture.setWrapT( GL_CLAMP_TO_EDGE );
+    m_position_texture.setMagFilter( GL_LINEAR );
+    m_position_texture.setMinFilter( GL_LINEAR );
+    m_position_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT );
+    m_position_texture.create( width, height );
+
+    m_normal_texture.setWrapS( GL_CLAMP_TO_EDGE );
+    m_normal_texture.setWrapT( GL_CLAMP_TO_EDGE );
+    m_normal_texture.setMagFilter( GL_LINEAR );
+    m_normal_texture.setMinFilter( GL_LINEAR );
+    m_normal_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT );
+    m_normal_texture.create( width, height );
+
+    m_depth_texture.setWrapS( GL_CLAMP_TO_EDGE );
+    m_depth_texture.setWrapT( GL_CLAMP_TO_EDGE );
+    m_depth_texture.setMagFilter( GL_LINEAR );
+    m_depth_texture.setMinFilter( GL_LINEAR );
+    m_depth_texture.setPixelFormat( GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT  );
+    m_depth_texture.create( width, height );
+
+    m_framebuffer.create();
+    m_framebuffer.attachColorTexture( m_color_texture, 0 );
+    m_framebuffer.attachColorTexture( m_position_texture, 1 );
+    m_framebuffer.attachColorTexture( m_normal_texture, 2 );
+    m_framebuffer.attachDepthTexture( m_depth_texture );
+}
+
+void SSAOStylizedLineRenderer::update_framebuffer( const size_t width, const size_t height )
+{
+    m_color_texture.release();
+    m_color_texture.create( width, height );
+
+    m_position_texture.release();
+    m_position_texture.create( width, height );
+
+    m_normal_texture.release();
+    m_normal_texture.create( width, height );
+
+    m_depth_texture.release();
+    m_depth_texture.create( width, height );
+
+    m_framebuffer.attachColorTexture( m_color_texture, 0 );
+    m_framebuffer.attachColorTexture( m_position_texture, 1 );
+    m_framebuffer.attachColorTexture( m_normal_texture, 2 );
+    m_framebuffer.attachDepthTexture( m_depth_texture );
+}
+
+void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line )
+{
+    kvs::FrameBufferObject::Binder bind0( m_framebuffer );
+
+    // Initialize FBO.
+    kvs::OpenGL::SetClearColor( kvs::Vec4::All( 0.0f ) );
+    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    // Enable MRT rendering.
+    const GLenum buffers[3] = {
+        GL_COLOR_ATTACHMENT0_EXT,
+        GL_COLOR_ATTACHMENT1_EXT,
+        GL_COLOR_ATTACHMENT2_EXT };
+    kvs::OpenGL::SetDrawBuffers( 3, buffers );
+
+    kvs::VertexBufferObject::Binder bind1( m_vbo );
+    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
+
+    kvs::Texture::Binder unit0( m_shape_texture, 0 );
+    kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
+    kvs::Texture::Binder unit1( m_diffuse_texture, 1 );
+    kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
+    {
+        const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+        const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
+        const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+        m_shader_geom_pass.setUniform( "ModelViewMatrix", M );
+        m_shader_geom_pass.setUniform( "ProjectionMatrix", P );
+        m_shader_geom_pass.setUniform( "NormalMatrix", N );
+        m_shader_geom_pass.setUniform( "shape_texture", 0 );
+        m_shader_geom_pass.setUniform( "diffuse_texture", 1 );
+
+        const size_t nvertices = line->numberOfVertices() * 2;
+        const size_t coord_size = nvertices * 3 * sizeof( kvs::Real32 );
+        const size_t color_size = nvertices * 3 * sizeof( kvs::UInt8 );
+        const size_t normal_size = nvertices * 3 * sizeof( kvs::Real32 );
+
+        // Enable coords.
+        KVS_GL_CALL( glEnableClientState( GL_VERTEX_ARRAY ) );
+        KVS_GL_CALL( glVertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 ) );
+
+        // Enable colors.
+        KVS_GL_CALL( glEnableClientState( GL_COLOR_ARRAY ) );
+        KVS_GL_CALL( glColorPointer( 3, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size ) );
+
+        // Enable normals.
+        KVS_GL_CALL( glEnableClientState( GL_NORMAL_ARRAY ) );
+        KVS_GL_CALL( glNormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size ) );
+
+        // Enable texcoords.
+        KVS_GL_CALL( glEnableClientState( GL_TEXTURE_COORD_ARRAY ) );
+        KVS_GL_CALL( glTexCoordPointer( 4, GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size + normal_size ) );
+
+        // Draw lines.
+        {
+            if ( line->lineType() == kvs::LineObject::Polyline )
+            {
+                // if OpenGL version is 1.4 or later
+                GLint* first = m_first_array.data();
+                GLsizei* count = m_count_array.data();
+                GLsizei primecount = m_first_array.size();
+                KVS_GL_CALL( glMultiDrawArrays( GL_QUAD_STRIP, first, count, primecount ) );
+                // else
+                //for ( size_t i = 0; i < nlines; i++ )
+                //{
+                //    const GLint first = m_first_array[i];
+                //    const GLsizei count = m_count_array[i];
+                //    KVS_GL_CALL( glDrawArrays( GL_LINE_STRIP, first, count ) );
+                //}
+            }
+            else if ( line->lineType() == kvs::LineObject::Strip )
+            {
+                const size_t nvertices = line->numberOfVertices() * 2;
+                KVS_GL_CALL( glDrawArrays( GL_QUAD_STRIP, 0, nvertices ) );
+            }
+        }
+
+        // Disable coords.
+        KVS_GL_CALL( glDisableClientState( GL_VERTEX_ARRAY ) );
+
+        // Disable colors.
+        KVS_GL_CALL( glDisableClientState( GL_COLOR_ARRAY ) );
+
+        // Disable normals.
+        KVS_GL_CALL( glDisableClientState( GL_NORMAL_ARRAY ) );
+
+        // Disable texcoords.
+        KVS_GL_CALL( glDisableClientState( GL_TEXTURE_COORD_ARRAY ) );
+    }
+
+
+/*
+    kvs::VertexBufferObject::Binder bind1( m_vbo );
+    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
+    {
+        const size_t nconnections = polygon->numberOfConnections();
+        const size_t nvertices = polygon->numberOfVertices();
+        const size_t npolygons = nconnections == 0 ? nvertices / 3 : nconnections;
+        const size_t coord_size = nvertices * 3 * sizeof( kvs::Real32 );
+        const size_t color_size = nvertices * 4 * sizeof( kvs::UInt8 );
+
+        KVS_GL_CALL( glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) );
+
+        // Enable coords.
+        KVS_GL_CALL( glEnableClientState( GL_VERTEX_ARRAY ) );
+        KVS_GL_CALL( glVertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 ) );
+
+        // Enable colors.
+        KVS_GL_CALL( glEnableClientState( GL_COLOR_ARRAY ) );
+        KVS_GL_CALL( glColorPointer( 4, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size ) );
+
+        // Enable normals.
+        if ( m_has_normal )
+        {
+            KVS_GL_CALL( glEnableClientState( GL_NORMAL_ARRAY ) );
+            KVS_GL_CALL( glNormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size ) );
+        }
+
+        // Draw triangles.
+        if ( m_has_connection )
+        {
+            kvs::IndexBufferObject::Binder bind3( m_ibo );
+            KVS_GL_CALL( glDrawElements( GL_TRIANGLES, 3 * npolygons, GL_UNSIGNED_INT, 0 ) );
+        }
+        else
+        {
+            KVS_GL_CALL( glDrawArrays( GL_TRIANGLES, 0, 3 * npolygons ) );
+        }
+
+        // Disable coords.
+        KVS_GL_CALL( glDisableClientState( GL_VERTEX_ARRAY ) );
+
+        // Disable colors.
+        KVS_GL_CALL( glDisableClientState( GL_COLOR_ARRAY ) );
+
+        // Disable normals.
+        if ( m_has_normal )
+        {
+            KVS_GL_CALL( glDisableClientState( GL_NORMAL_ARRAY ) );
+        }
+    }
+*/
+}
+
+void SSAOStylizedLineRenderer::render_occlusion_pass()
+{
+    kvs::ProgramObject::Binder bind1( m_shader_occl_pass );
+    kvs::Texture::Binder unit0( m_color_texture, 0 );
+    kvs::Texture::Binder unit1( m_position_texture, 1 );
+    kvs::Texture::Binder unit2( m_normal_texture, 2 );
+    kvs::Texture::Binder unit3( m_depth_texture, 3 );
+    m_shader_occl_pass.setUniform( "color_texture", 0 );
+    m_shader_occl_pass.setUniform( "position_texture", 1 );
+    m_shader_occl_pass.setUniform( "normal_texture", 2 );
+    m_shader_occl_pass.setUniform( "depth_texture", 3 );
+    m_shader_occl_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
+    ::Draw();
 }
 
 } // end of namespace AmbientOcclusionRendering

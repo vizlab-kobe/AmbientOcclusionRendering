@@ -329,8 +329,8 @@ void SSAOPolygonRenderer::create_framebuffer( const size_t width, const size_t h
     m_normal_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT );
     m_normal_texture.create( width, height );
 
-    m_depth_texture.setWrapS( GL_CLAMP_TO_BORDER );
-    m_depth_texture.setWrapT( GL_CLAMP_TO_BORDER );
+    m_depth_texture.setWrapS( GL_CLAMP_TO_EDGE );
+    m_depth_texture.setWrapT( GL_CLAMP_TO_EDGE );
     m_depth_texture.setMagFilter( GL_LINEAR );
     m_depth_texture.setMinFilter( GL_LINEAR );
     m_depth_texture.setPixelFormat( GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT  );

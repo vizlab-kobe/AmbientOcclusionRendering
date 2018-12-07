@@ -36,6 +36,7 @@ int main( int argc, char** argv )
             }
         }
     }
+
     kvs::PointObject* point = new kvs::PointObject;
     point->setCoords( kvs::ValueArray<kvs::Real32>( v ) );
 
