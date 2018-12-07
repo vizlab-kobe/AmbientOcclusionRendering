@@ -11,12 +11,16 @@
 #include <kvs/StylizedLineRenderer>
 #include <kvs/Streamline>
 #include <kvs/TornadoVolumeData>
+#include <kvs/ShaderSource>
 #include <kvs/glut/Application>
 #include <kvs/glut/Screen>
-#include "SSAOStylizedLineRenderer.h"
+#include <AmbientOcclusionRendering/Lib/SSAOStylizedLineRenderer.h>
+
 
 int main( int argc, char** argv )
 {
+    kvs::ShaderSource::AddSearchPath("../../Lib");
+
     kvs::glut::Application app( argc, argv );
 
     kvs::StructuredVolumeObject* volume = new kvs::TornadoVolumeData( kvs::Vec3u::All( 32 ) );
