@@ -267,13 +267,13 @@ void SSAOPolygonRenderer::create_buffer_object( const kvs::PolygonObject* polygo
 {
     if ( polygon->polygonType() != kvs::PolygonObject::Triangle )
     {
-        kvsMessageError("Not supported polygon type.");
+        kvsMessageError() << "Not supported polygon type." << std::endl;;
         return;
     }
 
     if ( polygon->colors().size() != 3 && polygon->colorType() == kvs::PolygonObject::PolygonColor )
     {
-        kvsMessageError("Not supported polygon color type.");
+        kvsMessageError() << "Not supported polygon color type." << std::endl;
         return;
     }
 
@@ -381,50 +381,43 @@ void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygo
     kvs::VertexBufferObject::Binder bind1( m_vbo );
     kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
     {
+        kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
         const size_t nconnections = polygon->numberOfConnections();
         const size_t nvertices = polygon->numberOfVertices();
         const size_t npolygons = nconnections == 0 ? nvertices / 3 : nconnections;
         const size_t coord_size = nvertices * 3 * sizeof( kvs::Real32 );
         const size_t color_size = nvertices * 4 * sizeof( kvs::UInt8 );
 
-        KVS_GL_CALL( glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) );
+        kvs::OpenGL::EnableClientState( GL_VERTEX_ARRAY );
+        kvs::OpenGL::EnableClientState( GL_COLOR_ARRAY );
 
-        // Enable coords.
-        KVS_GL_CALL( glEnableClientState( GL_VERTEX_ARRAY ) );
-        KVS_GL_CALL( glVertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 ) );
+        kvs::OpenGL::VertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 );
+        kvs::OpenGL::ColorPointer( 4, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size );
 
-        // Enable colors.
-        KVS_GL_CALL( glEnableClientState( GL_COLOR_ARRAY ) );
-        KVS_GL_CALL( glColorPointer( 4, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size ) );
-
-        // Enable normals.
         if ( m_has_normal )
         {
-            KVS_GL_CALL( glEnableClientState( GL_NORMAL_ARRAY ) );
-            KVS_GL_CALL( glNormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size ) );
+            kvs::OpenGL::EnableClientState( GL_NORMAL_ARRAY );
+            kvs::OpenGL::NormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size );
         }
 
         // Draw triangles.
         if ( m_has_connection )
         {
             kvs::IndexBufferObject::Binder bind3( m_ibo );
-            KVS_GL_CALL( glDrawElements( GL_TRIANGLES, 3 * npolygons, GL_UNSIGNED_INT, 0 ) );
+            kvs::OpenGL::DrawElements( GL_TRIANGLES, 3 * npolygons, GL_UNSIGNED_INT, 0 );
         }
         else
         {
-            KVS_GL_CALL( glDrawArrays( GL_TRIANGLES, 0, 3 * npolygons ) );
+            kvs::OpenGL::DrawArrays( GL_TRIANGLES, 0, 3 * npolygons );
         }
 
-        // Disable coords.
-        KVS_GL_CALL( glDisableClientState( GL_VERTEX_ARRAY ) );
+        kvs::OpenGL::DisableClientState( GL_VERTEX_ARRAY );
+        kvs::OpenGL::DisableClientState( GL_COLOR_ARRAY );
 
-        // Disable colors.
-        KVS_GL_CALL( glDisableClientState( GL_COLOR_ARRAY ) );
-
-        // Disable normals.
         if ( m_has_normal )
         {
-            KVS_GL_CALL( glDisableClientState( GL_NORMAL_ARRAY ) );
+            kvs::OpenGL::DisableClientState( GL_NORMAL_ARRAY );
         }
     }
 }
@@ -442,12 +435,6 @@ void SSAOPolygonRenderer::render_occlusion_pass()
     m_shader_occl_pass.setUniform( "depth_texture", 3 );
     m_shader_occl_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
     ::Draw();
-
-//    kvs::Texture::Binder unit( m_color_texture );
-//    kvs::Texture::Binder unit( m_position_texture );
-//    kvs::Texture::Binder unit( m_normal_texture );
-//    kvs::Texture::Binder unit( m_depth_texture );
-//    ::Draw();
 }
 
 } // end of namespace AmbientOcclusionRendering

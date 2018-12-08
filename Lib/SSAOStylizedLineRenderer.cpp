@@ -605,111 +605,33 @@ void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line
         const size_t color_size = nvertices * 3 * sizeof( kvs::UInt8 );
         const size_t normal_size = nvertices * 3 * sizeof( kvs::Real32 );
 
-        // Enable coords.
-        KVS_GL_CALL( glEnableClientState( GL_VERTEX_ARRAY ) );
-        KVS_GL_CALL( glVertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 ) );
-
-        // Enable colors.
-        KVS_GL_CALL( glEnableClientState( GL_COLOR_ARRAY ) );
-        KVS_GL_CALL( glColorPointer( 3, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size ) );
-
-        // Enable normals.
-        KVS_GL_CALL( glEnableClientState( GL_NORMAL_ARRAY ) );
-        KVS_GL_CALL( glNormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size ) );
-
-        // Enable texcoords.
-        KVS_GL_CALL( glEnableClientState( GL_TEXTURE_COORD_ARRAY ) );
-        KVS_GL_CALL( glTexCoordPointer( 4, GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size + normal_size ) );
-
         // Draw lines.
+        kvs::OpenGL::EnableClientState( GL_VERTEX_ARRAY );
+        kvs::OpenGL::EnableClientState( GL_COLOR_ARRAY );
+        kvs::OpenGL::EnableClientState( GL_NORMAL_ARRAY );
+        kvs::OpenGL::EnableClientState( GL_TEXTURE_COORD_ARRAY );
         {
-            if ( line->lineType() == kvs::LineObject::Polyline )
+            kvs::OpenGL::VertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 );
+            kvs::OpenGL::ColorPointer( 3, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size );
+            kvs::OpenGL::NormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size );
+            kvs::OpenGL::TexCoordPointer( 4, GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size + normal_size );
+
+            switch ( line->lineType() )
             {
-                // if OpenGL version is 1.4 or later
-                GLint* first = m_first_array.data();
-                GLsizei* count = m_count_array.data();
-                GLsizei primecount = m_first_array.size();
-                KVS_GL_CALL( glMultiDrawArrays( GL_QUAD_STRIP, first, count, primecount ) );
-                // else
-                //for ( size_t i = 0; i < nlines; i++ )
-                //{
-                //    const GLint first = m_first_array[i];
-                //    const GLsizei count = m_count_array[i];
-                //    KVS_GL_CALL( glDrawArrays( GL_LINE_STRIP, first, count ) );
-                //}
-            }
-            else if ( line->lineType() == kvs::LineObject::Strip )
-            {
-                const size_t nvertices = line->numberOfVertices() * 2;
-                KVS_GL_CALL( glDrawArrays( GL_QUAD_STRIP, 0, nvertices ) );
+            case kvs::LineObject::Polyline:
+                kvs::OpenGL::MultiDrawArrays( GL_QUAD_STRIP, m_first_array, m_count_array );
+                break;
+            case kvs::LineObject::Strip:
+                kvs::OpenGL::DrawArrays( GL_QUAD_STRIP, 0, line->numberOfVertices() * 2 );
+                break;
+            default: break;
             }
         }
-
-        // Disable coords.
-        KVS_GL_CALL( glDisableClientState( GL_VERTEX_ARRAY ) );
-
-        // Disable colors.
-        KVS_GL_CALL( glDisableClientState( GL_COLOR_ARRAY ) );
-
-        // Disable normals.
-        KVS_GL_CALL( glDisableClientState( GL_NORMAL_ARRAY ) );
-
-        // Disable texcoords.
-        KVS_GL_CALL( glDisableClientState( GL_TEXTURE_COORD_ARRAY ) );
+        kvs::OpenGL::DisableClientState( GL_VERTEX_ARRAY );
+        kvs::OpenGL::DisableClientState( GL_COLOR_ARRAY );
+        kvs::OpenGL::DisableClientState( GL_NORMAL_ARRAY );
+        kvs::OpenGL::DisableClientState( GL_TEXTURE_COORD_ARRAY );
     }
-
-
-/*
-    kvs::VertexBufferObject::Binder bind1( m_vbo );
-    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
-    {
-        const size_t nconnections = polygon->numberOfConnections();
-        const size_t nvertices = polygon->numberOfVertices();
-        const size_t npolygons = nconnections == 0 ? nvertices / 3 : nconnections;
-        const size_t coord_size = nvertices * 3 * sizeof( kvs::Real32 );
-        const size_t color_size = nvertices * 4 * sizeof( kvs::UInt8 );
-
-        KVS_GL_CALL( glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) );
-
-        // Enable coords.
-        KVS_GL_CALL( glEnableClientState( GL_VERTEX_ARRAY ) );
-        KVS_GL_CALL( glVertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 ) );
-
-        // Enable colors.
-        KVS_GL_CALL( glEnableClientState( GL_COLOR_ARRAY ) );
-        KVS_GL_CALL( glColorPointer( 4, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size ) );
-
-        // Enable normals.
-        if ( m_has_normal )
-        {
-            KVS_GL_CALL( glEnableClientState( GL_NORMAL_ARRAY ) );
-            KVS_GL_CALL( glNormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size ) );
-        }
-
-        // Draw triangles.
-        if ( m_has_connection )
-        {
-            kvs::IndexBufferObject::Binder bind3( m_ibo );
-            KVS_GL_CALL( glDrawElements( GL_TRIANGLES, 3 * npolygons, GL_UNSIGNED_INT, 0 ) );
-        }
-        else
-        {
-            KVS_GL_CALL( glDrawArrays( GL_TRIANGLES, 0, 3 * npolygons ) );
-        }
-
-        // Disable coords.
-        KVS_GL_CALL( glDisableClientState( GL_VERTEX_ARRAY ) );
-
-        // Disable colors.
-        KVS_GL_CALL( glDisableClientState( GL_COLOR_ARRAY ) );
-
-        // Disable normals.
-        if ( m_has_normal )
-        {
-            KVS_GL_CALL( glDisableClientState( GL_NORMAL_ARRAY ) );
-        }
-    }
-*/
 }
 
 void SSAOStylizedLineRenderer::render_occlusion_pass()
