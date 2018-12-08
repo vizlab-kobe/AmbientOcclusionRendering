@@ -220,16 +220,16 @@ void SSAOPolygonRenderer::create_shader_program()
 {
     // Build SSAO shader for geometry-pass (1st pass).
     {
-        kvs::ShaderSource vert( "SSAO_geom_pass.vert" );
-        kvs::ShaderSource frag( "SSAO_geom_pass.frag" );
+        kvs::ShaderSource vert( "SSAO_polygon_geom_pass.vert" );
+        kvs::ShaderSource frag( "SSAO_polygon_geom_pass.frag" );
 
         m_shader_geom_pass.build( vert, frag );
     }
 
     // Build SSAO shader for occlusion-pass (2nd pass).
     {
-        kvs::ShaderSource vert( "SSAO_occl_pass.vert" );
-        kvs::ShaderSource frag( "SSAO_occl_pass.frag" );
+        kvs::ShaderSource vert( "SSAO_polygon_occl_pass.vert" );
+        kvs::ShaderSource frag( "SSAO_polygon_occl_pass.frag" );
 
         if ( isEnabledShading() )
         {
