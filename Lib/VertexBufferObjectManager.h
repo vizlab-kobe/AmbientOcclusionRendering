@@ -29,6 +29,22 @@ private:
             offset(0) {}
     };
 
+    struct VertexAttribBuffer : public VertexBuffer
+    {
+        GLuint index; ///< index of vertex attribute to be modified
+        GLboolean normalized; ///< data values should be normalized (GL_TRUE) or not (GL_FALSE)
+        VertexAttribBuffer():
+            VertexBuffer(),
+            index(0),
+            normalized(GL_FALSE) {}
+        friend bool operator == ( const VertexAttribBuffer& left, const VertexAttribBuffer& right )
+        {
+            return left.index == right.index;
+        }
+    };
+
+    typedef std::vector<VertexAttribBuffer> VertexAttribBuffers;
+
     struct IndexBuffer
     {
         GLenum type; ///< GL_UNSIGNED_BYTE, GL_FLOAT, etc
@@ -54,6 +70,7 @@ private:
     VertexBuffer m_normal_array;
     VertexBuffer m_tex_coord_array;
     IndexBuffer m_index_array;
+    VertexAttribBuffers m_vertex_attrib_arrays;
 
 public:
     VertexBufferObjectManager();
@@ -65,6 +82,7 @@ public:
     void setNormalArray( const kvs::AnyValueArray& array, const size_t stride = 0 );
     void setTexCoordArray( const kvs::AnyValueArray& array, const size_t dim, const size_t stride = 0 );
     void setIndexArray( const kvs::AnyValueArray& array );
+    void setVertexAttribArray( const kvs::AnyValueArray& array, const size_t index, const size_t dim, const bool normalized = false, const size_t stride = 0 );
 
     void create();
     void bind() const;
@@ -79,6 +97,7 @@ public:
     void drawElements( GLenum mode, const kvs::ValueArray<GLsizei>& count );
 
 private:
+    size_t vertex_buffer_object_size() const;
     void enable_client_state() const;
     void disable_client_state() const;
 };

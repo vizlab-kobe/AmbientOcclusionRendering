@@ -1,4 +1,6 @@
 #include "VertexBufferObjectManager.h"
+#include <algorithm>
+
 
 namespace
 {
@@ -74,9 +76,31 @@ void VertexBufferObjectManager::setIndexArray( const kvs::AnyValueArray& array )
     m_index_array.pointer = array.data();
 }
 
+void VertexBufferObjectManager::setVertexAttribArray( const kvs::AnyValueArray& array, const size_t index, const size_t dim, const bool normalized, const size_t stride )
+{
+    VertexAttribBuffer attrib_array;
+    attrib_array.type = ::GLType( array );
+    attrib_array.size = array.byteSize();
+    attrib_array.dim = dim;
+    attrib_array.stride = stride;
+    attrib_array.pointer = array.data();
+    attrib_array.index = index;
+    attrib_array.normalized = ( normalized ) ? GL_TRUE : GL_FALSE;
+
+    VertexAttribBuffers::iterator result = std::find( m_vertex_attrib_arrays.begin(), m_vertex_attrib_arrays.end(), attrib_array );
+    if ( result == m_vertex_attrib_arrays.end() )
+    {
+        m_vertex_attrib_arrays.push_back( attrib_array );
+    }
+    else
+    {
+        *result = attrib_array;
+    }
+}
+
 void VertexBufferObjectManager::create()
 {
-    const size_t vbo_size = m_vertex_array.size + m_color_array.size + m_normal_array.size + m_tex_coord_array.size;
+    const size_t vbo_size = this->vertex_buffer_object_size();
     if ( vbo_size > 0 )
     {
         m_vbo.create( vbo_size );
@@ -110,6 +134,17 @@ void VertexBufferObjectManager::create()
                 m_tex_coord_array.offset = offset;
                 offset += m_tex_coord_array.size;
             }
+
+            for ( size_t i = 0; i < m_vertex_attrib_arrays.size(); i++ )
+            {
+                if ( m_vertex_attrib_arrays[i].size > 0 )
+                {
+                    m_vbo.load( m_vertex_attrib_arrays[i].size, m_vertex_attrib_arrays[i].pointer, offset );
+                    m_vertex_attrib_arrays[i].offset = offset;
+                    offset += m_vertex_attrib_arrays[i].size;
+                }
+            }
+
             m_vbo.unbind();
         }
 
@@ -140,6 +175,15 @@ void VertexBufferObjectManager::release()
 {
     m_vbo.release();
     m_ibo.release();
+
+    m_vbo_size = 0;
+    m_ibo_size = 0;
+    m_vertex_array = VertexBuffer();
+    m_color_array = VertexBuffer();
+    m_normal_array = VertexBuffer();
+    m_tex_coord_array = VertexBuffer();
+    m_index_array = IndexBuffer();
+    VertexAttribBuffers().swap( m_vertex_attrib_arrays );
 }
 
 void VertexBufferObjectManager::drawArrays( GLenum mode, GLint first, GLsizei count )
@@ -175,34 +219,69 @@ void VertexBufferObjectManager::drawElements( GLenum mode, const kvs::ValueArray
     kvs::OpenGL::MultiDrawElements( mode, count, m_index_array.type, 0 );
 }
 
+size_t VertexBufferObjectManager::vertex_buffer_object_size() const
+{
+    size_t vbo_size = 0;
+    vbo_size += m_vertex_array.size;
+    vbo_size += m_color_array.size;
+    vbo_size += m_normal_array.size;
+    vbo_size += m_tex_coord_array.size;
+    for ( size_t i = 0; i < m_vertex_attrib_arrays.size(); i++ )
+    {
+        vbo_size += m_vertex_attrib_arrays[i].size;
+    }
+    return vbo_size;
+}
+
 void VertexBufferObjectManager::enable_client_state() const
 {
     if ( m_vertex_array.size > 0 )
     {
         const VertexBuffer& array = m_vertex_array;
+        const GLvoid* offset = (GLbyte*)NULL + array.offset;
         kvs::OpenGL::EnableClientState( GL_VERTEX_ARRAY );
-        kvs::OpenGL::VertexPointer( array.dim, array.type, array.stride, (GLbyte*)NULL + array.offset );
+        kvs::OpenGL::VertexPointer( array.dim, array.type, array.stride, offset );
     }
 
     if ( m_color_array.size > 0 )
     {
         const VertexBuffer& array = m_color_array;
+        const GLvoid* offset = (GLbyte*)NULL + array.offset;
         kvs::OpenGL::EnableClientState( GL_COLOR_ARRAY );
-        kvs::OpenGL::ColorPointer( array.dim, array.type, array.stride, (GLbyte*)NULL + array.offset );
+        kvs::OpenGL::ColorPointer( array.dim, array.type, array.stride, offset );
     }
 
     if ( m_normal_array.size > 0 )
     {
         const VertexBuffer& array = m_normal_array;
+        const GLvoid* offset = (GLbyte*)NULL + array.offset;
         kvs::OpenGL::EnableClientState( GL_NORMAL_ARRAY );
-        kvs::OpenGL::NormalPointer( array.type, array.stride, (GLbyte*)NULL + array.offset );
+        kvs::OpenGL::NormalPointer( array.type, array.stride, offset );
     }
 
     if ( m_tex_coord_array.size > 0 )
     {
         const VertexBuffer& array = m_tex_coord_array;
+        const GLvoid* offset = (GLbyte*)NULL + array.offset;
         kvs::OpenGL::EnableClientState( GL_TEXTURE_COORD_ARRAY );
-        kvs::OpenGL::TexCoordPointer( array.dim, array.type, array.stride, (GLbyte*)NULL + array.offset );
+        kvs::OpenGL::TexCoordPointer( array.dim, array.type, array.stride, offset );
+    }
+
+    for ( size_t i = 0; i < m_vertex_attrib_arrays.size(); i++ )
+    {
+        const VertexAttribBuffer& array = m_vertex_attrib_arrays[i];
+        if ( array.size > 0 )
+        {
+            const GLvoid* offset = (GLbyte*)NULL + array.offset;
+            kvs::OpenGL::EnableVertexAttribArray( array.index );
+            kvs::OpenGL::VertexAttribPointer(
+                array.index,
+                array.dim,
+                array.type,
+                array.normalized,
+                array.stride,
+                offset );
+        }
     }
 }
 
@@ -226,6 +305,15 @@ void VertexBufferObjectManager::disable_client_state() const
     if ( m_tex_coord_array.size > 0 )
     {
         kvs::OpenGL::DisableClientState( GL_TEXTURE_COORD_ARRAY );
+    }
+
+    for ( size_t i = 0; i < m_vertex_attrib_arrays.size(); i++ )
+    {
+        const VertexAttribBuffer& array = m_vertex_attrib_arrays[i];
+        if ( array.size > 0 )
+        {
+            kvs::OpenGL::DisableVertexAttribArray( array.index );
+        }
     }
 }
 
