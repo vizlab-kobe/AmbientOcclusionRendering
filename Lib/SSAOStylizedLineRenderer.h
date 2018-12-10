@@ -5,11 +5,9 @@
 #include <kvs/LineRenderer>
 #include <kvs/Shader>
 #include <kvs/ProgramObject>
-#include <kvs/VertexBufferObject>
 #include <kvs/FrameBufferObject>
 #include <kvs/Texture2D>
-
-#include "VertexBufferObjectManager.h"
+#include <kvs/VertexBufferObjectManager>
 
 
 namespace AmbientOcclusionRendering
