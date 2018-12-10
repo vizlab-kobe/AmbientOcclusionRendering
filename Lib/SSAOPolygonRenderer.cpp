@@ -198,8 +198,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
         m_object = object;
         m_shader_geom_pass.release();
         m_shader_occl_pass.release();
-        m_vbo.release();
-        m_ibo.release();
+        m_vbo_manager.release();
         this->create_shader_program();
         this->create_buffer_object( polygon );
     }
@@ -281,29 +280,11 @@ void SSAOPolygonRenderer::create_buffer_object( const kvs::PolygonObject* polygo
     kvs::ValueArray<kvs::UInt8> colors = ::VertexColors( polygon );
     kvs::ValueArray<kvs::Real32> normals = ::VertexNormals( polygon );
 
-    const size_t coord_size = coords.byteSize();
-    const size_t color_size = colors.byteSize();
-    const size_t normal_size = normals.byteSize();
-    const size_t byte_size = coord_size + color_size + normal_size;
-
-    m_vbo.create( byte_size );
-    m_vbo.bind();
-    m_vbo.load( coord_size, coords.data(), 0 );
-    m_vbo.load( color_size, colors.data(), coord_size );
-    if ( normal_size > 0 )
-    {
-        m_vbo.load( normal_size, normals.data(), coord_size + color_size );
-    }
-    m_vbo.unbind();
-
-    if ( m_has_connection )
-    {
-        const size_t connection_size = polygon->connections().byteSize();
-        m_ibo.create( connection_size );
-        m_ibo.bind();
-        m_ibo.load( connection_size, polygon->connections().data(), 0 );
-        m_ibo.unbind();
-    }
+    m_vbo_manager.setVertexArray( coords, 3 );
+    m_vbo_manager.setColorArray( colors, 3 );
+    if ( normals.size() > 0 ) { m_vbo_manager.setNormalArray( normals ); }
+    if ( m_has_connection ) { m_vbo_manager.setIndexArray( polygon->connections() ); }
+    m_vbo_manager.create();
 }
 
 void SSAOPolygonRenderer::create_framebuffer( const size_t width, const size_t height )
@@ -378,7 +359,7 @@ void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygo
         GL_COLOR_ATTACHMENT2_EXT };
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
-    kvs::VertexBufferObject::Binder bind1( m_vbo );
+    kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
     kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
     {
         kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -386,38 +367,15 @@ void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygo
         const size_t nconnections = polygon->numberOfConnections();
         const size_t nvertices = polygon->numberOfVertices();
         const size_t npolygons = nconnections == 0 ? nvertices / 3 : nconnections;
-        const size_t coord_size = nvertices * 3 * sizeof( kvs::Real32 );
-        const size_t color_size = nvertices * 4 * sizeof( kvs::UInt8 );
-
-        kvs::OpenGL::EnableClientState( GL_VERTEX_ARRAY );
-        kvs::OpenGL::EnableClientState( GL_COLOR_ARRAY );
-
-        kvs::OpenGL::VertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 );
-        kvs::OpenGL::ColorPointer( 4, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size );
-
-        if ( m_has_normal )
-        {
-            kvs::OpenGL::EnableClientState( GL_NORMAL_ARRAY );
-            kvs::OpenGL::NormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size );
-        }
 
         // Draw triangles.
         if ( m_has_connection )
         {
-            kvs::IndexBufferObject::Binder bind3( m_ibo );
-            kvs::OpenGL::DrawElements( GL_TRIANGLES, 3 * npolygons, GL_UNSIGNED_INT, 0 );
+            m_vbo_manager.drawElements( GL_TRIANGLES, 3 * npolygons );
         }
         else
         {
-            kvs::OpenGL::DrawArrays( GL_TRIANGLES, 0, 3 * npolygons );
-        }
-
-        kvs::OpenGL::DisableClientState( GL_VERTEX_ARRAY );
-        kvs::OpenGL::DisableClientState( GL_COLOR_ARRAY );
-
-        if ( m_has_normal )
-        {
-            kvs::OpenGL::DisableClientState( GL_NORMAL_ARRAY );
+            m_vbo_manager.drawArrays( GL_TRIANGLES, 0, 3 * npolygons );
         }
     }
 }

@@ -23,6 +23,7 @@
 #include <kvs/IndexBufferObject>
 #include <kvs/FrameBufferObject>
 #include <kvs/Texture2D>
+#include "VertexBufferObjectManager.h"
 
 
 namespace AmbientOcclusionRendering
@@ -42,8 +43,7 @@ private:
     kvs::Shader::ShadingModel* m_shader; ///< shading method
     kvs::ProgramObject m_shader_geom_pass; ///< shader program for geometry-pass (1st pass)
     kvs::ProgramObject m_shader_occl_pass; ///< shader program for occlusion-pass (2nd pass)
-    kvs::VertexBufferObject m_vbo; ///< vertex buffer object
-    kvs::IndexBufferObject m_ibo; ///< index buffer object
+    kvs::VertexBufferObjectManager m_vbo_manager;
 
     // Variables for SSAO
     kvs::FrameBufferObject m_framebuffer;

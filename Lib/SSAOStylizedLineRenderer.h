@@ -9,6 +9,8 @@
 #include <kvs/FrameBufferObject>
 #include <kvs/Texture2D>
 
+#include "VertexBufferObjectManager.h"
+
 
 namespace AmbientOcclusionRendering
 {
@@ -34,7 +36,7 @@ private:
     kvs::Real32 m_halo_size;
     kvs::Texture2D m_shape_texture;
     kvs::Texture2D m_diffuse_texture;
-    kvs::VertexBufferObject m_vbo; ///< vertex buffer object
+    kvs::VertexBufferObjectManager m_vbo_manager;
 
     // Variables for SSAO
     kvs::FrameBufferObject m_framebuffer;

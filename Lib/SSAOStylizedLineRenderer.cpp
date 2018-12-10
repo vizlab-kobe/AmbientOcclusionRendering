@@ -328,6 +328,7 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
         m_object = object;
         m_shader_geom_pass.release();
         m_shader_occl_pass.release();
+        m_vbo_manager.release();
         this->create_shader_program();
         this->create_buffer_object( line );
     }
@@ -403,19 +404,11 @@ void SSAOStylizedLineRenderer::create_buffer_object( const kvs::LineObject* line
     kvs::ValueArray<kvs::Real32> normals = ::QuadVertexNormals( line );
     kvs::ValueArray<kvs::Real32> texcoords = ::QuadVertexTexCoords( line, m_halo_size, m_radius_size );
 
-    const size_t coord_size = coords.byteSize();
-    const size_t color_size = colors.byteSize();
-    const size_t normal_size = normals.byteSize();
-    const size_t texcoord_size = texcoords.byteSize();
-    const size_t byte_size = coord_size + color_size + normal_size +texcoord_size;
-
-    m_vbo.create( byte_size );
-    m_vbo.bind();
-    m_vbo.load( coord_size, coords.data(), 0 );
-    m_vbo.load( color_size, colors.data(), coord_size );
-    m_vbo.load( normal_size, normals.data(), coord_size + color_size );
-    m_vbo.load( texcoord_size, texcoords.data(), coord_size + color_size + normal_size );
-    m_vbo.unbind();
+    m_vbo_manager.setVertexArray( coords, 3 );
+    m_vbo_manager.setColorArray( colors, 3 );
+    m_vbo_manager.setNormalArray( normals );
+    m_vbo_manager.setTexCoordArray( texcoords, 4 );
+    m_vbo_manager.create();
 
     if ( line->lineType() == kvs::LineObject::Polyline )
     {
@@ -583,14 +576,13 @@ void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line
         GL_COLOR_ATTACHMENT2_EXT };
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
-    kvs::VertexBufferObject::Binder bind1( m_vbo );
+    kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
     kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
-
     kvs::Texture::Binder unit0( m_shape_texture, 0 );
-    kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
     kvs::Texture::Binder unit1( m_diffuse_texture, 1 );
-    kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
     {
+        kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
+
         const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
         const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
         const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
@@ -600,37 +592,17 @@ void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line
         m_shader_geom_pass.setUniform( "shape_texture", 0 );
         m_shader_geom_pass.setUniform( "diffuse_texture", 1 );
 
-        const size_t nvertices = line->numberOfVertices() * 2;
-        const size_t coord_size = nvertices * 3 * sizeof( kvs::Real32 );
-        const size_t color_size = nvertices * 3 * sizeof( kvs::UInt8 );
-        const size_t normal_size = nvertices * 3 * sizeof( kvs::Real32 );
-
         // Draw lines.
-        kvs::OpenGL::EnableClientState( GL_VERTEX_ARRAY );
-        kvs::OpenGL::EnableClientState( GL_COLOR_ARRAY );
-        kvs::OpenGL::EnableClientState( GL_NORMAL_ARRAY );
-        kvs::OpenGL::EnableClientState( GL_TEXTURE_COORD_ARRAY );
+        switch ( line->lineType() )
         {
-            kvs::OpenGL::VertexPointer( 3, GL_FLOAT, 0, (GLbyte*)NULL + 0 );
-            kvs::OpenGL::ColorPointer( 3, GL_UNSIGNED_BYTE, 0, (GLbyte*)NULL + coord_size );
-            kvs::OpenGL::NormalPointer( GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size );
-            kvs::OpenGL::TexCoordPointer( 4, GL_FLOAT, 0, (GLbyte*)NULL + coord_size + color_size + normal_size );
-
-            switch ( line->lineType() )
-            {
-            case kvs::LineObject::Polyline:
-                kvs::OpenGL::MultiDrawArrays( GL_QUAD_STRIP, m_first_array, m_count_array );
-                break;
-            case kvs::LineObject::Strip:
-                kvs::OpenGL::DrawArrays( GL_QUAD_STRIP, 0, line->numberOfVertices() * 2 );
-                break;
-            default: break;
-            }
+        case kvs::LineObject::Polyline:
+            m_vbo_manager.drawArrays( GL_QUAD_STRIP, m_first_array, m_count_array );
+            break;
+        case kvs::LineObject::Strip:
+            m_vbo_manager.drawArrays( GL_QUAD_STRIP, 0, line->numberOfVertices() * 2 );
+            break;
+        default: break;
         }
-        kvs::OpenGL::DisableClientState( GL_VERTEX_ARRAY );
-        kvs::OpenGL::DisableClientState( GL_COLOR_ARRAY );
-        kvs::OpenGL::DisableClientState( GL_NORMAL_ARRAY );
-        kvs::OpenGL::DisableClientState( GL_TEXTURE_COORD_ARRAY );
     }
 }
 
