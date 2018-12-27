@@ -15,19 +15,28 @@
 #include <kvs/Slider>
 #include <kvs/glut/Application>
 #include <kvs/glut/Screen>
+#include <kvs/glut/TransferFunctionEditor>
 
-#include <StochasticStreamline/Lib/StochasticStylizedLineRenderer.h>
-typedef StochasticStreamline::StochasticStylizedLineRenderer Renderer;
+#include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
+typedef StochasticStreamline::StochasticTubeRenderer Renderer;
 
-class Slider : public kvs::Slider
+#include <StochasticStreamline/Lib/Streamline.h>
+typedef StochasticStreamline::Streamline Streamline;
+
+
+class TransferFunctionEditor : public kvs::glut::TransferFunctionEditor
 {
 public:
-    Slider( kvs::glut::Screen* screen ) : kvs::Slider( screen ) {}
-    void valueChanged()
+
+    TransferFunctionEditor( kvs::glut::Screen* screen ):
+        kvs::glut::TransferFunctionEditor( screen ){}
+
+    void apply()
     {
-        kvs::glut::Screen* s = static_cast<kvs::glut::Screen*>( screen() );
-        Renderer* renderer = Renderer::DownCast( s->scene()->renderer() );
-        renderer->setOpacity( kvs::Math::Round( value() * 255 ) );
+        kvs::Scene* scene = static_cast<kvs::glut::Screen*>( screen() )->scene();
+        Renderer* renderer = Renderer::DownCast( scene->renderer( "Renderer" ) );
+        renderer->setTransferFunction( transferFunction() );
+        screen()->redraw();
     }
 };
 
@@ -59,32 +68,29 @@ int main( int argc, char** argv )
     point->setCoords( kvs::ValueArray<kvs::Real32>( v ) );
 
     const kvs::TransferFunction transfer_function( 256 );
-    kvs::LineObject* object = new kvs::Streamline( volume, point, transfer_function );
+    kvs::LineObject* object = new Streamline( volume, point, transfer_function );
 
-    delete volume;
+//    delete volume;
     delete point;
 
     Renderer* renderer = new Renderer();
+    renderer->setName( "Renderer" );
     renderer->setShader( kvs::Shader::BlinnPhong() );
-    renderer->setOpacity( 128 );
+    renderer->setTransferFunction( transfer_function );
     renderer->setRepetitionLevel( 50 );
     renderer->setEnabledLODControl( true );
-    renderer->enableShading();
     renderer->enableShading();
 
     kvs::glut::Screen screen( &app );
     screen.registerObject( object, renderer );
     screen.setGeometry( 0, 0, 512, 512 );
-    screen.setTitle( "StochasticStreamline::StochasticStylizedLineRenderer" );
+    screen.setTitle( "StochasticStreamline::StochasticTubeRenderer" );
     screen.show();
 
-    Slider slider( &screen );
-    slider.setCaption( "Opacity" );
-    slider.setX( 0 );
-    slider.setY( 0 );
-    slider.setRange( 0, 1 );
-    slider.setValue( 0.5 );
-    slider.show();
+    TransferFunctionEditor editor( &screen );
+    editor.setTransferFunction( transfer_function );
+    editor.setVolumeObject( volume );
+    editor.show();
 
     return app.run();
 }

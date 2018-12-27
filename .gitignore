@@ -5,3 +5,5 @@ App/ScreenSpaceAmbientOcclusion/ScreenSpaceAmbientOcclusion
 *.a
 App/SSAOStylizedLineRendering/SSAOStylizedLineRendering
 App/SSAOStylizedLineRendering/SSAOStylizedLineRendering
+App/StochasticStylizedLineRendering/StochasticStylizedLineRendering
+App/StochasticTubeRendering/StochasticTubeRendering
