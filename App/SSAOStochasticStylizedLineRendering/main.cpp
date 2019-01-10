@@ -17,9 +17,8 @@
 #include <kvs/glut/Screen>
 
 #include <StochasticStreamline/Lib/StochasticStylizedLineRenderer.h>
-#include "SSAOStochasticStylizedLineRenderer.h"
-//typedef StochasticStreamline::StochasticStylizedLineRenderer Renderer;
-typedef local::SSAOStochasticStylizedLineRenderer Renderer;
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticStylizedLineRenderer.h>
+typedef AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer Renderer;
 
 class Slider : public kvs::Slider
 {
@@ -35,7 +34,7 @@ public:
 
 int main( int argc, char** argv )
 {
-    kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
+    kvs::ShaderSource::AddSearchPath("../../Lib");
 
     kvs::glut::Application app( argc, argv );
 
@@ -70,13 +69,11 @@ int main( int argc, char** argv )
     renderer->setShader( kvs::Shader::BlinnPhong() );
     renderer->setOpacity( 128 );
     renderer->setRepetitionLevel( 50 );
-//    renderer->setRepetitionLevel( 1 );
     renderer->setEnabledLODControl( true );
     renderer->enableShading();
 
     kvs::glut::Screen screen( &app );
     screen.registerObject( object, renderer );
-//    screen.setBackgroundColor( kvs::RGBColor::Black() );
     screen.setGeometry( 0, 0, 512, 512 );
     screen.setTitle( "StochasticStreamline::StochasticStylizedLineRenderer" );
     screen.show();
