@@ -256,9 +256,6 @@ inline void Draw()
         p2.loadIdentity();
         {
             kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
-            kvs::OpenGL::WithDisabled d1( GL_DEPTH_TEST );
-            kvs::OpenGL::WithDisabled d2( GL_LIGHTING );
-            kvs::OpenGL::WithEnabled e1( GL_TEXTURE_2D );
             {
                 kvs::OpenGL::Begin( GL_QUADS );
                 kvs::OpenGL::Color( kvs::Vec4::All( 1.0 ) );
@@ -347,41 +344,13 @@ void SSAOStochasticStylizedLineRenderer::Engine::setup( kvs::ObjectBase* object,
 
 void SSAOStochasticStylizedLineRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
-    kvs::LineObject* line = kvs::LineObject::DownCast( object );
-
-    this->render_geometry_pass( line );
     this->render_occlusion_pass();
-/*
-    kvs::VertexBufferObjectManager::Binder bind0( m_vbo_manager );
-    kvs::ProgramObject::Binder bind1( m_shader_program );
-    kvs::Texture::Binder unit0( m_shape_texture, 0 );
-    kvs::Texture::Binder unit1( m_diffuse_texture, 1 );
-    kvs::Texture::Binder unit2( randomTexture(), 2 );
-    {
-        kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
-        kvs::OpenGL::WithEnabled d( GL_DEPTH_TEST );
+}
 
-        const size_t size = randomTextureSize();
-        const int count = repetitionCount() * ::RandomNumber();
-        const float offset_x = static_cast<float>( ( count ) % size );
-        const float offset_y = static_cast<float>( ( count / size ) % size );
-        const kvs::Vec2 random_offset( offset_x, offset_y );
-        m_shader_program.setUniform( "random_offset", random_offset );
-
-        // Draw lines.
-        switch ( line->lineType() )
-        {
-        case kvs::LineObject::Polyline:
-            m_vbo_manager.drawArrays( GL_QUAD_STRIP, m_first_array, m_count_array );
-            break;
-        case kvs::LineObject::Strip:
-            m_vbo_manager.drawArrays( GL_QUAD_STRIP, 0, line->numberOfVertices() * 2 );
-            break;
-        default:
-            break;
-        }
-    }
-*/
+void SSAOStochasticStylizedLineRenderer::Engine::preDraw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+{
+    kvs::LineObject* line = kvs::LineObject::DownCast( object );
+    this->render_geometry_pass( line );
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::create_shader_program()
@@ -599,7 +568,6 @@ void SSAOStochasticStylizedLineRenderer::Engine::render_geometry_pass( const kvs
     kvs::FrameBufferObject::Binder bind0( m_framebuffer );
 
     // Initialize FBO.
-    kvs::OpenGL::SetClearColor( kvs::Vec4::All( 0.0f ) );
     kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Enable MRT rendering.
@@ -624,20 +592,6 @@ void SSAOStochasticStylizedLineRenderer::Engine::render_geometry_pass( const kvs
         const float offset_y = static_cast<float>( ( count / size ) % size );
         const kvs::Vec2 random_offset( offset_x, offset_y );
         m_shader_geom_pass.setUniform( "random_offset", random_offset );
-
-/*
-        const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
-        const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
-        const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-        m_shader_geom_pass.setUniform( "ModelViewMatrix", M );
-        m_shader_geom_pass.setUniform( "ProjectionMatrix", P );
-        m_shader_geom_pass.setUniform( "NormalMatrix", N );
-        m_shader_geom_pass.setUniform( "shape_texture", 0 );
-        m_shader_geom_pass.setUniform( "diffuse_texture", 1 );
-        m_shader_geom_pass.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-        m_shader_geom_pass.setUniform( "random_texture", 2 );
-        m_shader_geom_pass.setUniform( "opacity", m_line_opacity / 255.0f );
-*/
 
         // Draw lines.
         switch ( line->lineType() )
@@ -666,6 +620,9 @@ void SSAOStochasticStylizedLineRenderer::Engine::render_occlusion_pass()
     m_shader_occl_pass.setUniform( "normal_texture", 2 );
     m_shader_occl_pass.setUniform( "depth_texture", 3 );
     m_shader_occl_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
+
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::Enable( GL_TEXTURE_2D );
     ::Draw();
 }
 

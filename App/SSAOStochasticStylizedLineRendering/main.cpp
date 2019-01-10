@@ -70,12 +70,13 @@ int main( int argc, char** argv )
     renderer->setShader( kvs::Shader::BlinnPhong() );
     renderer->setOpacity( 128 );
     renderer->setRepetitionLevel( 50 );
+//    renderer->setRepetitionLevel( 1 );
     renderer->setEnabledLODControl( true );
-    renderer->enableShading();
     renderer->enableShading();
 
     kvs::glut::Screen screen( &app );
     screen.registerObject( object, renderer );
+//    screen.setBackgroundColor( kvs::RGBColor::Black() );
     screen.setGeometry( 0, 0, 512, 512 );
     screen.setTitle( "StochasticStreamline::StochasticStylizedLineRenderer" );
     screen.show();

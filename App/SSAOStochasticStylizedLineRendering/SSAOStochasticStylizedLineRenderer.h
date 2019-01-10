@@ -61,6 +61,7 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    void preDraw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
 public:
     void setOpacity( const kvs::UInt8 opacity ){ m_line_opacity = opacity; }

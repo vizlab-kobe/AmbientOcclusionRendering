@@ -42,12 +42,7 @@ float OcclusionFactor( vec4 position, int resolution )
 void main()
 {
     vec4 color = LookupTexture2D( color_texture, gl_TexCoord[0].st );
-    if ( color.a == 0.0 )
-    {
-        gl_FragColor = vec4( color.rgb, 0.0 );
-        discard;
-        return;
-    }
+    if ( color.a == 0.0 ) { discard; return; }
 
     vec4 position = LookupTexture2D( position_texture, gl_TexCoord[0].st );
     vec3 normal = LookupTexture2D( normal_texture, gl_TexCoord[0].st ).xyz;
@@ -80,4 +75,5 @@ void main()
 #endif
 
     gl_FragColor = vec4( shaded_color, 1.0 );
+    gl_FragDepth = LookupTexture2D( depth_texture, gl_TexCoord[0].st ).z;
 }
