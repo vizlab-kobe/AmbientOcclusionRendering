@@ -20,8 +20,9 @@
 //#include <StochasticStreamline/Lib/StochasticStylizedLineRenderer.h>
 //#include <AmbientOcclusionRendering/Lib/SSAOStochasticStylizedLineRenderer.h>
 //typedef AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer Renderer;
-#include "SSAOStochasticTubeRenderer.h"
-typedef local::SSAOStochasticTubeRenderer Renderer;
+//#include "SSAOStochasticTubeRenderer.h"
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
+typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer Renderer;
 
 #include <StochasticStreamline/Lib/Streamline.h>
 typedef StochasticStreamline::Streamline Streamline;
