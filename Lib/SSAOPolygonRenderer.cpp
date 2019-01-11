@@ -227,8 +227,8 @@ void SSAOPolygonRenderer::create_shader_program()
 
     // Build SSAO shader for occlusion-pass (2nd pass).
     {
-        kvs::ShaderSource vert( "SSAO_polygon_occl_pass.vert" );
-        kvs::ShaderSource frag( "SSAO_polygon_occl_pass.frag" );
+        kvs::ShaderSource vert( "SSAO_occl_pass.vert" );
+        kvs::ShaderSource frag( "SSAO_occl_pass.frag" );
 
         if ( isEnabledShading() )
         {

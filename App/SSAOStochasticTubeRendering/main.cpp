@@ -8,24 +8,19 @@
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/LineObject>
-#include <kvs/StylizedLineRenderer>
 #include <kvs/Streamline>
 #include <kvs/TornadoVolumeData>
 #include <kvs/ShaderSource>
 #include <kvs/Slider>
+#include <kvs/ScreenCaptureEvent>
 #include <kvs/glut/Application>
 #include <kvs/glut/Screen>
 #include <kvs/glut/TransferFunctionEditor>
-
-//#include <StochasticStreamline/Lib/StochasticStylizedLineRenderer.h>
-//#include <AmbientOcclusionRendering/Lib/SSAOStochasticStylizedLineRenderer.h>
-//typedef AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer Renderer;
-//#include "SSAOStochasticTubeRenderer.h"
-#include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
-typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer Renderer;
-
 #include <StochasticStreamline/Lib/Streamline.h>
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
+
 typedef StochasticStreamline::Streamline Streamline;
+typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer Renderer;
 
 class TransferFunctionEditor : public kvs::glut::TransferFunctionEditor
 {
@@ -48,6 +43,11 @@ int main( int argc, char** argv )
     kvs::ShaderSource::AddSearchPath("../../Lib");
 
     kvs::glut::Application app( argc, argv );
+    kvs::glut::Screen screen( &app );
+    screen.setBackgroundColor( kvs::RGBColor::White() );
+    screen.setGeometry( 0, 0, 512, 512 );
+    screen.setTitle( "SSAOStochasticTubeRenderer" );
+    screen.show();
 
     kvs::StructuredVolumeObject* volume = new kvs::TornadoVolumeData( kvs::Vec3u::All( 32 ) );
 
@@ -72,8 +72,6 @@ int main( int argc, char** argv )
 
     const kvs::TransferFunction transfer_function( 256 );
     kvs::LineObject* object = new Streamline( volume, point, transfer_function );
-
-//    delete volume;
     delete point;
 
     Renderer* renderer = new Renderer();
@@ -84,16 +82,15 @@ int main( int argc, char** argv )
     renderer->setEnabledLODControl( true );
     renderer->enableShading();
 
-    kvs::glut::Screen screen( &app );
     screen.registerObject( object, renderer );
-    screen.setGeometry( 0, 0, 512, 512 );
-    screen.setTitle( "SSAOStochasticTubeRenderer" );
-    screen.show();
 
     TransferFunctionEditor editor( &screen );
     editor.setTransferFunction( transfer_function );
     editor.setVolumeObject( volume );
     editor.show();
+
+    kvs::ScreenCaptureEvent event;
+    screen.addEvent( &event );
 
     return app.run();
 }

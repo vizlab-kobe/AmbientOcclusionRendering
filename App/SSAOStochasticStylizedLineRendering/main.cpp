@@ -8,16 +8,16 @@
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/LineObject>
-#include <kvs/StylizedLineRenderer>
 #include <kvs/Streamline>
 #include <kvs/TornadoVolumeData>
 #include <kvs/ShaderSource>
 #include <kvs/Slider>
+#include <kvs/ScreenCaptureEvent>
+#include <kvs/KeyPressEventListener>
 #include <kvs/glut/Application>
 #include <kvs/glut/Screen>
-
-#include <StochasticStreamline/Lib/StochasticStylizedLineRenderer.h>
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticStylizedLineRenderer.h>
+
 typedef AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer Renderer;
 
 class Slider : public kvs::Slider
@@ -32,11 +32,37 @@ public:
     }
 };
 
+class KeyEvent : public kvs::KeyPressEventListener
+{
+    Slider& m_slider;
+
+public:
+    KeyEvent( Slider& slider ): m_slider( slider ) {}
+
+    void update( kvs::KeyEvent* event )
+    {
+        switch ( event->key() )
+        {
+        case kvs::Key::i:
+            if ( m_slider.isShown() ) { m_slider.hide(); }
+            else { m_slider.show(); }
+            break;
+        default:
+            break;
+        }
+    }
+};
+
 int main( int argc, char** argv )
 {
     kvs::ShaderSource::AddSearchPath("../../Lib");
 
     kvs::glut::Application app( argc, argv );
+    kvs::glut::Screen screen( &app );
+    screen.setBackgroundColor( kvs::RGBColor::White() );
+    screen.setGeometry( 0, 0, 512, 512 );
+    screen.setTitle( "SSAOStochasticStylizedLineRenderer" );
+    screen.show();
 
     kvs::StructuredVolumeObject* volume = new kvs::TornadoVolumeData( kvs::Vec3u::All( 32 ) );
 
@@ -72,11 +98,7 @@ int main( int argc, char** argv )
     renderer->setEnabledLODControl( true );
     renderer->enableShading();
 
-    kvs::glut::Screen screen( &app );
     screen.registerObject( object, renderer );
-    screen.setGeometry( 0, 0, 512, 512 );
-    screen.setTitle( "StochasticStreamline::StochasticStylizedLineRenderer" );
-    screen.show();
 
     Slider slider( &screen );
     slider.setCaption( "Opacity" );
@@ -85,6 +107,12 @@ int main( int argc, char** argv )
     slider.setRange( 0, 1 );
     slider.setValue( 0.5 );
     slider.show();
+
+    kvs::ScreenCaptureEvent capture_event;
+    screen.addEvent( &capture_event );
+
+    KeyEvent key_event( slider );
+    screen.addEvent( &key_event );
 
     return app.run();
 }
