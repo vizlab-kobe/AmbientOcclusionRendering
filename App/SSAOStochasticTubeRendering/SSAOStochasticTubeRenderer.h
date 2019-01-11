@@ -25,7 +25,7 @@ public:
 
 public:
     SSAOStochasticTubeRenderer();
-    /*KVS_DEPRECATED*/ void setOpacity( const kvs::UInt8 opacity );
+    void setTransferFunction( const kvs::TransferFunction& tfunc );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
 };
@@ -33,7 +33,6 @@ public:
 class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine
 {
 private:
-    kvs::UInt8 m_line_opacity; ///< line opacity
     kvs::ValueArray<GLint> m_first_array; ///< array of starting indices for the polyline
     kvs::ValueArray<GLsizei> m_count_array; ///< array of the number of indices for the polyline
     kvs::Shader::ShadingModel* m_shader; ///< shading method
@@ -46,6 +45,10 @@ private:
     kvs::Texture2D m_shape_texture;
     kvs::Texture2D m_diffuse_texture;
     kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
+
+    bool m_tfunc_changed; ///< flag for changing transfer function
+    kvs::TransferFunction m_tfunc; ///< transfer function
+    kvs::Texture1D m_tfunc_texture; ///< transfer function texture
 
     // Variables for SSAO
     kvs::FrameBufferObject m_framebuffer;
@@ -64,7 +67,7 @@ public:
     void preDraw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
 public:
-    void setOpacity( const kvs::UInt8 opacity ){ m_line_opacity = opacity; }
+    void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
     void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
 
@@ -73,6 +76,7 @@ private:
     void create_buffer_object( const kvs::LineObject* line );
     void create_shape_texture();
     void create_diffuse_texture();
+    void create_transfer_function_texture();
     void create_framebuffer( const size_t width, const size_t height );
     void update_framebuffer( const size_t width, const size_t height );
     void render_geometry_pass( const kvs::LineObject* line );

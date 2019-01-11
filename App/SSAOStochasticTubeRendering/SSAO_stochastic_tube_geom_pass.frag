@@ -38,8 +38,6 @@ uniform sampler2D diffuse_texture;
 uniform sampler2D random_texture; // random texture to generate random number
 uniform float random_texture_size_inv; // reciprocal value of the random texture size
 uniform vec2 random_offset; // offset values for accessing to the random texture
-uniform float opacity; // opacity value
-
 
 /*===========================================================================*/
 /**
@@ -62,6 +60,7 @@ vec2 RandomIndex( in vec2 p )
 /*===========================================================================*/
 void main()
 {
+    float opacity = diffuse.a;
     if ( opacity == 0.0 ) { discard; return; }
 
     // Stochastic color assignment.

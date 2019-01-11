@@ -36,6 +36,18 @@ inline kvs::ValueArray<kvs::UInt16> RandomIndices( const kvs::LineObject* line, 
     return indices;
 }
 
+inline kvs::ValueArray<kvs::Real32> QuadVertexValues( const kvs::LineObject* line )
+{
+    const size_t nvertices = line->numberOfVertices();
+    kvs::ValueArray<kvs::Real32> values( nvertices * 2 );
+    for ( size_t i = 0; i < nvertices; i++ )
+    {
+        values[ 2 * i + 0 ] = line->sizes()[i];
+        values[ 2 * i + 1 ] = line->sizes()[i];
+    }
+    return values;
+}
+
 inline kvs::ValueArray<kvs::Real32> QuadVertexCoords( const kvs::LineObject* line )
 {
     const size_t nvertices = line->numberOfVertices();
@@ -279,9 +291,9 @@ SSAOStochasticTubeRenderer::SSAOStochasticTubeRenderer():
 {
 }
 
-void SSAOStochasticTubeRenderer::setOpacity( const kvs::UInt8 opacity )
+void SSAOStochasticTubeRenderer::setTransferFunction( const kvs::TransferFunction& tfunc )
 {
-    static_cast<Engine&>( engine() ).setOpacity( opacity );
+    static_cast<Engine&>( engine() ).setTransferFunction( tfunc );
 }
 
 void SSAOStochasticTubeRenderer::setRadiusSize( const kvs::Real32 size )
@@ -295,9 +307,9 @@ void SSAOStochasticTubeRenderer::setHaloSize( const kvs::Real32 size )
 }
 
 SSAOStochasticTubeRenderer::Engine::Engine():
-    m_line_opacity( 255 ),
     m_radius_size( 0.05f ),
-    m_halo_size( 0.0f )
+    m_halo_size( 0.0f ),
+    m_tfunc_changed( true )
 {
 }
 
@@ -306,6 +318,7 @@ void SSAOStochasticTubeRenderer::Engine::release()
     m_shader_geom_pass.release();
     m_shader_occl_pass.release();
     m_vbo_manager.release();
+    m_tfunc_changed = true;
 }
 
 void SSAOStochasticTubeRenderer::Engine::create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
@@ -317,6 +330,7 @@ void SSAOStochasticTubeRenderer::Engine::create( kvs::ObjectBase* object, kvs::C
     this->create_buffer_object( line );
     this->create_shape_texture();
     this->create_diffuse_texture();
+    this->create_transfer_function_texture();
     this->create_framebuffer( camera->windowWidth(), camera->windowHeight() );
 }
 
@@ -327,6 +341,12 @@ void SSAOStochasticTubeRenderer::Engine::update( kvs::ObjectBase* object, kvs::C
 
 void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
+    if ( m_tfunc_changed )
+    {
+        m_tfunc_texture.release();
+        this->create_transfer_function_texture();
+    }
+
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
     const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
@@ -338,7 +358,7 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
     m_shader_geom_pass.setUniform( "diffuse_texture", 1 );
     m_shader_geom_pass.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
     m_shader_geom_pass.setUniform( "random_texture", 2 );
-    m_shader_geom_pass.setUniform( "opacity", m_line_opacity / 255.0f );
+    m_shader_geom_pass.setUniform( "transfer_function_texture", 3 );
     m_shader_geom_pass.unbind();
 }
 
@@ -360,6 +380,31 @@ void SSAOStochasticTubeRenderer::Engine::create_shader_program()
         kvs::ShaderSource vert( "SSAO_stochastic_tube_geom_pass.vert" );
         kvs::ShaderSource frag( "SSAO_stochastic_tube_geom_pass.frag" );
         m_shader_geom_pass.build( vert, frag );
+
+        kvs::Real32 min_value = 0.0f;
+        kvs::Real32 max_value = 0.0f;
+        if ( m_tfunc.hasRange() )
+        {
+            min_value = m_tfunc.minValue();
+            max_value = m_tfunc.maxValue();
+        }
+        else
+        {
+            const kvs::LineObject* line = kvs::LineObject::DownCast( object() );
+            const kvs::ValueArray<kvs::Real32>& values = line->sizes();
+            min_value = values[0];
+            max_value = values[1];
+            for ( size_t i = 0; i < values.size(); i++ )
+            {
+                min_value = kvs::Math::Min( min_value, values[i] );
+                max_value = kvs::Math::Max( max_value, values[i] );
+            }
+        }
+
+        m_shader_geom_pass.bind();
+        m_shader_geom_pass.setUniform( "min_value", min_value );
+        m_shader_geom_pass.setUniform( "max_value", max_value );
+        m_shader_geom_pass.unbind();
     }
 
     // Build SSAO shader for occlusion-pass (2nd pass).
@@ -401,11 +446,13 @@ void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineOb
     }
 
     const kvs::ValueArray<kvs::UInt16> indices = ::RandomIndices( line, randomTextureSize() );
+    const kvs::ValueArray<kvs::Real32> values = ::QuadVertexValues( line );
     const kvs::ValueArray<kvs::Real32> coords = ::QuadVertexCoords( line );
     const kvs::ValueArray<kvs::UInt8> colors = ::QuadVertexColors( line );
     const kvs::ValueArray<kvs::Real32> normals = ::QuadVertexNormals( line );
     const kvs::ValueArray<kvs::Real32> texcoords = ::QuadVertexTexCoords( line, m_halo_size, m_radius_size );
     m_vbo_manager.setVertexAttribArray( indices, m_shader_geom_pass.attributeLocation("random_index"), 2 );
+    m_vbo_manager.setVertexAttribArray( values, m_shader_geom_pass.attributeLocation("value"), 1 );
     m_vbo_manager.setVertexArray( coords, 3 );
     m_vbo_manager.setColorArray( colors, 3 );
     m_vbo_manager.setNormalArray( normals );
@@ -506,6 +553,18 @@ void SSAOStochasticTubeRenderer::Engine::create_diffuse_texture()
     m_diffuse_texture.create( 1, 1, diffuse.data() );
 }
 
+void SSAOStochasticTubeRenderer::Engine::create_transfer_function_texture()
+{
+    const size_t width = m_tfunc.resolution();
+    const kvs::ValueArray<kvs::Real32> table = m_tfunc.table();
+    m_tfunc_texture.setWrapS( GL_CLAMP_TO_EDGE );
+    m_tfunc_texture.setMagFilter( GL_LINEAR );
+    m_tfunc_texture.setMinFilter( GL_LINEAR );
+    m_tfunc_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT  );
+    m_tfunc_texture.create( width, table.data() );
+    m_tfunc_changed = false;
+}
+
 void SSAOStochasticTubeRenderer::Engine::create_framebuffer( const size_t width, const size_t height )
 {
     m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
@@ -582,6 +641,7 @@ void SSAOStochasticTubeRenderer::Engine::render_geometry_pass( const kvs::LineOb
     kvs::Texture::Binder unit0( m_shape_texture, 0 );
     kvs::Texture::Binder unit1( m_diffuse_texture, 1 );
     kvs::Texture::Binder unit2( randomTexture(), 2 );
+    kvs::Texture::Binder unit3( m_tfunc_texture, 3 );
     {
         kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
         kvs::OpenGL::WithEnabled d( GL_DEPTH_TEST );

@@ -14,9 +14,11 @@
 /*****************************************************************************/
 #version 120
 #include "qualifire.h"
+#include "texture.h"
 
 // Input parameters.
 VertIn vec2 random_index; // index for accessing to the random texture
+VertIn float value; // normalized scalar value for the vertex
 
 // Output parameters to fragment shader.
 VertOut vec3 position;
@@ -35,7 +37,9 @@ VertOut vec2 index; // index for accessing to the random texture
 uniform mat4 ModelViewMatrix; // model-view matrix
 uniform mat4 ProjectionMatrix; // projection matrix
 uniform mat3 NormalMatrix; // normal matrix
-
+uniform sampler1D transfer_function_texture; // transfer function texture
+uniform float min_value;
+uniform float max_value;
 
 /*===========================================================================*/
 /**
@@ -58,7 +62,10 @@ void main()
     p.xyz += side_vec * gl_MultiTexCoord0.x;
     gl_Position = ProjectionMatrix * p;
 
-    diffuse = gl_Color;
+    float tfunc_index = ( value - min_value ) / ( max_value - min_value );
+    gl_FrontColor = LookupTexture1D( transfer_function_texture, tfunc_index );
+
+    diffuse = gl_FrontColor;
     coord = gl_MultiTexCoord0.xzy;
     depth0 = gl_Position.zw;
 
