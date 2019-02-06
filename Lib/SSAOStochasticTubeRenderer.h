@@ -56,6 +56,8 @@ private:
     kvs::Texture2D m_position_texture;
     kvs::Texture2D m_normal_texture;
     kvs::Texture2D m_depth_texture;
+    float m_sampling_sphere_radius;
+    size_t m_nsamples;
 
 public:
     Engine();
@@ -70,6 +72,8 @@ public:
     void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
     void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
+    void setSamplingSphereRadius( const float radius ) { m_sampling_sphere_radius = radius; }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
 
 private:
     void create_shader_program();
@@ -78,6 +82,7 @@ private:
     void create_diffuse_texture();
     void create_transfer_function_texture();
     void create_framebuffer( const size_t width, const size_t height );
+    void create_sampling_points();
     void update_framebuffer( const size_t width, const size_t height );
     void render_geometry_pass( const kvs::LineObject* line );
     void render_occlusion_pass();

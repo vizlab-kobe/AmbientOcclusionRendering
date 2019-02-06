@@ -1,4 +1,5 @@
 #include "SSAOStochasticStylizedLineRenderer.h"
+#include "SSAOPointSampling.h"
 #include <kvs/OpenGL>
 #include <kvs/ProgramObject>
 #include <kvs/ShaderSource>
@@ -297,7 +298,9 @@ void SSAOStochasticStylizedLineRenderer::setHaloSize( const kvs::Real32 size )
 SSAOStochasticStylizedLineRenderer::Engine::Engine():
     m_line_opacity( 255 ),
     m_radius_size( 0.05f ),
-    m_halo_size( 0.0f )
+    m_halo_size( 0.0f ),
+    m_sampling_sphere_radius( 0.5f ),
+    m_nsamples( 256 )
 {
 }
 
@@ -318,6 +321,7 @@ void SSAOStochasticStylizedLineRenderer::Engine::create( kvs::ObjectBase* object
     this->create_shape_texture();
     this->create_diffuse_texture();
     this->create_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    this->create_sampling_points();
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
@@ -541,6 +545,17 @@ void SSAOStochasticStylizedLineRenderer::Engine::create_framebuffer( const size_
     m_framebuffer.attachColorTexture( m_position_texture, 1 );
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
+}
+
+void SSAOStochasticStylizedLineRenderer::Engine::create_sampling_points()
+{
+    const size_t nsamples = m_nsamples;
+    const float radius = m_sampling_sphere_radius;
+    const size_t dim = 3;
+    const kvs::ValueArray<GLfloat> sampling_points = AmbientOcclusionRendering::SSAOPointSampling( radius, nsamples );
+    m_shader_occl_pass.bind();
+    m_shader_occl_pass.setUniform( "sampling_points", sampling_points, dim );
+    m_shader_occl_pass.unbind();
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::update_framebuffer( const size_t width, const size_t height )

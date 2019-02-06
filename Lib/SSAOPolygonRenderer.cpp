@@ -13,6 +13,7 @@
  */
 /*****************************************************************************/
 #include "SSAOPolygonRenderer.h"
+#include "SSAOPointSampling.h"
 #include <kvs/OpenGL>
 #include <kvs/ProgramObject>
 #include <kvs/ShaderSource>
@@ -137,7 +138,9 @@ SSAOPolygonRenderer::SSAOPolygonRenderer():
     m_object( NULL ),
     m_has_normal( false ),
     m_has_connection( false ),
-    m_shader( NULL )
+    m_shader( NULL ),
+    m_sampling_sphere_radius( 0.5f ),
+    m_nsamples( 256 )
 {
     this->setShader( kvs::Shader::Lambert() );
 }
@@ -182,6 +185,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
         this->create_shader_program();
         this->create_buffer_object( polygon );
         this->create_framebuffer( m_width, m_height );
+        this->create_sampling_points();
     }
 
     const bool window_resized = m_width != width || m_height != height;
@@ -322,6 +326,17 @@ void SSAOPolygonRenderer::create_framebuffer( const size_t width, const size_t h
     m_framebuffer.attachColorTexture( m_position_texture, 1 );
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
+}
+
+void SSAOPolygonRenderer::create_sampling_points()
+{
+    const size_t nsamples = m_nsamples;
+    const float radius = m_sampling_sphere_radius;
+    const size_t dim = 3;
+    const kvs::ValueArray<GLfloat> sampling_points = AmbientOcclusionRendering::SSAOPointSampling( radius, nsamples );
+    m_shader_occl_pass.bind();
+    m_shader_occl_pass.setUniform( "sampling_points", sampling_points, dim );
+    m_shader_occl_pass.unbind();
 }
 
 void SSAOPolygonRenderer::update_framebuffer( const size_t width, const size_t height )

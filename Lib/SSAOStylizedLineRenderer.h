@@ -42,6 +42,8 @@ private:
     kvs::Texture2D m_position_texture;
     kvs::Texture2D m_normal_texture;
     kvs::Texture2D m_depth_texture;
+    float m_sampling_sphere_radius;
+    size_t m_nsamples;
 
 public:
     SSAOStylizedLineRenderer();
@@ -49,16 +51,19 @@ public:
 
     void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
-    void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
-    void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
     template <typename ShadingType>
     void setShader( const ShadingType shader );
+    void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
+    void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
+    void setSamplingSphereRadius( const float radius ) { m_sampling_sphere_radius = radius; }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
 
 private:
     void create_shader_program();
     void create_buffer_object( const kvs::LineObject* line );
     void create_shape_texture();
     void create_diffuse_texture();
+    void create_sampling_points();
     void create_framebuffer( const size_t width, const size_t height );
     void update_framebuffer( const size_t width, const size_t height );
     void render_geometry_pass( const kvs::LineObject* line );

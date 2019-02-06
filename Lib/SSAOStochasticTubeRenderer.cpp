@@ -1,4 +1,5 @@
 #include "SSAOStochasticTubeRenderer.h"
+#include "SSAOPointSampling.h"
 #include <kvs/OpenGL>
 #include <kvs/ProgramObject>
 #include <kvs/ShaderSource>
@@ -309,7 +310,9 @@ void SSAOStochasticTubeRenderer::setHaloSize( const kvs::Real32 size )
 SSAOStochasticTubeRenderer::Engine::Engine():
     m_radius_size( 0.05f ),
     m_halo_size( 0.0f ),
-    m_tfunc_changed( true )
+    m_tfunc_changed( true ),
+    m_sampling_sphere_radius( 0.5f ),
+    m_nsamples( 256 )
 {
 }
 
@@ -332,6 +335,7 @@ void SSAOStochasticTubeRenderer::Engine::create( kvs::ObjectBase* object, kvs::C
     this->create_diffuse_texture();
     this->create_transfer_function_texture();
     this->create_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    this->create_sampling_points();
 }
 
 void SSAOStochasticTubeRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
@@ -600,6 +604,17 @@ void SSAOStochasticTubeRenderer::Engine::create_framebuffer( const size_t width,
     m_framebuffer.attachColorTexture( m_position_texture, 1 );
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
+}
+
+void SSAOStochasticTubeRenderer::Engine::create_sampling_points()
+{
+    const size_t nsamples = m_nsamples;
+    const float radius = m_sampling_sphere_radius;
+    const size_t dim = 3;
+    const kvs::ValueArray<GLfloat> sampling_points = AmbientOcclusionRendering::SSAOPointSampling( radius, nsamples );
+    m_shader_occl_pass.bind();
+    m_shader_occl_pass.setUniform( "sampling_points", sampling_points, dim );
+    m_shader_occl_pass.unbind();
 }
 
 void SSAOStochasticTubeRenderer::Engine::update_framebuffer( const size_t width, const size_t height )

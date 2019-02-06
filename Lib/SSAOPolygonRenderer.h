@@ -49,6 +49,8 @@ private:
     kvs::Texture2D m_position_texture;
     kvs::Texture2D m_normal_texture;
     kvs::Texture2D m_depth_texture;
+    float m_sampling_sphere_radius;
+    size_t m_nsamples;
 
 public:
     SSAOPolygonRenderer();
@@ -58,11 +60,14 @@ public:
 
     template <typename ShadingType>
     void setShader( const ShadingType shader );
+    void setSamplingSphereRadius( const float radius ) { m_sampling_sphere_radius = radius; }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
 
 private:
     void create_shader_program();
     void create_buffer_object( const kvs::PolygonObject* point );
     void create_framebuffer( const size_t width, const size_t height );
+    void create_sampling_points();
     void update_framebuffer( const size_t width, const size_t height );
     void render_geometry_pass( const kvs::PolygonObject* polygon );
     void render_occlusion_pass();
