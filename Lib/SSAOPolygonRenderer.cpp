@@ -19,6 +19,7 @@
 #include <kvs/ShaderSource>
 #include <kvs/VertexShader>
 #include <kvs/FragmentShader>
+#include <kvs/String>
 
 
 namespace
@@ -248,6 +249,8 @@ void SSAOPolygonRenderer::create_shader_program()
             {
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
+
+            frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
         }
 
         m_shader_occl_pass.build( vert, frag );

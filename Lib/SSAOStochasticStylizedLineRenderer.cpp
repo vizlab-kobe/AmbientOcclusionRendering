@@ -6,6 +6,7 @@
 #include <kvs/VertexShader>
 #include <kvs/FragmentShader>
 #include <kvs/Xorshift128>
+#include <kvs/String>
 
 
 namespace
@@ -295,6 +296,16 @@ void SSAOStochasticStylizedLineRenderer::setHaloSize( const kvs::Real32 size )
     static_cast<Engine&>( engine() ).setHaloSize( size );
 }
 
+void SSAOStochasticStylizedLineRenderer::setSamplingSphereRadius( const float radius )
+{
+    static_cast<Engine&>( engine() ).setSamplingSphereRadius( radius );
+}
+
+void SSAOStochasticStylizedLineRenderer::setNumberOfSamplingPoints( const size_t nsamples )
+{
+    static_cast<Engine&>( engine() ).setNumberOfSamplingPoints( nsamples );
+}
+
 SSAOStochasticStylizedLineRenderer::Engine::Engine():
     m_line_opacity( 255 ),
     m_radius_size( 0.05f ),
@@ -384,6 +395,8 @@ void SSAOStochasticStylizedLineRenderer::Engine::create_shader_program()
             {
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
+
+            frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
         }
 
         m_shader_occl_pass.build( vert, frag );

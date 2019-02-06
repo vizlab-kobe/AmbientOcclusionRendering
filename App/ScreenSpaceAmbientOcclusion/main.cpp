@@ -18,6 +18,7 @@ int main( int argc, char** argv )
 
     kvs::glut::Application app( argc, argv );
     kvs::glut::Screen screen( &app );
+    screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "Screen Space Ambient Occlusion" );
     screen.show();
 
@@ -33,6 +34,8 @@ int main( int argc, char** argv )
 
     typedef AmbientOcclusionRendering::SSAOPolygonRenderer Renderer;
     Renderer* renderer = new Renderer();
+    renderer->setNumberOfSamplingPoints( 256 );
+    renderer->setSamplingSphereRadius( 0.5 );
 
     screen.registerObject( polygon, renderer );
 

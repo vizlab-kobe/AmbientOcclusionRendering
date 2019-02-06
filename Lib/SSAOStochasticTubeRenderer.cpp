@@ -6,6 +6,7 @@
 #include <kvs/VertexShader>
 #include <kvs/FragmentShader>
 #include <kvs/Xorshift128>
+#include <kvs/String>
 
 
 namespace
@@ -307,6 +308,16 @@ void SSAOStochasticTubeRenderer::setHaloSize( const kvs::Real32 size )
     static_cast<Engine&>( engine() ).setHaloSize( size );
 }
 
+void SSAOStochasticTubeRenderer::setSamplingSphereRadius( const float radius )
+{
+    static_cast<Engine&>( engine() ).setSamplingSphereRadius( radius );
+}
+
+void SSAOStochasticTubeRenderer::setNumberOfSamplingPoints( const size_t nsamples )
+{
+    static_cast<Engine&>( engine() ).setNumberOfSamplingPoints( nsamples );
+}
+
 SSAOStochasticTubeRenderer::Engine::Engine():
     m_radius_size( 0.05f ),
     m_halo_size( 0.0f ),
@@ -429,6 +440,8 @@ void SSAOStochasticTubeRenderer::Engine::create_shader_program()
             {
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
+
+            frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
         }
 
         m_shader_occl_pass.build( vert, frag );

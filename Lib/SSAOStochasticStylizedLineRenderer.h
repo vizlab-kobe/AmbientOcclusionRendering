@@ -28,6 +28,8 @@ public:
     /*KVS_DEPRECATED*/ void setOpacity( const kvs::UInt8 opacity );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
+    void setSamplingSphereRadius( const float radius );
+    void setNumberOfSamplingPoints( const size_t nsamples );
 };
 
 class SSAOStochasticStylizedLineRenderer::Engine : public kvs::StochasticRenderingEngine

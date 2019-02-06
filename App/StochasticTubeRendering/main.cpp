@@ -82,9 +82,10 @@ int main( int argc, char** argv )
     renderer->enableShading();
 
     kvs::glut::Screen screen( &app );
-    screen.registerObject( object, renderer );
+    screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setGeometry( 0, 0, 512, 512 );
     screen.setTitle( "StochasticStreamline::StochasticTubeRenderer" );
+    screen.registerObject( object, renderer );
     screen.show();
 
     TransferFunctionEditor editor( &screen );

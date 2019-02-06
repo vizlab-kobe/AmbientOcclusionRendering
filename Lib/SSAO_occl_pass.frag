@@ -2,15 +2,14 @@
 #include "shading.h"
 #include "texture.h"
 
-// Constant variables
-const int MAX_NSAMPLES = 256;
+// NUMBER_OF_SAMPLING_POINTS is set from SSAO renderer.
 
 // Uniform parameters.
 uniform sampler2D color_texture;
 uniform sampler2D position_texture;
 uniform sampler2D normal_texture;
 uniform sampler2D depth_texture;
-uniform vec3 sampling_points[MAX_NSAMPLES];
+uniform vec3 sampling_points[ NUMBER_OF_SAMPLING_POINTS ];
 uniform ShadingParameter shading;
 
 // Uniform variables (OpenGL variables).
@@ -78,7 +77,7 @@ void main()
     // Ambient occlusion.
 //    int resolution = 3;
 //    float occlusion = OcclusionFactor( position, resolution );
-    int nsamples = 256;
+    int nsamples = NUMBER_OF_SAMPLING_POINTS;
     float occlusion = OcclusionFactor( position, nsamples );
 
     // Shading.

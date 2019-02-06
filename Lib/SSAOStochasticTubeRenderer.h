@@ -28,6 +28,8 @@ public:
     void setTransferFunction( const kvs::TransferFunction& tfunc );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
+    void setSamplingSphereRadius( const float radius );
+    void setNumberOfSamplingPoints( const size_t nsamples );
 };
 
 class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine

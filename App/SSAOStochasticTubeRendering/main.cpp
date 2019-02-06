@@ -76,6 +76,8 @@ int main( int argc, char** argv )
 
     Renderer* renderer = new Renderer();
     renderer->setName( "Renderer" );
+    renderer->setNumberOfSamplingPoints( 256 );
+    renderer->setSamplingSphereRadius( 0.5 );
     renderer->setTransferFunction( transfer_function );
     renderer->setShader( kvs::Shader::BlinnPhong() );
     renderer->setRepetitionLevel( 50 );

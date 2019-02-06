@@ -92,6 +92,8 @@ int main( int argc, char** argv )
     delete point;
 
     Renderer* renderer = new Renderer();
+    renderer->setNumberOfSamplingPoints( 256 );
+    renderer->setSamplingSphereRadius( 0.5 );
     renderer->setShader( kvs::Shader::BlinnPhong() );
     renderer->setOpacity( 128 );
     renderer->setRepetitionLevel( 50 );
