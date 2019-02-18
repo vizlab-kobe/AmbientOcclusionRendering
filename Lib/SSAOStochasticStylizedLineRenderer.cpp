@@ -306,6 +306,31 @@ void SSAOStochasticStylizedLineRenderer::setNumberOfSamplingPoints( const size_t
     static_cast<Engine&>( engine() ).setNumberOfSamplingPoints( nsamples );
 }
 
+kvs::UInt8 SSAOStochasticStylizedLineRenderer::opacity() const
+{
+    return static_cast<const Engine&>( engine() ).opacity();
+}
+
+kvs::Real32 SSAOStochasticStylizedLineRenderer::radiusSize() const
+{
+    return static_cast<const Engine&>( engine() ).radiusSize();
+}
+
+kvs::Real32 SSAOStochasticStylizedLineRenderer::haloSize() const
+{
+    return static_cast<const Engine&>( engine() ).haloSize();
+}
+
+kvs::Real32 SSAOStochasticStylizedLineRenderer::samplingSphereRadius()
+{
+    return static_cast<const Engine&>( engine() ).samplingSphereRadius();
+}
+
+size_t SSAOStochasticStylizedLineRenderer::numberOfSamplingPoints()
+{
+    return static_cast<const Engine&>( engine() ).numberOfSamplingPoints();
+}
+
 SSAOStochasticStylizedLineRenderer::Engine::Engine():
     m_line_opacity( 255 ),
     m_radius_size( 0.05f ),

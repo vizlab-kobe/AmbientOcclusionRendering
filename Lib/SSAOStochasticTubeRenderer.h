@@ -30,6 +30,11 @@ public:
     void setHaloSize( const kvs::Real32 size );
     void setSamplingSphereRadius( const float radius );
     void setNumberOfSamplingPoints( const size_t nsamples );
+    const kvs::TransferFunction& transferFunction() const;
+    kvs::Real32 radiusSize() const;
+    kvs::Real32 haloSize() const;
+    kvs::Real32 samplingSphereRadius() const;
+    size_t numberOfSamplingPoints() const;
 };
 
 class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine
@@ -58,7 +63,7 @@ private:
     kvs::Texture2D m_position_texture;
     kvs::Texture2D m_normal_texture;
     kvs::Texture2D m_depth_texture;
-    float m_sampling_sphere_radius;
+    kvs::Real32 m_sampling_sphere_radius;
     size_t m_nsamples;
 
 public:
@@ -74,8 +79,13 @@ public:
     void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
     void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
-    void setSamplingSphereRadius( const float radius ) { m_sampling_sphere_radius = radius; }
+    void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
+    const kvs::TransferFunction& transferFunction() const { return m_tfunc; }
+    kvs::Real32 radiusSize() const { return m_radius_size; }
+    kvs::Real32 haloSize() const { return m_halo_size; }
+    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
+    size_t numberOfSamplingPoints() const { return m_nsamples; }
 
 private:
     void create_shader_program();

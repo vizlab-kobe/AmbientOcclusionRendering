@@ -30,6 +30,11 @@ public:
     void setHaloSize( const kvs::Real32 size );
     void setSamplingSphereRadius( const float radius );
     void setNumberOfSamplingPoints( const size_t nsamples );
+    /*KVS_DEPRECATED*/ kvs::UInt8 opacity() const;
+    kvs::Real32 radiusSize() const;
+    kvs::Real32 haloSize() const;
+    kvs::Real32 samplingSphereRadius();
+    size_t numberOfSamplingPoints();
 };
 
 class SSAOStochasticStylizedLineRenderer::Engine : public kvs::StochasticRenderingEngine
@@ -55,7 +60,7 @@ private:
     kvs::Texture2D m_position_texture;
     kvs::Texture2D m_normal_texture;
     kvs::Texture2D m_depth_texture;
-    float m_sampling_sphere_radius;
+    kvs::Real32 m_sampling_sphere_radius;
     size_t m_nsamples;
 
 public:
@@ -71,8 +76,13 @@ public:
     void setOpacity( const kvs::UInt8 opacity ){ m_line_opacity = opacity; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
     void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
-    void setSamplingSphereRadius( const float radius ) { m_sampling_sphere_radius = radius; }
+    void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
+    kvs::UInt8 opacity() const { return m_line_opacity; }
+    kvs::Real32 radiusSize() const { return m_radius_size; }
+    kvs::Real32 haloSize() const { return m_halo_size; }
+    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
+    size_t numberOfSamplingPoints() const { return m_nsamples; }
 
 private:
     void create_shader_program();

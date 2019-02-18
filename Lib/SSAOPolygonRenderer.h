@@ -62,6 +62,8 @@ public:
     void setShader( const ShadingType shader );
     void setSamplingSphereRadius( const float radius ) { m_sampling_sphere_radius = radius; }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
+    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
+    size_t numberOfSamplingPoints() const { return m_nsamples; }
 
 private:
     void create_shader_program();

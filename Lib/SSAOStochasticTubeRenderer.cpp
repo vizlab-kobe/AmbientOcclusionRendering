@@ -318,6 +318,31 @@ void SSAOStochasticTubeRenderer::setNumberOfSamplingPoints( const size_t nsample
     static_cast<Engine&>( engine() ).setNumberOfSamplingPoints( nsamples );
 }
 
+const kvs::TransferFunction& SSAOStochasticTubeRenderer::transferFunction() const
+{
+    return static_cast<const Engine&>( engine() ).transferFunction();
+}
+
+kvs::Real32 SSAOStochasticTubeRenderer::radiusSize() const
+{
+    return static_cast<const Engine&>( engine() ).radiusSize();
+}
+
+kvs::Real32 SSAOStochasticTubeRenderer::haloSize() const
+{
+    return static_cast<const Engine&>( engine() ).haloSize();
+}
+
+kvs::Real32 SSAOStochasticTubeRenderer::samplingSphereRadius() const
+{
+    return static_cast<const Engine&>( engine() ).samplingSphereRadius();
+}
+
+size_t SSAOStochasticTubeRenderer::numberOfSamplingPoints() const
+{
+    return static_cast<const Engine&>( engine() ).numberOfSamplingPoints();
+}
+
 SSAOStochasticTubeRenderer::Engine::Engine():
     m_radius_size( 0.05f ),
     m_halo_size( 0.0f ),
