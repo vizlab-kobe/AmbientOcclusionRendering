@@ -20,6 +20,20 @@ size_t SamplingPoints = 256;
 namespace
 {
 
+inline kvs::PolygonObject* ImportPolygonObject( const std::string filename )
+{
+    kvs::PolygonObject* polygon = new kvs::PolygonImporter( filename );
+    const size_t nvertices = polygon->numberOfVertices();
+    const size_t npolygons = polygon->numberOfConnections();
+    if ( npolygons > 0 && nvertices != 3 * npolygons )
+    {
+        kvs::PolygonObject* temp = new AmbientOcclusionRendering::PolygonToPolygon( polygon );
+        delete polygon;
+        polygon = temp;
+    }
+    return polygon;
+}
+
 inline kvs::RendererBase* CreateRenderer( const bool ssao )
 {
     if ( ssao )
@@ -183,16 +197,8 @@ int main( int argc, char** argv )
     const bool ssao = true;
 
     // Visualization pipeline.
-    kvs::PolygonObject* polygon = new kvs::PolygonImporter( filename );
-    const size_t nvertices = polygon->numberOfVertices();
-    const size_t npolygons = polygon->numberOfConnections();
-    if ( npolygons > 0 && nvertices != 3 * npolygons )
-    {
-        kvs::PolygonObject* temp = new AmbientOcclusionRendering::PolygonToPolygon( polygon );
-        delete polygon;
-        polygon = temp;
-    }
-    screen.registerObject( polygon, ::CreateRenderer( ssao ) );
+    kvs::PolygonObject* object = ::ImportPolygonObject( filename );
+    screen.registerObject( object, ::CreateRenderer( ssao ) );
 
     // Widgets.
     SSAOCheckBox ssao_check_box( &screen );
