@@ -11,3 +11,4 @@ App/SSAOStochasticStylizedLineRendering/SSAOStochasticStylizedLineRendering
 App/SSAOStochasticTubeRendering/SSAOStochasticTubeRendering
 .DS_Store
 App/MHDStreamLine/MHDStreamLine
+App/SSAOPolygonRendering/SSAOPolygonRendering
