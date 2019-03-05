@@ -404,13 +404,8 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
 
 void SSAOStochasticTubeRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
+    this->render_geometry_pass( kvs::LineObject::DownCast( object ) );
     this->render_occlusion_pass();
-}
-
-void SSAOStochasticTubeRenderer::Engine::preDraw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
-{
-    kvs::LineObject* line = kvs::LineObject::DownCast( object );
-    this->render_geometry_pass( line );
 }
 
 void SSAOStochasticTubeRenderer::Engine::create_shader_program()
@@ -677,7 +672,7 @@ void SSAOStochasticTubeRenderer::Engine::update_framebuffer( const size_t width,
 
 void SSAOStochasticTubeRenderer::Engine::render_geometry_pass( const kvs::LineObject* line )
 {
-    kvs::FrameBufferObject::Binder bind0( m_framebuffer );
+    kvs::FrameBufferObject::GuardedBinder bind0( m_framebuffer );
 
     // Initialize FBO.
     kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
