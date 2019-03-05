@@ -68,6 +68,7 @@ bool Input::parse()
 
 void Input::print( std::ostream& os, const kvs::Indent& indent ) const
 {
+    os << indent << "Input file: " << filename << std::endl;
     os << indent << "SSAO: " << std::boolalpha << ssao << std::endl;
     os << indent << "LoD: " << std::boolalpha << lod << std::endl;
     os << indent << "Scale: " << scale << std::endl;
@@ -77,7 +78,6 @@ void Input::print( std::ostream& os, const kvs::Indent& indent ) const
     os << indent << "Stride: " << stride << std::endl;
     os << indent << "Sampling radius: " << radius << std::endl;
     os << indent << "Sampling points: " << points << std::endl;
-    os << indent << "Input file: " << filename << std::endl;
 }
 
 } // end of namespace local
