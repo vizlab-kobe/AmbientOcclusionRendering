@@ -16,3 +16,4 @@ Test/SSAOPolygonRendering/SSAOPolygonRendering
 Test/SSAOStochasticStylizedLineRendering/SSAOStochasticStylizedLineRendering
 Test/SSAOStochasticTubeRendering/SSAOStochasticTubeRendering
 Test/SSAOStylizedLineRendering/SSAOStylizedLineRendering
+App/MHDStreamLine/MHDStreamLine

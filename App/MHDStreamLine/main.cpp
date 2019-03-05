@@ -20,6 +20,8 @@
 #include <StochasticStreamline/Lib/Streamline.h>
 #include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
+typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer SSAORenderer;
+typedef StochasticStreamline::StochasticTubeRenderer NoSSAORenderer;
 
 
 namespace
@@ -157,8 +159,7 @@ public:
     {
         if ( state() )
         {
-            typedef StochasticStreamline::StochasticTubeRenderer Renderer;
-            const Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            const NoSSAORenderer* renderer = NoSSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             if ( renderer )
             {
                 const size_t repeats = renderer->repetitionLevel();
@@ -168,8 +169,7 @@ public:
         }
         else
         {
-            typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer Renderer;
-            const Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            const SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             if ( renderer )
             {
                 const size_t repeats = renderer->repetitionLevel();
@@ -192,18 +192,15 @@ public:
 
     void stateChanged()
     {
-        typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer SSAORenderer;
         const bool ssao = ( SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) ) != NULL );
         if ( ssao )
         {
-            typedef SSAORenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             renderer->setEnabledLODControl( state() );
         }
         else
         {
-            typedef StochasticStreamline::StochasticTubeRenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            NoSSAORenderer* renderer = NoSSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             renderer->setEnabledLODControl( state() );
         }
     }
@@ -226,18 +223,15 @@ public:
 
     void sliderReleased()
     {
-        typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer SSAORenderer;
         const bool ssao = ( SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) ) != NULL );
         if ( ssao )
         {
-            typedef SSAORenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( size_t( value() ) );
         }
         else
         {
-            typedef StochasticStreamline::StochasticTubeRenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            NoSSAORenderer* renderer = NoSSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( size_t( value() ) );
         }
     }
@@ -261,12 +255,10 @@ public:
 
     void sliderReleased()
     {
-        typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer SSAORenderer;
         const bool ssao = ( SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) ) != NULL );
         if ( ssao )
         {
-            typedef SSAORenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             const size_t repeats = renderer->repetitionLevel();
             const kvs::TransferFunction& tfunc = renderer->transferFunction();
             m_scene->replaceRenderer( "Renderer", ::CreateRenderer( repeats, tfunc, true ) );
@@ -299,12 +291,10 @@ public:
 
     void sliderReleased()
     {
-        typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer SSAORenderer;
         const bool ssao = ( SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) ) != NULL );
         if ( ssao )
         {
-            typedef SSAORenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
+            SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
             const size_t repeats = renderer->repetitionLevel();
             const kvs::TransferFunction& tfunc = renderer->transferFunction();
             m_scene->replaceRenderer( "Renderer", ::CreateRenderer( repeats, tfunc, true ) );
@@ -325,18 +315,15 @@ public:
     void apply()
     {
         kvs::Scene* scene = static_cast<kvs::glut::Screen*>( screen() )->scene();
-        typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer SSAORenderer;
         const bool ssao = ( SSAORenderer::DownCast( scene->renderer( "Renderer" ) ) != NULL );
         if ( ssao )
         {
-            typedef SSAORenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( scene->renderer( "Renderer" ) );
+            SSAORenderer* renderer = SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setTransferFunction( transferFunction() );
         }
         else
         {
-            typedef StochasticStreamline::StochasticTubeRenderer Renderer;
-            Renderer* renderer = Renderer::DownCast( scene->renderer( "Renderer" ) );
+            NoSSAORenderer* renderer = NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setTransferFunction( transferFunction() );
         }
         m_cmap_bar->setColorMap( colorMap() );
