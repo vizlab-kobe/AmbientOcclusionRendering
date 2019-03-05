@@ -15,6 +15,7 @@
 #include <kvs/ScreenCaptureEvent>
 #include <kvs/TargetChangeEvent>
 #include <kvs/KeyPressEventListener>
+#include "Input.h"
 
 // Stochastic renderers.
 #include <StochasticStreamline/Lib/Streamline.h>
@@ -26,38 +27,27 @@ typedef StochasticStreamline::StochasticTubeRenderer NoSSAORenderer;
 
 namespace
 {
-float SamplingRadius = 0.5f;
-size_t SamplingPoints = 256;
-}
 
-namespace
+inline kvs::StructuredVolumeObject* Import( const local::Input& input )
 {
-
-inline kvs::StructuredVolumeObject* ImportVolumeObject(
-    const std::string& filename,
-    const float scale )
-{
-    kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( filename );
+    kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( input.filename );
 
     kvs::ValueArray<float> values = volume->values().asValueArray<float>();
-    for ( size_t i = 0; i < values.size(); i++ ) { values[i] *= scale; }
+    for ( size_t i = 0; i < values.size(); i++ ) { values[i] *= input.scale; }
     volume->setValues( values );
     volume->updateMinMaxValues();
 
     return volume;
 }
 
-inline kvs::PointObject* GenerateSeedPoints(
-    const kvs::Vec3i min_coord,
-    const kvs::Vec3i max_coord,
-    const kvs::Vec3i stride )
+inline kvs::LineObject* Streamline( const local::Input& input, const kvs::StructuredVolumeObject* volume )
 {
     std::vector<kvs::Real32> v;
-    for ( int k = min_coord.z(); k < max_coord.z(); k += stride.z() )
+    for ( int k = input.min_coord.z(); k < input.max_coord.z(); k += input.stride.z() )
     {
-        for ( int j = min_coord.y(); j < max_coord.y(); j += stride.y() )
+        for ( int j = input.min_coord.y(); j < input.max_coord.y(); j += input.stride.y() )
         {
-            for ( int i = min_coord.x(); i < max_coord.x(); i += stride.x() )
+            for ( int i = input.min_coord.x(); i < input.max_coord.x(); i += input.stride.x() )
             {
                 v.push_back( static_cast<kvs::Real32>(i) );
                 v.push_back( static_cast<kvs::Real32>(j) );
@@ -66,43 +56,34 @@ inline kvs::PointObject* GenerateSeedPoints(
         }
     }
 
-    kvs::PointObject* point = new kvs::PointObject;
-    point->setCoords( kvs::ValueArray<kvs::Real32>( v ) );
-    return point;
-}
+    kvs::SharedPointer<kvs::PointObject> seeds( new kvs::PointObject );
+    seeds->setCoords( kvs::ValueArray<kvs::Real32>( v ) );
 
-inline kvs::LineObject* ExtractStreamlines(
-    const kvs::StructuredVolumeObject* volume,
-    const kvs::PointObject* seed_points,
-    const kvs::TransferFunction& tfunc )
-{
     typedef StochasticStreamline::Streamline Mapper;
     Mapper* mapper = new Mapper();
-    mapper->setSeedPoints( seed_points );
+    mapper->setSeedPoints( seeds.get() );
     mapper->setIntegrationInterval( 0.1 );
     mapper->setIntegrationMethod( Mapper::RungeKutta4th );
     mapper->setIntegrationDirection( Mapper::ForwardDirection );
-    mapper->setTransferFunction( tfunc );
+    mapper->setTransferFunction( input.tfunc );
     return mapper->exec( volume );
 }
 
-inline kvs::RendererBase* CreateRenderer(
-    const size_t repeats,
-    const kvs::TransferFunction& tfunc,
-    const bool ssao )
+
+inline kvs::RendererBase* Renderer( const local::Input& input )
 {
-    if ( ssao )
+    if ( input.ssao )
     {
         typedef AmbientOcclusionRendering::SSAOStochasticTubeRenderer Renderer;
         Renderer* renderer = new Renderer();
         renderer->setName( "Renderer" );
-        renderer->setTransferFunction( tfunc );
+        renderer->setTransferFunction( input.tfunc );
         renderer->setShader( kvs::Shader::BlinnPhong() );
-        renderer->setRepetitionLevel( repeats );
-        renderer->setEnabledLODControl( true );
+        renderer->setRepetitionLevel( input.repeats );
+        renderer->setEnabledLODControl( input.lod );
+        renderer->setSamplingSphereRadius( input.radius );
+        renderer->setNumberOfSamplingPoints( input.points );
         renderer->enableShading();
-        renderer->setSamplingSphereRadius( ::SamplingRadius );
-        renderer->setNumberOfSamplingPoints( ::SamplingPoints );
         return renderer;
     }
     else
@@ -110,10 +91,10 @@ inline kvs::RendererBase* CreateRenderer(
         typedef StochasticStreamline::StochasticTubeRenderer Renderer;
         Renderer* renderer = new Renderer();
         renderer->setName( "Renderer" );
-        renderer->setTransferFunction( tfunc );
+        renderer->setTransferFunction( input.tfunc );
         renderer->setShader( kvs::Shader::BlinnPhong() );
-        renderer->setRepetitionLevel( repeats );
-        renderer->setEnabledLODControl( true );
+        renderer->setRepetitionLevel( input.repeats );
+        renderer->setEnabledLODControl( input.lod );
         renderer->enableShading();
         return renderer;
     }
@@ -121,62 +102,40 @@ inline kvs::RendererBase* CreateRenderer(
 
 }
 
-class OrientationAxis : public kvs::OrientationAxis
-{
-public:
-    OrientationAxis( kvs::glut::Screen* screen ):
-        kvs::OrientationAxis( screen, screen->scene() ) {}
-
-    void screenResized()
-    {
-        setPosition( 0, screen()->height() - height() );
-    }
-};
-
-class ColorMapBar : public kvs::ColorMapBar
-{
-public:
-    ColorMapBar( kvs::glut::Screen* screen ):
-        kvs::ColorMapBar( screen ) {}
-
-    void screenResized()
-    {
-        setPosition( screen()->width() - width(), screen()->height() - height() );
-    }
-};
-
 class SSAOCheckBox : public kvs::CheckBox
 {
 private:
     kvs::Scene* m_scene;
+    local::Input& m_input;
 
 public:
-    SSAOCheckBox( kvs::glut::Screen* screen ):
-        kvs::CheckBox( screen ),
-        m_scene( screen->scene() ) {}
+    SSAOCheckBox( kvs::glut::Screen& screen, local::Input& input ):
+        kvs::CheckBox( &screen ),
+        m_scene( screen.scene() ),
+        m_input( input )
+    {
+        setCaption( "SSAO" );
+        setState( input.ssao );
+        setMargin( 10 );
+    }
 
     void stateChanged()
     {
         if ( state() )
         {
             const NoSSAORenderer* renderer = NoSSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
-            if ( renderer )
-            {
-                const size_t repeats = renderer->repetitionLevel();
-                const kvs::TransferFunction& tfunc = renderer->transferFunction();
-                m_scene->replaceRenderer( "Renderer", ::CreateRenderer( repeats, tfunc, true ) );
-            }
+            m_input.ssao = true;
+            m_input.repeats = renderer->repetitionLevel();
+            m_input.tfunc = renderer->transferFunction();
         }
         else
         {
             const SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
-            if ( renderer )
-            {
-                const size_t repeats = renderer->repetitionLevel();
-                const kvs::TransferFunction& tfunc = renderer->transferFunction();
-                m_scene->replaceRenderer( "Renderer", ::CreateRenderer( repeats, tfunc, false ) );
-            }
+            m_input.ssao = false;
+            m_input.repeats = renderer->repetitionLevel();
+            m_input.tfunc = renderer->transferFunction();
         }
+        m_scene->replaceRenderer( "Renderer", ::Renderer( m_input ) );
     }
 };
 
@@ -186,9 +145,14 @@ private:
     kvs::Scene* m_scene;
 
 public:
-    LODCheckBox( kvs::glut::Screen* screen ):
-        kvs::CheckBox( screen ),
-        m_scene( screen->scene() ) {}
+    LODCheckBox( kvs::glut::Screen& screen, local::Input& input ):
+        kvs::CheckBox( &screen ),
+        m_scene( screen.scene() )
+    {
+        setCaption( "LOD" );
+        setState( input.lod );
+        setMargin( 10 );
+    }
 
     void stateChanged()
     {
@@ -212,9 +176,15 @@ private:
     kvs::Scene* m_scene;
 
 public:
-    RepeatSlider( kvs::glut::Screen* screen ):
-        kvs::Slider( screen ),
-        m_scene( screen->scene() ) {}
+    RepeatSlider( kvs::glut::Screen& screen, local::Input& input ):
+        kvs::Slider( &screen ),
+        m_scene( screen.scene() )
+    {
+        setCaption( "Repeats: " + kvs::String::ToString( input.repeats ) );
+        setValue( input.repeats );
+        setRange( 1, 100 );
+        setMargin( 10 );
+    }
 
     void sliderMoved()
     {
@@ -241,16 +211,24 @@ class SamplingRadiusSlider : public kvs::Slider
 {
 private:
     kvs::Scene* m_scene;
+    local::Input& m_input;
 
 public:
-    SamplingRadiusSlider( kvs::glut::Screen* screen ):
-        kvs::Slider( screen ),
-        m_scene( screen->scene() ) {}
+    SamplingRadiusSlider( kvs::glut::Screen& screen, local::Input& input ):
+        kvs::Slider( &screen ),
+        m_scene( screen.scene() ),
+        m_input( input )
+    {
+        setCaption( "Radius: " + kvs::String::ToString( input.radius ) );
+        setValue( input.radius );
+        setRange( 0.1, 5.0 );
+        setMargin( 10 );
+    }
 
     void sliderMoved()
     {
-        ::SamplingRadius = current_value();
-        setCaption( "Radius: " + kvs::String::ToString( ::SamplingRadius ) );
+        m_input.radius = current_value();
+        setCaption( "Radius: " + kvs::String::ToString( m_input.radius ) );
     }
 
     void sliderReleased()
@@ -258,10 +236,10 @@ public:
         const bool ssao = ( SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) ) != NULL );
         if ( ssao )
         {
-            SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
-            const size_t repeats = renderer->repetitionLevel();
-            const kvs::TransferFunction& tfunc = renderer->transferFunction();
-            m_scene->replaceRenderer( "Renderer", ::CreateRenderer( repeats, tfunc, true ) );
+            const SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
+            m_input.repeats = renderer->repetitionLevel();
+            m_input.tfunc = renderer->transferFunction();
+            m_scene->replaceRenderer( "Renderer", ::Renderer( m_input ) );
         }
     }
 
@@ -277,16 +255,24 @@ class SamplingPointsSlider : public kvs::Slider
 {
 private:
     kvs::Scene* m_scene;
+    local::Input& m_input;
 
 public:
-    SamplingPointsSlider( kvs::glut::Screen* screen ):
-        kvs::Slider( screen ),
-        m_scene( screen->scene() ) {}
+    SamplingPointsSlider( kvs::glut::Screen& screen, local::Input& input ):
+        kvs::Slider( &screen ),
+        m_scene( screen.scene() ),
+        m_input( input )
+    {
+        setCaption( "Points: " + kvs::String::ToString( input.points ) );
+        setValue( input.points );
+        setRange( 1, 256 );
+        setMargin( 10 );
+    }
 
     void sliderMoved()
     {
-        ::SamplingPoints = int( value() );
-        setCaption( "Points: " + kvs::String::ToString( ::SamplingPoints ) );
+        m_input.points = int( value() );
+        setCaption( "Points: " + kvs::String::ToString( m_input.points ) );
     }
 
     void sliderReleased()
@@ -295,10 +281,34 @@ public:
         if ( ssao )
         {
             SSAORenderer* renderer = SSAORenderer::DownCast( m_scene->renderer( "Renderer" ) );
-            const size_t repeats = renderer->repetitionLevel();
-            const kvs::TransferFunction& tfunc = renderer->transferFunction();
-            m_scene->replaceRenderer( "Renderer", ::CreateRenderer( repeats, tfunc, true ) );
+            m_input.repeats = renderer->repetitionLevel();
+            m_input.tfunc = renderer->transferFunction();
+            m_scene->replaceRenderer( "Renderer", ::Renderer( m_input ) );
         }
+    }
+};
+
+class OrientationAxis : public kvs::OrientationAxis
+{
+public:
+    OrientationAxis( kvs::glut::Screen& screen ):
+        kvs::OrientationAxis( &screen, screen.scene() ) {}
+
+    void screenResized()
+    {
+        setPosition( 0, screen()->height() - height() );
+    }
+};
+
+class ColorMapBar : public kvs::ColorMapBar
+{
+public:
+    ColorMapBar( kvs::glut::Screen& screen ):
+        kvs::ColorMapBar( &screen ) {}
+
+    void screenResized()
+    {
+        setPosition( screen()->width() - width(), screen()->height() - height() );
     }
 };
 
@@ -308,8 +318,8 @@ private:
     ColorMapBar* m_cmap_bar;
 
 public:
-    TransferFunctionEditor( kvs::glut::Screen* screen, ColorMapBar* cmap_bar ):
-        kvs::glut::TransferFunctionEditor( screen ),
+    TransferFunctionEditor( kvs::glut::Screen& screen, ColorMapBar* cmap_bar ):
+        kvs::glut::TransferFunctionEditor( &screen ),
         m_cmap_bar( cmap_bar ) {}
 
     void apply()
@@ -360,11 +370,17 @@ public:
     }
 };
 
+
 int main( int argc, char** argv )
 {
     // Shader path.
     kvs::ShaderSource::AddSearchPath("../../Lib");
     kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
+
+    // Input variables.
+    local::Input input( argc, argv );
+    if ( !input.parse() ) { return 1; }
+    input.print( std::cout << "Input Variables" << std::endl, kvs::Indent( 4 ) );
 
     // Application and screen.
     kvs::glut::Application app( argc, argv );
@@ -373,77 +389,44 @@ int main( int argc, char** argv )
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.show();
 
-    // Input variables.
-    const std::string filename = argv[1];
-    const bool ssao = true;
-    const bool lod = true;
-    const float scale = 100.0f;
-    const size_t repeats = 40;
-    const kvs::Vec3i min_coord( 0, 0, 0 );
-    const kvs::Vec3i max_coord( 250, 250, 250 );
-    const kvs::Vec3i stride( 30, 30, 30 );
-    const kvs::TransferFunction tfunc( kvs::DivergingColorMap::CoolWarm( 256 ) );
-
     // Visualization pipeline.
-    kvs::StructuredVolumeObject* volume = ::ImportVolumeObject( filename, scale);
-    kvs::PointObject* seed_points = ::GenerateSeedPoints( min_coord, max_coord, stride );
-    kvs::LineObject* object = ::ExtractStreamlines( volume, seed_points, tfunc );
-    kvs::RendererBase* renderer = ::CreateRenderer( repeats, tfunc, ssao );
+    kvs::StructuredVolumeObject* volume = ::Import( input );
+    kvs::LineObject* object = ::Streamline( input, volume );
+    kvs::RendererBase* renderer = ::Renderer( input );
     screen.registerObject( object, renderer );
-    delete seed_points;
 
     // Widgets.
-    OrientationAxis orientation_axis( &screen );
-    orientation_axis.setBoxType( kvs::OrientationAxis::SolidBox );
-    orientation_axis.show();
-
-    ColorMapBar cmap_bar( &screen );
-    cmap_bar.setCaption( "Velocity Magnitude" );
-    cmap_bar.setColorMap( tfunc.colorMap() );
-    cmap_bar.setRange( volume->minValue(), volume->maxValue() );
-    cmap_bar.show();
-
-    SSAOCheckBox ssao_check_box( &screen );
-    ssao_check_box.setCaption( "SSAO" );
-    ssao_check_box.setState( ssao );
-    ssao_check_box.setMargin( 10 );
+    SSAOCheckBox ssao_check_box( screen, input );
     ssao_check_box.show();
 
-    LODCheckBox lod_check_box( &screen );
-    lod_check_box.setCaption( "LOD" );
-    lod_check_box.setState( lod );
-    lod_check_box.setMargin( 10 );
+    LODCheckBox lod_check_box( screen, input );
     lod_check_box.setPosition( ssao_check_box.x(), ssao_check_box.y() + ssao_check_box.height() - 10 );
     lod_check_box.show();
 
-    RepeatSlider repeat_slider( &screen );
-    repeat_slider.setCaption( "Repeats: " + kvs::String::ToString( repeats ) );
-    repeat_slider.setValue( repeats );
-    repeat_slider.setRange( 1, 100 );
-    repeat_slider.setMargin( 10 );
+    RepeatSlider repeat_slider( screen, input );
     repeat_slider.setPosition( lod_check_box.x(), lod_check_box.y() + lod_check_box.height() );
     repeat_slider.show();
 
-    const float radius = 0.5;
-    SamplingRadiusSlider radius_slider( &screen );
-    radius_slider.setCaption( "Radius: " + kvs::String::ToString( radius ) );
-    radius_slider.setValue( radius );
-    radius_slider.setRange( 0.1, 5.0 );
-    radius_slider.setMargin( 10 );
+    SamplingRadiusSlider radius_slider( screen, input );
     radius_slider.setPosition( repeat_slider.x(), repeat_slider.y() + repeat_slider.height() - 10 );
     radius_slider.show();
 
-    const int npoints = 256;
-    SamplingPointsSlider points_slider( &screen );
-    points_slider.setCaption( "Points: " + kvs::String::ToString( npoints ) );
-    points_slider.setValue( npoints );
-    points_slider.setRange( 1, 256 );
-    points_slider.setMargin( 10 );
+    SamplingPointsSlider points_slider( screen, input );
     points_slider.setPosition( radius_slider.x(), radius_slider.y() + radius_slider.height() - 10 );
     points_slider.show();
 
-    TransferFunctionEditor editor( &screen, &cmap_bar );
-    editor.setTransferFunction( tfunc );
+    OrientationAxis orientation_axis( screen );
+    orientation_axis.setBoxType( kvs::OrientationAxis::SolidBox );
+    orientation_axis.show();
+
+    ColorMapBar cmap_bar( screen );
+    cmap_bar.setCaption( "Velocity Magnitude" );
+    cmap_bar.setColorMap( input.tfunc.colorMap() );
+    cmap_bar.setRange( volume->minValue(), volume->maxValue() );
+    cmap_bar.show();
+
+    TransferFunctionEditor editor( screen, &cmap_bar );
+    editor.setTransferFunction( input.tfunc );
     editor.setVolumeObject( volume );
     editor.show();
 
