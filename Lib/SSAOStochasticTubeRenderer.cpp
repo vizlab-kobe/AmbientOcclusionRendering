@@ -358,6 +358,11 @@ void SSAOStochasticTubeRenderer::Engine::release()
     m_shader_occl_pass.release();
     m_vbo_manager.release();
     m_tfunc_changed = true;
+    m_framebuffer.release();
+    m_color_texture.release();
+    m_position_texture.release();
+    m_normal_texture.release();
+    m_depth_texture.release();
 }
 
 void SSAOStochasticTubeRenderer::Engine::create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
