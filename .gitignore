@@ -18,3 +18,4 @@ Test/SSAOStochasticTubeRendering/SSAOStochasticTubeRendering
 Test/SSAOStylizedLineRendering/SSAOStylizedLineRendering
 App/MHDStreamLine/MHDStreamLine
 Test/SSAOStochasticPolygonRenderer/SSAOStochasticPolygonRenderer
+Test/SSAOStochasticTetrahedraRenderer/SSAOStochasticTetrahedraRenderer
