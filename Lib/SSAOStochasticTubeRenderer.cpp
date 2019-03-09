@@ -417,8 +417,8 @@ void SSAOStochasticTubeRenderer::Engine::create_shader_program()
 {
     // Build SSAO shader for geometry-pass (1st pass).
     {
-        kvs::ShaderSource vert( "SSAO_stochastic_tube_geom_pass.vert" );
-        kvs::ShaderSource frag( "SSAO_stochastic_tube_geom_pass.frag" );
+        kvs::ShaderSource vert( "SSAO_SR_tube_geom_pass.vert" );
+        kvs::ShaderSource frag( "SSAO_SR_tube_geom_pass.frag" );
         m_shader_geom_pass.build( vert, frag );
 
         kvs::Real32 min_value = 0.0f;

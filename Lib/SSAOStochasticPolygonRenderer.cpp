@@ -539,8 +539,8 @@ void SSAOStochasticPolygonRenderer::Engine::create_shader_program()
 {
     // Build SSAO shader for geometry-pass (1st pass).
     {
-        kvs::ShaderSource vert( "SSAO_stochastic_polygon_geom_pass.vert" );
-        kvs::ShaderSource frag( "SSAO_stochastic_polygon_geom_pass.frag" );
+        kvs::ShaderSource vert( "SSAO_SR_polygon_geom_pass.vert" );
+        kvs::ShaderSource frag( "SSAO_SR_polygon_geom_pass.frag" );
         m_shader_geom_pass.build( vert, frag );
     }
 
