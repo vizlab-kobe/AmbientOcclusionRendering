@@ -2,6 +2,7 @@
 #include <kvs/ValueArray>
 #include <kvs/SmartPointer>
 #include <StochasticStreamline/Lib/Streamline.h>
+#include "Streamline.h"
 
 
 namespace local
@@ -25,7 +26,8 @@ kvs::LineObject* Vis::streamline( const kvs::StructuredVolumeObject* volume ) co
     if ( !volume ) { return NULL; }
 
     kvs::SharedPointer<kvs::PointObject> seeds( this->generate_seed_points() );
-    typedef StochasticStreamline::Streamline Mapper;
+//    typedef StochasticStreamline::Streamline Mapper;
+    typedef local::Streamline Mapper;
     Mapper* mapper = new Mapper();
     mapper->setSeedPoints( seeds.get() );
     mapper->setIntegrationInterval( 0.1 );
