@@ -344,28 +344,6 @@ kvs::ValueArray<kvs::UInt8> VertexColors( const kvs::PolygonObject* polygon )
     return colors;
 }
 
-/*inline void Draw()
-{
-    kvs::OpenGL::WithPushedMatrix p1( GL_MODELVIEW );
-    p1.loadIdentity();
-    {
-        kvs::OpenGL::WithPushedMatrix p2( GL_PROJECTION );
-        p2.loadIdentity();
-        {
-            kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
-            {
-                kvs::OpenGL::Begin( GL_QUADS );
-                kvs::OpenGL::Color( kvs::Vec4::All( 1.0 ) );
-                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
-                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 1 ), kvs::Vec2( 0, 1 ) );
-                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 0 ), kvs::Vec2( 0, 0 ) );
-                kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 0 ), kvs::Vec2( 1, 0 ) );
-                kvs::OpenGL::End();
-            }
-        }
-    }
-}*/
-
 }
 
 

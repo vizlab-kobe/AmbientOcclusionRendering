@@ -41,7 +41,6 @@ private:
     bool m_has_connection; ///< check flag for the connection array
     float m_polygon_offset; ///< polygon offset
     kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
-//    kvs::ProgramObject m_shader_program; ///< shader program
 
     // Variables for SSAO
     kvs::ProgramObject m_shader_geom_pass; ///< shader program for geometry-pass (1st pass)

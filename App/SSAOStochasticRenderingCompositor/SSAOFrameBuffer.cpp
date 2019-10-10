@@ -39,8 +39,6 @@ namespace AmbientOcclusionRendering
 
 SSAOFrameBuffer::SSAOFrameBuffer():
     m_shader( new kvs::Shader::Lambert() ),
-    m_sampling_sphere_radius( 0.5f ),
-    m_nsamples( 256 ),
     m_enable_shading( true )
 {
 }
@@ -52,11 +50,12 @@ SSAOFrameBuffer::SSAOFrameBuffer():
  *  @param  height [in] buffer height
  */
 /*===========================================================================*/
-void SSAOFrameBuffer::create( const size_t width, const size_t height )
+void SSAOFrameBuffer::create( const size_t width, const size_t height, kvs::Real32 radius, const size_t nsamples)
 {
-    this->create_shader_program();
-    this->create_sampling_points();
-    this->create_framebuffer( width, height );  
+    this->create_shader_program( nsamples );
+    this->create_sampling_points( radius, nsamples );
+    this->create_framebuffer( width, height );
+    
 }
 
 /*===========================================================================*/
@@ -157,10 +156,10 @@ void SSAOFrameBuffer::update_framebuffer( const size_t width, const size_t heigh
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
 
-void SSAOFrameBuffer::create_sampling_points()
+void SSAOFrameBuffer::create_sampling_points( kvs::Real32 sphere_radius, const size_t nsamples )
 {
-    const size_t nsamples = m_nsamples;
-    const float radius = m_sampling_sphere_radius;
+    //const size_t nsamples = nsamples;
+    const float radius = sphere_radius;
     const size_t dim = 3;
     const kvs::ValueArray<GLfloat> sampling_points = AmbientOcclusionRendering::SSAOPointSampling( radius, nsamples );
     m_shader_occl_pass.bind();
@@ -168,7 +167,7 @@ void SSAOFrameBuffer::create_sampling_points()
     m_shader_occl_pass.unbind();
 }
 
-void SSAOFrameBuffer::create_shader_program()
+void SSAOFrameBuffer::create_shader_program( const size_t nsamples )
 {
     // Build SSAO shader for occlusion-pass (2nd pass).
     kvs::ShaderSource vert( "SSAO_occl_pass.vert" );
@@ -188,7 +187,7 @@ void SSAOFrameBuffer::create_shader_program()
             frag.define("ENABLE_TWO_SIDE_LIGHTING");
         }
 
-        frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
+        frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( nsamples ) );
     }
 
     m_shader_occl_pass.build( vert, frag );
@@ -252,24 +251,16 @@ void SSAOFrameBuffer::update(
     this->update_framebuffer( camera->windowWidth(), camera->windowHeight() );
 }
 
-void SSAOFrameBuffer::setSamplingSphereRadius( const kvs::Real32 radius )
-{
-    m_sampling_sphere_radius = radius;
-}
-void SSAOFrameBuffer::setNumberOfSamplingPoints( const size_t nsamples )
-{
-    m_nsamples = nsamples;
-}
-
-kvs::Real32 SSAOFrameBuffer::samplingSphereRadius()
+/*kvs::Real32 SSAOFrameBuffer::samplingSphereRadius()
 {
     return m_sampling_sphere_radius;
-}
+    }
 
 size_t SSAOFrameBuffer::numberOfSamplingPoints()
 {
     return m_nsamples;
 }
+*/
 
 /*bool SSAOFrameBuffer::isEnabledShading()
 {

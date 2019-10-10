@@ -1,17 +1,3 @@
-/*****************************************************************************/
-/**
- *  @file   StochasticRendererBase.cpp
- *  @author Jun Nishimura, Naohisa Sakamoto
- */
-/*----------------------------------------------------------------------------
- *
- *  Copyright (c) Visualization Laboratory, Kyoto University.
- *  All rights reserved.
- *  See http://www.viz.media.kyoto-u.ac.jp/kvs/copyright/ for details.
- *
- *  $Id$
- */
-/*****************************************************************************/
 #include "SSAOStochasticRendererBase.h"
 #include <kvs/ObjectBase>
 #include <kvs/Camera>
@@ -24,7 +10,7 @@ namespace AmbientOcclusionRendering
 
 /*===========================================================================*/
 /**
- *  @brief  Constructs a new StochasticRendererBase class.
+ *  @brief  Constructs a new SSAOtochasticRendererBase class.
  *  @param  engine [in] pointer to the stochastic rendering engine
  */
 /*===========================================================================*/
@@ -33,6 +19,8 @@ SSAOStochasticRendererBase::SSAOStochasticRendererBase( AmbientOcclusionRenderin
     m_height( 0 ),
     m_repetition_level( 1 ),
     m_coarse_level( 1 ),
+    m_sampling_sphere_radius( 0.5f ),
+    m_nsamples( 256 ),
     m_enable_lod( false ),
     m_enable_refinement( false ),
     m_shader( new kvs::Shader::Lambert() ),
@@ -87,10 +75,13 @@ void SSAOStochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* cam
     {
         m_width = width;
         m_height = height;
+        
         m_ensemble_buffer.create( width, height );
         m_ensemble_buffer.clear();
-        m_ssao_framebuffer.create( width, height );
+        
+        m_ssao_framebuffer.create( width, height, m_sampling_sphere_radius, m_nsamples );
         m_ssao_framebuffer.clear();
+        
         m_modelview = kvs::OpenGL::ModelViewMatrix();
         m_light_position = light->position();
         m_engine->setShader( &shader() );
@@ -104,12 +95,15 @@ void SSAOStochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* cam
     {
         m_width = width;
         m_height = height;
+        
         m_ensemble_buffer.release();
-        m_ssao_framebuffer.release();
         m_ensemble_buffer.create( width, height );
         m_ensemble_buffer.clear();
-        m_ssao_framebuffer.create( width, height );
+        
+        m_ssao_framebuffer.release();
+        m_ssao_framebuffer.create( width, height, m_sampling_sphere_radius, m_nsamples );
         m_ssao_framebuffer.clear();
+        
         m_engine->update( object, camera, light );
     }
 
@@ -167,6 +161,15 @@ void SSAOStochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* cam
 
     kvs::OpenGL::Finish();
     stopTimer();
+}
+
+void SSAOStochasticRendererBase::setSamplingSphereRadius( const kvs::Real32 radius )
+{
+    m_sampling_sphere_radius = radius;
+}
+void SSAOStochasticRendererBase::setNumberOfSamplingPoints( const size_t nsamples )
+{
+    m_nsamples = nsamples;
 }
 
 } // end of namespace kvs

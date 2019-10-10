@@ -12,8 +12,8 @@
  *  $Id$
  */
 /*****************************************************************************/
-#ifndef KVS__STOCHASTIC_RENDERER_BASE_H_INCLUDE
-#define KVS__STOCHASTIC_RENDERER_BASE_H_INCLUDE
+#ifndef KVS__SSAO_STOCHASTIC_RENDERER_BASE_H_INCLUDE
+#define KVS__SSAO_STOCHASTIC_RENDERER_BASE_H_INCLUDE
 
 #include <kvs/RendererBase>
 #include <kvs/Shader>
@@ -48,6 +48,8 @@ private:
     size_t m_height;
     size_t m_repetition_level; ///< repetition level
     size_t m_coarse_level; ///< repetition level for the coarse rendering (LOD)
+	kvs::Real32 m_sampling_sphere_radius;
+	size_t m_nsamples;
     bool m_enable_lod; ///< flag for LOD rendering
     bool m_enable_refinement; ///< flag for progressive refinement rendering
     kvs::Mat4 m_modelview; ///< modelview matrix used for LOD control
@@ -55,7 +57,7 @@ private:
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
     kvs::Shader::ShadingModel* m_shader; ///< shading method
     AmbientOcclusionRendering::SSAOStochasticRenderingEngine* m_engine; ///< rendering engine
-	AmbientOcclusionRendering::SSAOFrameBuffer m_ssao_framebuffer;
+	AmbientOcclusionRendering::SSAOFrameBuffer m_ssao_framebuffer; ///< SSAO framebuffer 
 
 public:
 
@@ -72,6 +74,8 @@ public:
     void setRepetitionLevel( const size_t repetition_level ) { m_repetition_level = repetition_level; }
     void setEnabledLODControl( const bool enable ) { m_enable_lod = enable; }
     void setEnabledRefinement( const bool enable ) { m_enable_refinement = enable; }
+	void setSamplingSphereRadius( const kvs::Real32 radius );
+	void setNumberOfSamplingPoints( const size_t nsamples );
     void enableLODControl() { this->setEnabledLODControl( true ); }
     void enableRefinement() { this->setEnabledRefinement( true ); }
     void disableLODControl() { this->setEnabledLODControl( false ); }

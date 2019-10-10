@@ -12,8 +12,8 @@
  *  $Id$
  */
 /*****************************************************************************/
-#ifndef KVS__STOCHASTIC_RENDERING_ENGINE_H_INCLUDE
-#define KVS__STOCHASTIC_RENDERING_ENGINE_H_INCLUDE
+#ifndef KVS__SSAO_STOCHASTIC_RENDERING_ENGINE_H_INCLUDE
+#define KVS__SSAO_STOCHASTIC_RENDERING_ENGINE_H_INCLUDE
 
 #include <kvs/Shader>
 #include <kvs/Texture2D>

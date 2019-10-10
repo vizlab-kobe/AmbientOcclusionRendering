@@ -153,7 +153,7 @@ void SSAOStochasticRenderingCompositor::check_window_created()
         m_width = width;
         m_height = height;
         m_ensemble_buffer.create( width, height );
-        m_ssao_framebuffer.create( width, height );
+        m_ssao_framebuffer.create( width, height, m_sampling_sphere_radius, m_nsamples );
         m_ensemble_buffer.clear();
         m_ssao_framebuffer.clear();
         m_object_xform = this->object_xform();
@@ -180,7 +180,7 @@ void SSAOStochasticRenderingCompositor::check_window_resized()
         m_ensemble_buffer.release();
         m_ssao_framebuffer.release();
         m_ensemble_buffer.create( width, height );
-        m_ssao_framebuffer.create(width, height );
+        m_ssao_framebuffer.create( width, height ,m_sampling_sphere_radius, m_nsamples );
         m_ensemble_buffer.clear();
         m_ssao_framebuffer.clear();
         this->engines_update();

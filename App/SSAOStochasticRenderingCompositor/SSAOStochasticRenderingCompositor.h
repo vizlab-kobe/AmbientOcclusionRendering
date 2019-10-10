@@ -45,6 +45,8 @@ private:
     size_t m_height; ///< window height
     size_t m_repetition_level; ///< repetition level
     size_t m_coarse_level; ///< repetition level for the coarse rendering (LOD)
+	kvs::Real32 m_sampling_sphere_radius;
+	size_t m_nsamples;
     bool m_enable_lod; ///< flag for LOD rendering
     bool m_enable_refinement; ///< flag for progressive refinement rendering
     kvs::Mat4 m_object_xform; ///< object xform matrix used for LOD control
