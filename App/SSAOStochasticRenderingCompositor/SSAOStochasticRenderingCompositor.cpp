@@ -44,6 +44,8 @@ SSAOStochasticRenderingCompositor::SSAOStochasticRenderingCompositor( kvs::Scene
     m_height( 0 ),
     m_repetition_level( 1 ),
     m_coarse_level( 1 ),
+    m_sampling_sphere_radius( 0.5 ),
+    m_nsamples( 256 ),
     m_enable_lod( false ),
     m_enable_refinement( false )
 {

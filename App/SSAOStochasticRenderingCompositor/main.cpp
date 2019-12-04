@@ -1,18 +1,3 @@
-/*****************************************************************************/
-/**
- *  @file   main.cpp
- *  @author Naohisa Sakamoto
- *  @brief  Example program for kvs::StochasticTetrahedraRenderer class.
- */
-/*----------------------------------------------------------------------------
- *
- *  Copyright (c) Visualization Laboratory, Kyoto University.
- *  All rights reserved.
- *  See http://www.viz.media.kyoto-u.ac.jp/kvs/copyright/ for details.
- *
- *  $Id$
- */
-/*****************************************************************************/
 #include <kvs/glut/Application>
 #include <kvs/glut/Screen>
 #include <kvs/glut/TransferFunctionEditor>
@@ -153,7 +138,7 @@ int main( int argc, char** argv )
     volume_object->print( std::cout );
 
     AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer* volume_renderer = new AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer();
-    volume_renderer->setName("Renderer");
+    volume_renderer->setName("SSAOStochasticRenderingCompositor");
 
     kvs::PolygonObject* polygon_object = new kvs::ExternalFaces( volume_object );
     polygon_object->setName( "Polygon" );

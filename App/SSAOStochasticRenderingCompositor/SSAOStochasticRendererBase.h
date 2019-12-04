@@ -40,7 +40,7 @@ class SSAOStochasticRendererBase : public kvs::RendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticRendererBase, Renderer );
 
-    friend class StochasticRenderingCompositor;;
+    friend class StochasticRenderingCompositor;
 
 private:
 
