@@ -30,7 +30,7 @@ inline kvs::PolygonObject* ImportPolygonObject( const std::string filename )
         kvs::PolygonObject* temp = new AmbientOcclusionRendering::PolygonToPolygon( polygon );
         delete polygon;
         polygon = temp;
-    }
+        }
     return polygon;
 }
 
