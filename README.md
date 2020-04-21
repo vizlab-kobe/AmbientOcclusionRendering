@@ -1,19 +1,28 @@
 # AmbientOcclusionRendering
-AmbientOcclusionRendering is a library includes particle-based renderering techniques with ambient occlusion effects.
+Order-independent semi-transparent ambient occlusion renderers based on KVS.
 
-## Requirements
+## Installation
+
+### Prerequisite
 * [KVS](https://github.com/naohisas/KVS)
 
-## Compiling
-Clone the repository.
+### Build
+You can get the source codes of StochasticStreamline from GitHub.
 ```bash
 $ git clone https://github.com/vizlab-kobe/AmbientOcclusionRendering.git
 ```
 
-Build AmbientOcclusionRendering library required to compile each application in App.
+#### Lib
+Build AmbientOcclusionRendering library required to compile each application in App and Test.
 ```bash
+$ cd AmbientOcclusionRendering
 $ cd Lib
 $ ./kvsmake.py
+```
+
+If necessary, rebuild the library as follows:
+```bash
+$ ./kvsmake.py rebuild
 ```
 
 Build applications with kvsmake in each test or application directory. e.g.) Test/SSAOPolygonRendering
