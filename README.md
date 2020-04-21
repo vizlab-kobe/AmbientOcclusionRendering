@@ -7,7 +7,7 @@ Order-independent semi-transparent ambient occlusion renderers based on KVS.
 * [KVS](https://github.com/naohisas/KVS)
 
 ### Build
-Clone the AmbientOcclusionRendering repository from GitHub as follows:
+Clone AmbientOcclusionRendering repository from GitHub as follows:
 ```bash
 $ git clone https://github.com/vizlab-kobe/AmbientOcclusionRendering.git
 ```
