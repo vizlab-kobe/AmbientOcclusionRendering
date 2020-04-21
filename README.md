@@ -41,7 +41,31 @@ Note: Some of test programs require (e.g. Test/SSAOPolygonRendering) a test data
 The App directory contains several application programs. To build and run these application programs, refer to the ReadMe files in each directories.
 
 ## Class List
-The library includes the following classes used in the test programs and application programs. All of classes included in the library are defined in the namespace of AmbientOcclusionRendering.
+The library includes the following classes used in the test programs and application programs. All of classes included in the library are defined in the namespace of `AmbientOcclusionRendering`.
+
+* `AmbientOcclusionRendering::PolygonToPolygon`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+* `AmbientOcclusionRendering::SSAOPointSampling`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+* `AmbientOcclusionRendering::SSAOPolygonRenderer`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+* `AmbientOcclusionRendering::SSAOStylizedLineRenderer`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+* `AmbientOcclusionRendering::SSAOStochasticPolygonRenderer`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+* `AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+* `AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+* `AmbientOcclusionRendering::SSAOStochasticTubeRenderer`
+<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
 ## Publications
 1. 藤田 泰之, 坂本 尚久, 確率的半透明流線可視化向けアンビエントオクルージョン, 第47回 可視化情報シンポジウム, 2019. [[repo](https://github.com/vizlab-kobe-paper/2019_VisSympo__YasuyukiFujita)]
