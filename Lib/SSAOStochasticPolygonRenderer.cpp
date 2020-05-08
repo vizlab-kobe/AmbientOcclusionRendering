@@ -356,7 +356,7 @@ inline void Draw()
             kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
             {
                 kvs::OpenGL::Begin( GL_QUADS );
-                kvs::OpenGL::Color( kvs::Vec4::All( 1.0 ) );
+                kvs::OpenGL::Color( kvs::Vec4::Constant( 1.0 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 1 ), kvs::Vec2( 0, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 0 ), kvs::Vec2( 0, 0 ) );
@@ -463,11 +463,15 @@ void SSAOStochasticPolygonRenderer::Engine::create(
     m_has_connection = ::HasConnections( polygon );
     if ( !m_has_normal ) setEnabledShading( false );
 
+    const float dpr = camera->devicePixelRatio();
+    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
+    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
+
     attachObject( object );
     createRandomTexture();
     this->create_shader_program();
     this->create_buffer_object( polygon );
-    this->create_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    this->create_framebuffer( framebuffer_width, framebuffer_height );
     this->create_sampling_points();
 }
 
@@ -484,7 +488,10 @@ void SSAOStochasticPolygonRenderer::Engine::update(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    this->update_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    const float dpr = camera->devicePixelRatio();
+    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
+    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
+    this->update_framebuffer( framebuffer_width, framebuffer_height );
 }
 
 /*===========================================================================*/
@@ -610,6 +617,13 @@ void SSAOStochasticPolygonRenderer::Engine::create_buffer_object( const kvs::Pol
     m_vbo_manager.create();
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Creates framebuffer.
+ *  @param  width [in] framebuffer width
+ *  @param  height [in] framebuffer height
+ */
+/*===========================================================================*/
 void SSAOStochasticPolygonRenderer::Engine::create_framebuffer( const size_t width, const size_t height )
 {
     m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
@@ -658,6 +672,13 @@ void SSAOStochasticPolygonRenderer::Engine::create_sampling_points()
     m_shader_occl_pass.unbind();
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Updates framebuffer
+ *  @param  width [in] framebuffer width
+ *  @param  height [in] framebuffer height
+ */
+/*===========================================================================*/
 void SSAOStochasticPolygonRenderer::Engine::update_framebuffer( const size_t width, const size_t height )
 {
     m_color_texture.release();

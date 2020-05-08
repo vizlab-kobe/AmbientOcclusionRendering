@@ -111,7 +111,7 @@ inline void Draw()
             kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
             {
                 kvs::OpenGL::Begin( GL_QUADS );
-                kvs::OpenGL::Color( kvs::Vec4::All( 1.0 ) );
+                kvs::OpenGL::Color( kvs::Vec4::Constant( 1.0 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 1 ), kvs::Vec2( 0, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 0 ), kvs::Vec2( 0, 0 ) );
@@ -239,6 +239,9 @@ void SSAOStochasticUniformGridRenderer::Engine::release()
 void SSAOStochasticUniformGridRenderer::Engine::create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
     kvs::StructuredVolumeObject* volume = kvs::StructuredVolumeObject::DownCast( object );
+    const float dpr = camera->devicePixelRatio();
+    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
+    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
 
     attachObject( object );
     createRandomTexture();
@@ -246,7 +249,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create( kvs::ObjectBase* object,
     this->create_volume_texture( volume );
     this->create_transfer_function_texture();
     this->create_bounding_cube_buffer( volume );
-    this->create_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    this->create_framebuffer( framebuffer_width, framebuffer_height );
     this->create_sampling_points();
 }
 
@@ -260,7 +263,10 @@ void SSAOStochasticUniformGridRenderer::Engine::create( kvs::ObjectBase* object,
 /*===========================================================================*/
 void SSAOStochasticUniformGridRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
-    this->update_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    const float dpr = camera->devicePixelRatio();
+    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
+    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
+    this->update_framebuffer( framebuffer_width, framebuffer_height );
 }
 
 /*===========================================================================*/

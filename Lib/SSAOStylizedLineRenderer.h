@@ -19,8 +19,8 @@ class SSAOStylizedLineRenderer : public kvs::LineRenderer
     kvsModuleBaseClass( kvs::LineRenderer );
 
 private:
-    size_t m_width; ///< window width
-    size_t m_height; ///< window height
+    size_t m_window_width; ///< window width
+    size_t m_window_height; ///< window height
     const kvs::ObjectBase* m_object; ///< pointer to the rendering object
     kvs::ValueArray<GLint> m_first_array; ///< array of starting indices for the polyline
     kvs::ValueArray<GLsizei> m_count_array; ///< array of the number of indices for the polyline

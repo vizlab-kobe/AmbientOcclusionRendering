@@ -260,7 +260,7 @@ inline void Draw()
             kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
             {
                 kvs::OpenGL::Begin( GL_QUADS );
-                kvs::OpenGL::Color( kvs::Vec4::All( 1.0 ) );
+                kvs::OpenGL::Color( kvs::Vec4::Constant( 1.0 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 1 ), kvs::Vec2( 0, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 0 ), kvs::Vec2( 0, 0 ) );
@@ -352,22 +352,35 @@ void SSAOStochasticStylizedLineRenderer::Engine::release()
     m_depth_texture.release();
 }
 
-void SSAOStochasticStylizedLineRenderer::Engine::create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+void SSAOStochasticStylizedLineRenderer::Engine::create(
+    kvs::ObjectBase* object,
+    kvs::Camera* camera,
+    kvs::Light* light )
 {
     kvs::LineObject* line = kvs::LineObject::DownCast( object );
+    const float dpr = camera->devicePixelRatio();
+    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
+    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
+
     attachObject( line );
     createRandomTexture();
     this->create_shader_program();
     this->create_buffer_object( line );
     this->create_shape_texture();
     this->create_diffuse_texture();
-    this->create_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    this->create_framebuffer( framebuffer_width, framebuffer_height );
     this->create_sampling_points();
 }
 
-void SSAOStochasticStylizedLineRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+void SSAOStochasticStylizedLineRenderer::Engine::update(
+    kvs::ObjectBase* object,
+    kvs::Camera* camera,
+    kvs::Light* light )
 {
-    this->update_framebuffer( camera->windowWidth(), camera->windowHeight() );
+    const float dpr = camera->devicePixelRatio();
+    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
+    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
+    this->update_framebuffer( framebuffer_width, framebuffer_height );
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )

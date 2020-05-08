@@ -31,7 +31,7 @@ namespace
 
 inline kvs::StructuredVolumeObject* ImportVolumeObject( const int resolution )
 {
-    return new kvs::TornadoVolumeData( kvs::Vec3u::All( resolution ) );
+    return new kvs::TornadoVolumeData( kvs::Vec3u::Constant( resolution ) );
 }
 
 inline kvs::PointObject* GenerateSeedPoints(

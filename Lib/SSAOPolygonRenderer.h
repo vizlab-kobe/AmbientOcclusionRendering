@@ -33,8 +33,8 @@ class SSAOPolygonRenderer : public kvs::PolygonRenderer
     kvsModuleBaseClass( kvs::PolygonRenderer );
 
 private:
-    size_t m_width; ///< window width
-    size_t m_height; ///< window height
+    size_t m_window_width; ///< window width
+    size_t m_window_height; ///< window height
     const kvs::ObjectBase* m_object; ///< pointer to the rendering object
     bool m_has_normal; ///< check flag for the normal array
     bool m_has_connection; ///< check flag for the connection array

@@ -236,7 +236,7 @@ inline void Draw()
             kvs::OpenGL::WithEnabled e1( GL_TEXTURE_2D );
             {
                 kvs::OpenGL::Begin( GL_QUADS );
-                kvs::OpenGL::Color( kvs::Vec4::All( 1.0 ) );
+                kvs::OpenGL::Color( kvs::Vec4::Constant( 1.0 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 1 ), kvs::Vec2( 0, 1 ) );
                 kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 0 ), kvs::Vec2( 0, 0 ) );
@@ -259,8 +259,8 @@ namespace AmbientOcclusionRendering
  */
 /*===========================================================================*/
 SSAOStylizedLineRenderer::SSAOStylizedLineRenderer():
-    m_width( 0 ),
-    m_height( 0 ),
+    m_window_width( 0 ),
+    m_window_height( 0 ),
     m_object( NULL ),
     m_has_connection( false ),
     m_shader( NULL ),
@@ -306,26 +306,30 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
 
     const size_t width = camera->windowWidth();
     const size_t height = camera->windowHeight();
-    const bool window_created = m_width == 0 && m_height == 0;
+    const float dpr = camera->devicePixelRatio();
+    const size_t framebuffer_width = static_cast<size_t>( width * dpr );
+    const size_t framebuffer_height = static_cast<size_t>( height * dpr );
+
+    const bool window_created = m_window_width == 0 && m_window_height == 0;
     if ( window_created )
     {
-        m_width = width;
-        m_height = height;
+        m_window_width = width;
+        m_window_height = height;
         m_object = object;
         this->create_shader_program();
         this->create_buffer_object( line );
         this->create_shape_texture();
         this->create_diffuse_texture();
-        this->create_framebuffer( m_width, m_height );
+        this->create_framebuffer( framebuffer_width, framebuffer_height );
         this->create_sampling_points();
     }
 
-    const bool window_resized = m_width != width || m_height != height;
+    const bool window_resized = m_window_width != width || m_window_height != height;
     if ( window_resized )
     {
-        m_width = width;
-        m_height = height;
-        this->update_framebuffer( m_width, m_height );
+        m_window_width = width;
+        m_window_height = height;
+        this->update_framebuffer( framebuffer_width, framebuffer_height );
     }
 
     const bool object_changed = m_object != object;
@@ -590,7 +594,7 @@ void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line
     kvs::FrameBufferObject::Binder bind0( m_framebuffer );
 
     // Initialize FBO.
-    kvs::OpenGL::SetClearColor( kvs::Vec4::All( 0.0f ) );
+    kvs::OpenGL::SetClearColor( kvs::Vec4::Constant( 0.0f ) );
     kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Enable MRT rendering.

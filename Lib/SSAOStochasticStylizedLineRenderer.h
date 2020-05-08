@@ -43,7 +43,7 @@ private:
     kvs::UInt8 m_line_opacity; ///< line opacity
     kvs::ValueArray<GLint> m_first_array; ///< array of starting indices for the polyline
     kvs::ValueArray<GLsizei> m_count_array; ///< array of the number of indices for the polyline
-    kvs::Shader::ShadingModel* m_shader; ///< shading method
+//    kvs::Shader::ShadingModel* m_shader; ///< shading method
     kvs::ProgramObject m_shader_geom_pass; ///< shader program for geometry-pass (1st pass)
     kvs::ProgramObject m_shader_occl_pass; ///< shader program for occlusion-pass (2nd pass)
 
