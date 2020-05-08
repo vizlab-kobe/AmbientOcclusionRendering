@@ -59,13 +59,13 @@ The library includes the following classes used in the test programs and applica
 <br>Order-independent semi-transparent polygon renderer class with screen space ambient occlusion effect.
 
 * `AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer`
-<br>Order-independent semi-transparent stylized line renderer class with screen space ambient occlusion effect.
+<br>Order-independent semi-transparent stylized line renderer class with screen space ambient occlusion effect. A opacity value can be specified for the streamlines.
 
 * `AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer`
 <br>Order-independent semi-transparent tetrahedra renderer class with screen space ambient occlusion effect.
 
 * `AmbientOcclusionRendering::SSAOStochasticTubeRenderer`
-<br>Order-independent semi-transparent tube renderer class with screen space ambient occlusion effect.
+<br>Order-independent semi-transparent tube renderer class with screen space ambient occlusion effect<sup>[1,2]</sup>. The opacities can be specified for each vertex of streamlines by using the transfer function.
 
 ## Publications
 1. 藤田 泰之, 坂本 尚久, 確率的半透明流線可視化向けアンビエントオクルージョン, 第47回 可視化情報シンポジウム, 2019. [[repo](https://github.com/vizlab-kobe-paper/2019_VisSympo__YasuyukiFujita)]
