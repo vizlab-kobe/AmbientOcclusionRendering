@@ -20,3 +20,4 @@ App/MHDStreamLine/MHDStreamLine
 Test/SSAOStochasticPolygonRenderer/SSAOStochasticPolygonRenderer
 Test/SSAOStochasticTetrahedraRenderer/SSAOStochasticTetrahedraRenderer
 Test/SSAOStochasticUniformGridRenderer/SSAOStochasticUniformGridRenderer
+App/EEStreamline/EEStreamline

@@ -67,7 +67,7 @@ kvs::Vec3 Streamline::StructuredVolumeInterpolator::interpolatedValue( const kvs
     {
         if ( kvs::Math::IsZero( Sx[i] ) && kvs::Math::IsZero( Sy[i] ) && kvs::Math::IsZero( Sz[i] ) )
         {
-            return kvs::Vec3::All(0);
+            return kvs::Vec3::Constant(0);
         }
     }
 
