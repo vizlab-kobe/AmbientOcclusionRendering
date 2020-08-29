@@ -1,5 +1,5 @@
-#include <kvs/glut/Application>
-#include <kvs/glut/Screen>
+#include <kvs/Application>
+#include <kvs/Screen>
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/LineObject>
@@ -97,8 +97,8 @@ int main( int argc, char** argv )
     kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
 
     // Application and screen.
-    kvs::glut::Application app( argc, argv );
-    kvs::glut::Screen screen( &app );
+    kvs::Application app( argc, argv );
+    kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "SSAOStochasticStylizedLineRenderer" );
     screen.show();
