@@ -12,48 +12,53 @@
 #include <AmbientOcclusionRendering/Lib/SSAOPolygonRenderer.h>
 
 
-namespace
+struct Model
 {
+    using SSAORenderer = AmbientOcclusionRendering::SSAOPolygonRenderer;
+    using NoSSAORenderer = kvs::glsl::PolygonRenderer();
 
-inline kvs::PolygonObject* ImportPolygonObject( const std::string filename )
-{
-    kvs::PolygonObject* polygon = new kvs::PolygonImporter( filename );
-    const size_t nvertices = polygon->numberOfVertices();
-    const size_t npolygons = polygon->numberOfConnections();
-    if ( npolygons > 0 && nvertices != 3 * npolygons )
+    bool ssao;
+    float radius;
+    size_t points;
+
+    kvs::PolygonObject* import( const std::string filename )
     {
-        kvs::PolygonObject* temp = new kvs::PolygonToPolygon( polygon );
-        delete polygon;
-        polygon = temp;
+        kvs::PolygonObject* polygon = new kvs::PolygonImporter( filename );
+        const size_t nvertices = polygon->numberOfVertices();
+        const size_t npolygons = polygon->numberOfConnections();
+        if ( npolygons > 0 && nvertices != 3 * npolygons )
+        {
+            kvs::PolygonObject* temp = new kvs::PolygonToPolygon( polygon );
+            delete polygon;
+            polygon = temp;
         }
-    return polygon;
-}
-
-inline kvs::RendererBase* CreateRenderer( const bool ssao, const float radius, const size_t points )
-{
-    if ( ssao )
-    {
-        auto* renderer = new AmbientOcclusionRendering::SSAOPolygonRenderer();
-        renderer->setName( "Renderer" );
-        renderer->setSamplingSphereRadius( radius );
-        renderer->setNumberOfSamplingPoints( points );
-        renderer->enableShading();
-        return renderer;
+        return polygon;
     }
-    else
+
+    kvs::RendererBase* renderer()
     {
-        auto* renderer = new kvs::glsl::PolygonRenderer();
-        renderer->setName( "Renderer" );
-        renderer->enableShading();
-        return renderer;
+        if ( ssao )
+        {
+            auto* renderer = new SSAORenderer();
+            renderer->setName( "Renderer" );
+            renderer->setSamplingSphereRadius( radius );
+            renderer->setNumberOfSamplingPoints( points );
+            renderer->enableShading();
+            return renderer;
+        }
+        else
+        {
+            auto* renderer = new NoSSAORenderer();
+            renderer->setName( "Renderer" );
+            renderer->enableShading();
+            return renderer;
+        }
     }
-}
-
-} // end of namespace
-
+};
 
 int main( int argc, char** argv )
 {
+    // Shader path.
     kvs::ShaderSource::AddSearchPath("../../Lib");
 
     // Application and screen.
@@ -64,97 +69,87 @@ int main( int argc, char** argv )
     screen.show();
 
     // Parameters.
-    bool ssao = true;
-    float radius = 0.5f;
-    size_t points = 256;
+    Model model;
+    model.ssao = true;
+    model.radius = 0.5f;
+    model.points = 256;
 
     // Visualization pipeline.
     const std::string filename = argv[1];
-    auto* object = ::ImportPolygonObject( filename );
-    auto* renderer = ::CreateRenderer( ssao, radius, points );
-    screen.registerObject( object, renderer );
+    screen.registerObject( model.import( filename ), model.renderer() );
 
     // Widgets.
     kvs::CheckBox ssao_check_box( &screen );
     ssao_check_box.setCaption( "SSAO" );
-    ssao_check_box.setState( ssao );
+    ssao_check_box.setState( model.ssao );
     ssao_check_box.setMargin( 10 );
-    ssao_check_box.stateChanged(
-        [&] ()
-        {
-            ssao = ssao_check_box.state();
-            renderer = ::CreateRenderer( ssao, radius, points );
-            screen.scene()->replaceRenderer( "Renderer", renderer );
-        } );
     ssao_check_box.show();
+    ssao_check_box.stateChanged( [&] ()
+    {
+        model.ssao = ssao_check_box.state();
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+    } );
 
     kvs::Slider radius_slider( &screen );
-    radius_slider.setCaption( "Radius: " + kvs::String::From( radius ) );
-    radius_slider.setValue( radius );
+    radius_slider.setCaption( "Radius: " + kvs::String::From( model.radius ) );
+    radius_slider.setValue( model.radius );
     radius_slider.setRange( 0.1, 5.0 );
     radius_slider.setMargin( 10 );
     radius_slider.anchorToBottom( &ssao_check_box );
-    radius_slider.sliderMoved(
-        [&] ()
-        {
-            const float min_value = radius_slider.minValue();
-            const float max_value = radius_slider.maxValue();
-            const float v = int( radius_slider.value() * 2 ) * 0.5f;
-            radius = kvs::Math::Clamp( v, min_value, max_value );
-            radius_slider.setCaption( "Radius: " + kvs::String::From( radius ) );
-        } );
-    radius_slider.sliderReleased(
-        [&] ()
-        {
-            if ( ssao )
-            {
-                renderer = ::CreateRenderer( ssao, radius, points );
-                screen.scene()->replaceRenderer( "Renderer", renderer );
-            }
-        } );
     radius_slider.show();
+    radius_slider.sliderMoved( [&] ()
+    {
+        const float min_value = radius_slider.minValue();
+        const float max_value = radius_slider.maxValue();
+        const float v = int( radius_slider.value() * 2 ) * 0.5f;
+        model.radius = kvs::Math::Clamp( v, min_value, max_value );
+        radius_slider.setCaption( "Radius: " + kvs::String::From( model.radius ) );
+    } );
+    radius_slider.sliderReleased( [&] ()
+    {
+        if ( model.ssao )
+        {
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }
+    } );
 
     kvs::Slider points_slider( &screen );
-    points_slider.setCaption( "Points: " + kvs::String::From( points ) );
-    points_slider.setValue( points );
+    points_slider.setCaption( "Points: " + kvs::String::From( model.points ) );
+    points_slider.setValue( model.points );
     points_slider.setRange( 1, 256 );
     points_slider.setMargin( 10 );
     points_slider.anchorToBottom( &radius_slider );
-    points_slider.sliderMoved(
-        [&] ()
-        {
-            points = int( points_slider.value() );
-            points_slider.setCaption( "Points: " + kvs::String::From( points ) );
-        } );
-    points_slider.sliderReleased(
-        [&] ()
-        {
-            if ( ssao )
-            {
-                renderer = ::CreateRenderer( ssao, radius, points );
-                screen.scene()->replaceRenderer( "Renderer", renderer );
-            }
-        } );
     points_slider.show();
+    points_slider.sliderMoved( [&] ()
+    {
+        model.points = int( points_slider.value() );
+        points_slider.setCaption( "Points: " + kvs::String::From( model.points ) );
+    } );
+    points_slider.sliderReleased( [&] ()
+    {
+        if ( model.ssao )
+        {
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }
+    } );
 
     // Events.
-    kvs::KeyPressEventListener key_event(
-        [&] ( kvs::KeyEvent* event )
+    kvs::KeyPressEventListener key_event( [&] ( kvs::KeyEvent* event )
+    {
+        switch ( event->key() )
         {
-            switch ( event->key() )
-            {
-            case kvs::Key::i:
-            {
-                const bool visible = ssao_check_box.isVisible();
-                ssao_check_box.setVisible( !visible );
-                radius_slider.setVisible( !visible );
-                points_slider.setVisible( !visible );
-                screen.redraw();
-                break;
-            }
-            default: break;
-            }
-        } );
+        case kvs::Key::i:
+        {
+            const bool visible = ssao_check_box.isVisible();
+            ssao_check_box.setVisible( !visible );
+            radius_slider.setVisible( !visible );
+            points_slider.setVisible( !visible );
+            screen.redraw();
+            break;
+        }
+        default: break;
+        }
+    } );
     screen.addEvent( &key_event );
 
     kvs::ScreenCaptureEvent capture_event;
