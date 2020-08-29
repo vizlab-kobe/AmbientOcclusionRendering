@@ -10,8 +10,8 @@
 #include <kvs/TargetChangeEvent>
 #include <kvs/KeyPressEventListener>
 #include <kvs/PolygonToPolygon>
-#include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
 #include <kvs/StochasticPolygonRenderer>
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
 
 
 struct Model
@@ -71,13 +71,12 @@ int main( int argc, char** argv )
 {
     // Shader path.
     kvs::ShaderSource::AddSearchPath("../../Lib");
-    kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
 
     // Application and screen.
     kvs::Application app( argc, argv );
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
-    screen.setTitle( "SSAOStochasticStylizedLineRenderer" );
+    screen.setTitle( "SSAOStochasticPolygonRenderer" );
     screen.show();
 
     // Parameters.
