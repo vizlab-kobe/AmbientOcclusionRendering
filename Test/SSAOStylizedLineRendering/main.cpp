@@ -14,197 +14,69 @@
 #include <kvs/KeyPressEventListener>
 #include <AmbientOcclusionRendering/Lib/SSAOStylizedLineRenderer.h>
 
-namespace
-{
-float SamplingRadius = 0.5f;
-size_t SamplingPoints = 256;
-}
 
-namespace
+struct Model
 {
+    using SSAORenderer = AmbientOcclusionRendering::SSAOStylizedLineRenderer;
+    using Renderer = kvs::StylizedLineRenderer;
 
-inline kvs::StructuredVolumeObject* ImportVolumeObject( const int resolution )
-{
-    return new kvs::TornadoVolumeData( kvs::Vec3u::Constant( resolution ) );
-}
+    bool ssao;
+    float radius;
+    int points;
+    float opacity;
 
-inline kvs::PointObject* GenerateSeedPoints(
-    const kvs::Vec3i min_coord,
-    const kvs::Vec3i max_coord,
-    const kvs::Vec3i stride )
-{
-    std::vector<kvs::Real32> v;
-    for ( int k = min_coord.z(); k < max_coord.z(); k += stride.z() )
+    kvs::LineObject* import()
     {
-        for ( int j = min_coord.y(); j < max_coord.y(); j += stride.y() )
+        const kvs::Vec3u resolution( 32, 32, 32 );
+        auto* volume = new kvs::TornadoVolumeData( resolution );
+
+        const kvs::Vec3i min_coord( 15, 15,  0 );
+        const kvs::Vec3i max_coord( 20, 20, 30 );
+        const kvs::Vec3i stride( 1, 1, 1 );
+        auto* point = new kvs::PointObject;
         {
-            for ( int i = min_coord.x(); i < max_coord.x(); i += stride.x() )
+            std::vector<kvs::Real32> v;
+            for ( int k = min_coord.z(); k < max_coord.z(); k += stride.z() )
             {
-                v.push_back( static_cast<kvs::Real32>(i) );
-                v.push_back( static_cast<kvs::Real32>(j) );
-                v.push_back( static_cast<kvs::Real32>(k) );
+                for ( int j = min_coord.y(); j < max_coord.y(); j += stride.y() )
+                {
+                    for ( int i = min_coord.x(); i < max_coord.x(); i += stride.x() )
+                    {
+                        v.push_back( static_cast<kvs::Real32>(i) );
+                        v.push_back( static_cast<kvs::Real32>(j) );
+                        v.push_back( static_cast<kvs::Real32>(k) );
+                    }
+                }
             }
+            point->setCoords( kvs::ValueArray<kvs::Real32>( v ) );
         }
+
+        const kvs::TransferFunction tfunc( kvs::ColorMap::BrewerSpectral( 256 ) );
+        auto* object = new kvs::Streamline( volume, point, tfunc );
+        delete volume;
+        delete point;
+        return object;
     }
 
-    kvs::PointObject* point = new kvs::PointObject;
-    point->setCoords( kvs::ValueArray<kvs::Real32>( v ) );
-    return point;
-}
-
-inline kvs::LineObject* ExtractStreamlines(
-    const kvs::StructuredVolumeObject* volume,
-    const kvs::PointObject* seed_points,
-    const kvs::TransferFunction& tfunc )
-{
-    return new kvs::Streamline( volume, seed_points, tfunc );
-}
-
-inline kvs::RendererBase* CreateRenderer( const bool ssao )
-{
-    if ( ssao )
+    kvs::RendererBase* renderer()
     {
-        typedef AmbientOcclusionRendering::SSAOStylizedLineRenderer Renderer;
-        Renderer* renderer = new Renderer();
-        renderer->setName( "Renderer" );
-        renderer->setSamplingSphereRadius( ::SamplingRadius );
-        renderer->setNumberOfSamplingPoints( ::SamplingPoints );
-        renderer->setShader( kvs::Shader::BlinnPhong() );
-        renderer->enableShading();
-        return renderer;
-    }
-    else
-    {
-        typedef kvs::StylizedLineRenderer Renderer;
-        Renderer* renderer = new Renderer();
-        renderer->setName( "Renderer" );
-        renderer->setShader( kvs::Shader::BlinnPhong() );
-        renderer->enableShading();
-        return renderer;
-    }
-}
-
-}
-
-class SSAOCheckBox : public kvs::CheckBox
-{
-private:
-    kvs::Scene* m_scene;
-
-public:
-    SSAOCheckBox( kvs::glut::Screen* screen ):
-        kvs::CheckBox( screen ),
-        m_scene( screen->scene() ) {}
-
-    void stateChanged()
-    {
-        if ( !state() )
+        if ( ssao )
         {
-            typedef AmbientOcclusionRendering::SSAOStylizedLineRenderer Renderer;
-            const Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
-            if ( renderer )
-            {
-                m_scene->replaceRenderer( "Renderer", ::CreateRenderer( false ) );
-            }
+            auto* renderer = new SSAORenderer();
+            renderer->setName( "Renderer" );
+            renderer->setSamplingSphereRadius( radius );
+            renderer->setNumberOfSamplingPoints( points );
+            renderer->setShader( kvs::Shader::BlinnPhong() );
+            renderer->enableShading();
+            return renderer;
         }
         else
         {
-            typedef kvs::StylizedLineRenderer Renderer;
-            const Renderer* renderer = Renderer::DownCast( m_scene->renderer( "Renderer" ) );
-            if ( renderer )
-            {
-                m_scene->replaceRenderer( "Renderer", ::CreateRenderer( true ) );
-            }
-        }
-    }
-};
-
-class SamplingRadiusSlider : public kvs::Slider
-{
-private:
-    kvs::Scene* m_scene;
-
-public:
-    SamplingRadiusSlider( kvs::glut::Screen* screen ):
-        kvs::Slider( screen ),
-        m_scene( screen->scene() ) {}
-
-    void sliderMoved()
-    {
-        ::SamplingRadius = current_value();
-        setCaption( "Radius: " + kvs::String::ToString( ::SamplingRadius ) );
-    }
-
-    void sliderReleased()
-    {
-        typedef AmbientOcclusionRendering::SSAOStylizedLineRenderer Renderer;
-        const bool ssao = ( Renderer::DownCast( m_scene->renderer( "Renderer" ) ) != NULL );
-        if ( ssao )
-        {
-            m_scene->replaceRenderer( "Renderer", ::CreateRenderer( true ) );
-        }
-    }
-
-private:
-    float current_value()
-    {
-        const float v = int( value() * 2 ) * 0.5;
-        return kvs::Math::Clamp( v, minValue(), maxValue() );
-    }
-};
-
-class SamplingPointsSlider : public kvs::Slider
-{
-private:
-    kvs::Scene* m_scene;
-
-public:
-    SamplingPointsSlider( kvs::glut::Screen* screen ):
-        kvs::Slider( screen ),
-        m_scene( screen->scene() ) {}
-
-    void sliderMoved()
-    {
-        ::SamplingPoints = int( value() );
-        setCaption( "Points: " + kvs::String::ToString( ::SamplingPoints ) );
-    }
-
-    void sliderReleased()
-    {
-        typedef AmbientOcclusionRendering::SSAOStylizedLineRenderer Renderer;
-        const bool ssao = ( Renderer::DownCast( m_scene->renderer( "Renderer" ) ) != NULL );
-        if ( ssao )
-        {
-            m_scene->replaceRenderer( "Renderer", ::CreateRenderer( true ) );
-        }
-    }
-};
-
-class KeyPressEvent : public kvs::KeyPressEventListener
-{
-private:
-    std::vector<kvs::WidgetBase*> m_widgets;
-
-public:
-    void addWidget( kvs::WidgetBase* widget )
-    {
-        m_widgets.push_back( widget );
-    }
-
-    void update( kvs::KeyEvent* event )
-    {
-        switch ( event->key() )
-        {
-        case kvs::Key::i:
-        {
-            for ( size_t i = 0; i < m_widgets.size(); i++ )
-            {
-                if ( m_widgets[i]->isShown() ) { m_widgets[i]->hide(); }
-                else { m_widgets[i]->show(); }
-            }
-            break;
-        }
-        default: break;
+            auto* renderer = new Renderer();
+            renderer->setName( "Renderer" );
+            renderer->setShader( kvs::Shader::BlinnPhong() );
+            renderer->enableShading();
+            return renderer;
         }
     }
 };
@@ -220,51 +92,87 @@ int main( int argc, char** argv )
     screen.setTitle( "SSAOStylizedLineRenderer" );
     screen.show();
 
-    // Input variables.
-    const bool ssao = true;
-    const kvs::Vector3i min_coord( 15, 15,  0 );
-    const kvs::Vector3i max_coord( 20, 20, 30 );
-    const kvs::Vec3i stride( 1, 1, 1 );
-    const kvs::TransferFunction tfunc( 256 );
+    // Parameters.
+    Model model;
+    model.ssao = true;
+    model.radius = 0.5;
+    model.points = 256;
 
     // Visualization pipeline.
-    kvs::StructuredVolumeObject* volume = ::ImportVolumeObject( 32 );
-    kvs::PointObject* seed_points = ::GenerateSeedPoints( min_coord, max_coord, stride );
-    kvs::LineObject* object = ::ExtractStreamlines( volume, seed_points, tfunc );
-    screen.registerObject( object, ::CreateRenderer( ssao ) );
-    delete volume;
-    delete seed_points;
+    screen.registerObject( model.import(), model.renderer() );
 
     // Widgets.
-    SSAOCheckBox ssao_check_box( &screen );
+    kvs::CheckBox ssao_check_box( &screen );
     ssao_check_box.setCaption( "SSAO" );
-    ssao_check_box.setState( ssao );
+    ssao_check_box.setState( model.ssao );
     ssao_check_box.setMargin( 10 );
     ssao_check_box.show();
+    ssao_check_box.stateChanged( [&] ()
+    {
+        model.ssao = ssao_check_box.state();
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+    } );
 
-    const float radius = ::SamplingRadius;
-    SamplingRadiusSlider radius_slider( &screen );
-    radius_slider.setCaption( "Radius: " + kvs::String::ToString( radius ) );
-    radius_slider.setValue( radius );
+    kvs::Slider radius_slider( &screen );
+    radius_slider.setCaption( "Radius: " + kvs::String::ToString( model.radius ) );
+    radius_slider.setValue( model.radius );
     radius_slider.setRange( 0.1, 5.0 );
     radius_slider.setMargin( 10 );
-    radius_slider.setPosition( ssao_check_box.x(), ssao_check_box.y() + ssao_check_box.height() );
+    radius_slider.anchorToBottom( &ssao_check_box );
     radius_slider.show();
+    radius_slider.sliderMoved( [&] ()
+    {
+        const float min_value = radius_slider.minValue();
+        const float max_value = radius_slider.maxValue();
+        const float v = int( radius_slider.value() * 2 ) * 0.5f;
+        model.radius = kvs::Math::Clamp( v, min_value, max_value );
+        radius_slider.setCaption( "Radius: " + kvs::String::From( model.radius ) );
+    } );
+    radius_slider.sliderReleased( [&] ()
+    {
+        if ( model.ssao )
+        {
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }
+    } );
 
-    const int npoints = ::SamplingPoints;
-    SamplingPointsSlider points_slider( &screen );
-    points_slider.setCaption( "Points: " + kvs::String::ToString( npoints ) );
-    points_slider.setValue( npoints );
+    kvs::Slider points_slider( &screen );
+    points_slider.setCaption( "Points: " + kvs::String::From( model.points ) );
+    points_slider.setValue( model.points );
     points_slider.setRange( 1, 256 );
     points_slider.setMargin( 10 );
-    points_slider.setPosition( radius_slider.x(), radius_slider.y() + radius_slider.height() - 10 );
+    points_slider.anchorToBottom( &radius_slider );
     points_slider.show();
+    points_slider.sliderMoved( [&] ()
+    {
+        model.points = int( points_slider.value() );
+        points_slider.setCaption( "Points: " + kvs::String::From( model.points ) );
+    } );
+    points_slider.sliderReleased( [&] ()
+    {
+        if ( model.ssao )
+        {
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }
+    } );
 
     // Events.
-    KeyPressEvent key_event;
-    key_event.addWidget( &ssao_check_box );
-    key_event.addWidget( &radius_slider );
-    key_event.addWidget( &points_slider );
+    kvs::KeyPressEventListener key_event( [&] ( kvs::KeyEvent* event )
+    {
+        switch ( event->key() )
+        {
+        case kvs::Key::i:
+        {
+            const bool visible = ssao_check_box.isVisible();
+            ssao_check_box.setVisible( !visible );
+            radius_slider.setVisible( !visible );
+            points_slider.setVisible( !visible );
+            screen.redraw();
+            break;
+        }
+        default: break;
+        }
+    } );
     screen.addEvent( &key_event );
 
     kvs::ScreenCaptureEvent capture_event;
