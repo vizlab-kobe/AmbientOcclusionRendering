@@ -87,7 +87,6 @@ struct Model
             return renderer;
         }
     }
-
 };
 
 int main( int argc, char** argv )
