@@ -17,7 +17,7 @@
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
-    using NoSSAORenderer = kvs::StochasticPolygonRenderer;
+    using Renderer = kvs::StochasticPolygonRenderer;
 
     bool ssao;
     bool lod;
@@ -57,7 +57,7 @@ struct Model
         }
         else
         {
-            auto* renderer = new NoSSAORenderer();
+            auto* renderer = new Renderer();
             renderer->setName( "Renderer" );
             renderer->setRepetitionLevel( repeats );
             renderer->setEnabledLODControl( lod );
@@ -121,7 +121,7 @@ int main( int argc, char** argv )
         }
         else
         {
-            auto* renderer = Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+            auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setEnabledLODControl( model.lod );
         }
     } );
@@ -148,7 +148,7 @@ int main( int argc, char** argv )
         }
         else
         {
-            auto* renderer = Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+            auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( model.repeats );
         }
     } );
@@ -217,26 +217,25 @@ int main( int argc, char** argv )
     } );
 
     // Events.
-    kvs::KeyPressEventListener key_event(
-        [&] ( kvs::KeyEvent* event )
+    kvs::KeyPressEventListener key_event( [&] ( kvs::KeyEvent* event )
+    {
+        switch ( event->key() )
         {
-            switch ( event->key() )
-            {
-            case kvs::Key::i:
-            {
-                const bool visible = ssao_check_box.isVisible();
-                ssao_check_box.setVisible( !visible );
-                lod_check_box.setVisible( !visible );
-                repeat_slider.setVisible( !visible );
-                radius_slider.setVisible( !visible );
-                points_slider.setVisible( !visible );
-                opacity_slider.setVisible( !visible );
-                screen.redraw();
-                break;
-            }
-            default: break;
-            }
-        } );
+        case kvs::Key::i:
+        {
+            const bool visible = ssao_check_box.isVisible();
+            ssao_check_box.setVisible( !visible );
+            lod_check_box.setVisible( !visible );
+            repeat_slider.setVisible( !visible );
+            radius_slider.setVisible( !visible );
+            points_slider.setVisible( !visible );
+            opacity_slider.setVisible( !visible );
+            screen.redraw();
+            break;
+        }
+        default: break;
+        }
+    } );
     screen.addEvent( &key_event );
 
     kvs::ScreenCaptureEvent capture_event;
