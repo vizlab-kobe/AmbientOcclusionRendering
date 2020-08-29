@@ -15,7 +15,7 @@
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOPolygonRenderer;
-    using NoSSAORenderer = kvs::glsl::PolygonRenderer();
+    using Renderer = kvs::glsl::PolygonRenderer();
 
     bool ssao;
     float radius;
@@ -48,7 +48,7 @@ struct Model
         }
         else
         {
-            auto* renderer = new NoSSAORenderer();
+            auto* renderer = new Renderer();
             renderer->setName( "Renderer" );
             renderer->enableShading();
             return renderer;
