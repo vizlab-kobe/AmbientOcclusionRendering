@@ -17,17 +17,22 @@
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
 
 
+/*===========================================================================*/
+/**
+ *  @brief  Model class manages SSAO parameters
+ */
+/*===========================================================================*/
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticTubeRenderer;
     using Renderer = StochasticStreamline::StochasticTubeRenderer;
 
-    bool ssao;
-    bool lod;
-    size_t repeats;
-    float radius;
-    int points;
-    kvs::TransferFunction tfunc;
+    bool ssao; ///< SSAO flag
+    bool lod; ///< LoD flag
+    size_t repeats; ///< number of repetitions for stochasti rendering
+    float radius; ///< radius of point sampling region for SSAO
+    int points; ///< number of points used for SSAO
+    kvs::TransferFunction tfunc; ///< transfer function
 
     kvs::StructuredVolumeObject* volume()
     {
@@ -95,6 +100,11 @@ struct Model
     }
 };
 
+/*===========================================================================*/
+/**
+ *  @brief  Main function
+ */
+/*===========================================================================*/
 int main( int argc, char** argv )
 {
     // Shader path.
@@ -154,13 +164,6 @@ int main( int argc, char** argv )
         }
     } );
 
-    // RepeatSlider repeat_slider( &screen );
-    // repeat_slider.setCaption( "Repeats: " + kvs::String::ToString( repeats ) );
-    // repeat_slider.setValue( repeats );
-    // repeat_slider.setRange( 1, 100 );
-    // repeat_slider.setMargin( 10 );
-    // repeat_slider.setPosition( lod_check_box.x(), lod_check_box.y() + lod_check_box.height() );
-    // repeat_slider.show();
     kvs::Slider repeat_slider( &screen );
     repeat_slider.setCaption( "Repeats: " + kvs::String::ToString( model.repeats ) );
     repeat_slider.setValue( model.repeats );

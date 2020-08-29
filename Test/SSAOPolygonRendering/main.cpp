@@ -12,14 +12,19 @@
 #include <AmbientOcclusionRendering/Lib/SSAOPolygonRenderer.h>
 
 
+/*===========================================================================*/
+/**
+ *  @brief  Model class manages SSAO parameters
+ */
+/*===========================================================================*/
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOPolygonRenderer;
     using Renderer = kvs::glsl::PolygonRenderer();
 
-    bool ssao;
-    float radius;
-    size_t points;
+    bool ssao; ///< SSAO flag
+    float radius; ///< radius of point sampling region for SSAM
+    size_t points; ///< number of points used for SSAO
 
     kvs::PolygonObject* import( const std::string filename )
     {
@@ -56,6 +61,11 @@ struct Model
     }
 };
 
+/*===========================================================================*/
+/**
+ *  @brief  Main function.
+ */
+/*===========================================================================*/
 int main( int argc, char** argv )
 {
     // Shader path.
@@ -64,7 +74,7 @@ int main( int argc, char** argv )
     // Application and screen.
     kvs::Application app( argc, argv );
     kvs::Screen screen( &app );
-    screen.setTitle( "Screen Space Ambient Occlusion" );
+    screen.setTitle( "SSAOPolygonRenderer" );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.show();
 

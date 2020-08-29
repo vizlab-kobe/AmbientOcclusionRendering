@@ -1,5 +1,5 @@
-#include <kvs/glut/Application>
-#include <kvs/glut/Screen>
+#include <kvs/Application>
+#include <kvs/Screen>
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/LineObject>
@@ -15,15 +15,19 @@
 #include <AmbientOcclusionRendering/Lib/SSAOStylizedLineRenderer.h>
 
 
+/*===========================================================================*/
+/**
+ *  @brief  Model class manages SSAO parameters
+ */
+/*===========================================================================*/
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOStylizedLineRenderer;
     using Renderer = kvs::StylizedLineRenderer;
 
-    bool ssao;
-    float radius;
-    int points;
-    float opacity;
+    bool ssao; ///< SSAO flag
+    float radius; ///< radius of point sampling region for SSAO
+    int points; ///< number of points used for SSAO
 
     kvs::LineObject* import()
     {
@@ -81,13 +85,19 @@ struct Model
     }
 };
 
+/*===========================================================================*/
+/**
+ *  @brief  Main function
+ */
+/*===========================================================================*/
 int main( int argc, char** argv )
 {
+    // Shader path.
     kvs::ShaderSource::AddSearchPath("../../Lib");
 
     // Application and screen.
-    kvs::glut::Application app( argc, argv );
-    kvs::glut::Screen screen( &app );
+    kvs::Application app( argc, argv );
+    kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "SSAOStylizedLineRenderer" );
     screen.show();

@@ -14,17 +14,22 @@
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
 
 
+/*===========================================================================*/
+/**
+ *  @brief  Model class manages SSAO parameters
+ */
+/*===========================================================================*/
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;
 
-    bool ssao;
-    bool lod;
-    size_t repeats;
-    float radius;
-    int points;
-    float opacity;
+    bool ssao; ///< SSAO flag
+    bool lod; ///< LoD flag
+    size_t repeats; ///< number of repetitions for stochasti rendering
+    float radius; ///< radius of point sampling region for SSAO
+    int points; ///< number of points used for SSAO
+    float opacity; ///< opacity of polygon object
 
     kvs::PolygonObject* import( const std::string filename )
     {
@@ -67,6 +72,11 @@ struct Model
     }
 };
 
+/*===========================================================================*/
+/**
+ *  @brief  Main function
+ */
+/*===========================================================================*/
 int main( int argc, char** argv )
 {
     // Shader path.

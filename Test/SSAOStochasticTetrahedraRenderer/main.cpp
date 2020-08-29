@@ -13,17 +13,22 @@
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticTetrahedraRenderer.h>
 
 
+/*===========================================================================*/
+/**
+ *  @brief  Model class manages SSAO parameters
+ */
+/*===========================================================================*/
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer;
     using Renderer = kvs::StochasticTetrahedraRenderer;
 
-    bool ssao;
-    bool lod;
-    size_t repeats;
-    float radius;
-    int points;
-    kvs::TransferFunction tfunc;
+    bool ssao; ///< SSAO flag
+    bool lod; ///< LoD flag
+    size_t repeats; ///< number of repetitions for stochasti rendering
+    float radius; ///< radius of point sampling region for SSAO
+    int points; ///< number of points used for SSAO
+    kvs::TransferFunction tfunc; ///< transfer function
 
     kvs::UnstructuredVolumeObject* import( const std::string& filename )
     {
@@ -60,7 +65,11 @@ struct Model
     }
 };
 
-
+/*===========================================================================*/
+/**
+ *  @brief  Main function
+ */
+/*===========================================================================*/
 int main( int argc, char** argv )
 {
     // Shader path.
@@ -70,7 +79,7 @@ int main( int argc, char** argv )
     kvs::Application app( argc, argv );
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
-    screen.setTitle( "SSAOStochasticTubeRenderer" );
+    screen.setTitle( "SSAOStochasticTetrahedraRenderer" );
     screen.show();
 
     // Parameters.
