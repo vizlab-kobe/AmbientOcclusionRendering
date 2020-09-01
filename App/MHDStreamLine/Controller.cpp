@@ -21,7 +21,6 @@ Controller::Controller( local::Model& model, local::View& view ):
     m_ssao_check_box.setCaption( "SSAO" );
     m_ssao_check_box.setState( m_model.isSSAOEnabled() );
     m_ssao_check_box.setMargin( 10 );
-//    m_ssao_check_box.show();
     m_ssao_check_box.stateChanged( [&] ()
     {
         m_model.setSSAOEnabled( m_ssao_check_box.state() );
@@ -32,7 +31,6 @@ Controller::Controller( local::Model& model, local::View& view ):
     m_lod_check_box.setState( m_model.isLODEnabled() );
     m_lod_check_box.setMargin( 10 );
     m_lod_check_box.anchorToBottom( &m_ssao_check_box );
-//    m_lod_check_box.show();
     m_lod_check_box.stateChanged( [&] ()
     {
         m_model.setLODEnabled( m_lod_check_box.state() );
@@ -54,7 +52,6 @@ Controller::Controller( local::Model& model, local::View& view ):
     m_repeat_slider.setRange( 1, 100 );
     m_repeat_slider.setMargin( 10 );
     m_repeat_slider.anchorToBottom( &m_lod_check_box );
-//    m_repeat_slider.show();
     m_repeat_slider.sliderMoved( [&] ()
     {
         m_model.setRepeats( m_repeat_slider.value() );
@@ -80,7 +77,6 @@ Controller::Controller( local::Model& model, local::View& view ):
     m_radius_slider.setRange( 0.1, 5.0 );
     m_radius_slider.setMargin( 10 );
     m_radius_slider.anchorToBottom( &m_repeat_slider );
-//    m_radius_slider.show();
     m_radius_slider.sliderMoved( [&] ()
     {
         const float min_value = m_radius_slider.minValue();
@@ -102,7 +98,6 @@ Controller::Controller( local::Model& model, local::View& view ):
     m_points_slider.setRange( 1, 256 );
     m_points_slider.setMargin( 10 );
     m_points_slider.anchorToBottom( &m_radius_slider );
-//    m_points_slider.show();
     m_points_slider.sliderMoved( [&] ()
     {
         m_model.setPoints( int( m_points_slider.value() ) );
@@ -123,7 +118,6 @@ Controller::Controller( local::Model& model, local::View& view ):
     m_bar.setCaption( "Velocity Magnitude" );
     m_bar.setColorMap( m_model.transferFunction().colorMap() );
     m_bar.anchorToBottomRight();
-//    m_bar.show();
 
     m_editor.setTransferFunction( m_model.transferFunction() );
     m_editor.show();
