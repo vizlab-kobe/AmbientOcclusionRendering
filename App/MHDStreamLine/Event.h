@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 #include "Controller.h"
 #include <kvs/EventListener>
@@ -17,3 +18,4 @@ public:
 };
 
 } // end of namespace local
+#endif

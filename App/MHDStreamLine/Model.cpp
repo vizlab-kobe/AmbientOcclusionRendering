@@ -8,6 +8,13 @@
 namespace local
 {
 
+Model::Model( local::Input& input ):
+    Input( input ),
+    m_cached_volume( nullptr )
+{
+    input.print( std::cout << "Input Variables" << std::endl, kvs::Indent( 4 ) );
+}
+
 kvs::StructuredVolumeObject* Model::import( const bool cache ) const
 {
     kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( this->filename() );

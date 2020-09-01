@@ -22,7 +22,7 @@ public:
     typedef StochasticStreamline::StochasticTubeRenderer NoSSAORenderer;
 
 public:
-    Model( local::Input& input ): Input( input ), m_cached_volume( NULL ) {}
+    Model( local::Input& input );
 
     const kvs::StructuredVolumeObject* cachedVolume() const { return m_cached_volume; }
     kvs::StructuredVolumeObject* import( const bool cache = true ) const;

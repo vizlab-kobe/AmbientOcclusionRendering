@@ -4,6 +4,9 @@
 #include <kvs/OrientationAxis>
 #include <kvs/ColorMapBar>
 #include <kvs/TransferFunctionEditor>
+#include <kvs/KeyPressEventListener>
+#include <kvs/ScreenCaptureEvent>
+#include <kvs/TargetChangeEvent>
 #include "Model.h"
 #include "View.h"
 
@@ -24,10 +27,14 @@ private:
     kvs::OrientationAxis m_axis;
     kvs::ColorMapBar m_bar;
     kvs::TransferFunctionEditor m_editor;
+    kvs::KeyPressEventListener m_key_press_event;
+    kvs::ScreenCaptureEvent m_capture_event;
+    kvs::TargetChangeEvent m_target_change_event;
 
 public:
     Controller( local::Model& model, local::View& view );
 
+protected:
     bool isVisible() const;
     void show();
     void hide();

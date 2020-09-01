@@ -1,3 +1,4 @@
+#if 0
 #include "Event.h"
 
 
@@ -16,7 +17,7 @@ void Event::keyPressEvent( kvs::KeyEvent* event )
     {
     case kvs::Key::i:
     {
-        if ( m_widget.isShown() ) { m_widget.hide(); }
+        if ( m_widget.isVisible() ) { m_widget.hide(); }
         else { m_widget.show(); }
     }
     default: break;
@@ -24,3 +25,4 @@ void Event::keyPressEvent( kvs::KeyEvent* event )
 }
 
 } // end of namespace local
+#endif
