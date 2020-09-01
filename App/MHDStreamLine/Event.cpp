@@ -4,7 +4,7 @@
 namespace local
 {
 
-Event::Event( local::Widget& widget ):
+Event::Event( local::Controller& widget ):
     m_widget( widget )
 {
     setEventType( kvs::EventBase::KeyPressEvent );

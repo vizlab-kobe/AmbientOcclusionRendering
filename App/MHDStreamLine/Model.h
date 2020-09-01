@@ -12,10 +12,9 @@
 namespace local
 {
 
-class Vis
+class Model : public Input
 {
 private:
-    local::Input& m_input; ///< input variables
     mutable kvs::StructuredVolumeObject* m_cached_volume;
 
 public:
@@ -23,7 +22,7 @@ public:
     typedef StochasticStreamline::StochasticTubeRenderer NoSSAORenderer;
 
 public:
-    Vis( local::Input& input ): m_input( input ), m_cached_volume( NULL ) {}
+    Model( local::Input& input ): Input( input ), m_cached_volume( NULL ) {}
 
     const kvs::StructuredVolumeObject* cachedVolume() const { return m_cached_volume; }
     kvs::StructuredVolumeObject* import( const bool cache = true ) const;

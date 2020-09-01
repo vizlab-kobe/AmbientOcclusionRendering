@@ -1,10 +1,11 @@
 #include "Program.h"
 #include "Input.h"
-#include "Vis.h"
-#include "Widget.h"
+#include "Model.h"
+#include "View.h"
+#include "Controller.h"
 #include "Event.h"
-#include <kvs/glut/Application>
-#include <kvs/glut/Screen>
+#include <kvs/Application>
+#include <kvs/Screen>
 #include <kvs/ScreenCaptureEvent>
 #include <kvs/TargetChangeEvent>
 
@@ -14,40 +15,44 @@ namespace local
 
 int Program::exec( int argc, char** argv )
 {
+    kvs::Application app( argc, argv );
+
     // Input variables.
-    local::Input input( argc, argv );
-    if ( !input.parse() ) { return 1; }
+    local::Input input;
+    if ( !input.parse( argc, argv ) ) { return 1; }
 
     input.print( std::cout << "Input Variables" << std::endl, kvs::Indent( 4 ) );
 
     // Application and screen.
-    kvs::glut::Application app( argc, argv );
-    kvs::glut::Screen screen( &app );
-    screen.setTitle( "Stochastic Tubeline Rendering with SSAO" );
-    screen.setBackgroundColor( kvs::RGBColor::White() );
-    screen.show();
+//    kvs::Application app( argc, argv );
+//    kvs::Screen screen( &app );
+//    screen.setTitle( "Stochastic Tubeline Rendering with SSAO" );
+//    screen.setBackgroundColor( kvs::RGBColor::White() );
+//    screen.show();
 
     // Visualization pipeline.
-    local::Vis vis( input );
-    kvs::StructuredVolumeObject* volume = vis.import();
-    kvs::LineObject* object = vis.streamline( volume );
-    kvs::RendererBase* renderer = vis.renderer();
-    screen.registerObject( object, renderer );
+    local::Model model( input );
+//    auto* volume = model.import();
+//    auto* object = model.streamline( volume );
+//    auto* renderer = model.renderer();
+//    screen.registerObject( object, renderer );
+    local::View view( &app, &model );
 
-    volume->print( std::cout << "Imported Volume Object" << std::endl, kvs::Indent( 4 ) );
-    object->print( std::cout << "Generated Streamlines" << std::endl, kvs::Indent( 4 ) );
+//    volume->print( std::cout << "Imported Volume Object" << std::endl, kvs::Indent( 4 ) );
+//    object->print( std::cout << "Generated Streamlines" << std::endl, kvs::Indent( 4 ) );
 
     // Widgets.
-    local::Widget widget( screen, input, vis );
-    widget.show();
+//    local::Controller widget( screen, model );
+    local::Controller controller( model, view );
+    controller.show();
 
     // Events.
-    local::Event local_event( widget );
+    local::Event local_event( controller );
     kvs::ScreenCaptureEvent capture_event;
     kvs::TargetChangeEvent target_change_event;
-    screen.addEvent( &local_event );
-    screen.addEvent( &capture_event );
-    screen.addEvent( &target_change_event );
+    view.screen().addEvent( &local_event );
+    view.screen().addEvent( &capture_event );
+    view.screen().addEvent( &target_change_event );
 
     return app.run();
 }
