@@ -5,14 +5,6 @@
  */
 /*----------------------------------------------------------------------------
  *
- *  Copyright (c) Visualization Laboratory, Kyoto University.
- *  All rights reserved.
- *  See http://www.viz.media.kyoto-u.ac.jp/kvs/copyright/ for details.
- *
- *  $Id$
- */
-/*----------------------------------------------------------------------------
- *
  * References:
  * [1] Naohisa Sakamoto, Koji Koyamada, "A Stochastic Approach for Rendering
  *     Multiple Irregular Volumes", In Proc. of IEEE Pacific Visualization
@@ -92,21 +84,7 @@ private:
     kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
     float m_sampling_step; ///< sampling step
     float m_maxT; ///< maximum value of T
-
-    // Variables for SSAO
-    /*
-    kvs::ProgramObject m_shader_geom_pass; ///< shader program for geometry-pass (1st pass)
-    kvs::ProgramObject m_shader_occl_pass; ///< shader program for occlusion-pass (2nd pass)
-    kvs::FrameBufferObject m_framebuffer;
-    kvs::Texture2D m_color_texture;
-    kvs::Texture2D m_position_texture;
-    kvs::Texture2D m_normal_texture;
-    kvs::Texture2D m_depth_texture;
-    kvs::Real32 m_sampling_sphere_radius;
-    size_t m_nsamples;
-    */
-//    SSAODrawable m_drawable;
-    Drawable m_drawable;
+    Drawable m_drawable; ///< drawable for SSAO
 
 public:
     Engine();
@@ -126,23 +104,15 @@ public:
     float samplingStep() const { return m_sampling_step; }
     const kvs::TransferFunction& transferFunction() const { return m_transfer_function; }
 
-    // void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
-    // void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
-    // kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
-    // size_t numberOfSamplingPoints() const { return m_nsamples; }
     void setSamplingSphereRadius( const float radius ) { m_drawable.setSamplingSphereRadius( radius ); }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_drawable.setNumberOfSamplingPoints( nsamples ); }
     kvs::Real32 samplingSphereRadius() const { return m_drawable.samplingSphereRadius(); }
     size_t numberOfSamplingPoints() const { return m_drawable.numberOfSamplingPoints(); }
 
 private:
-//    void create_shader_program();
     void create_buffer_object( const kvs::UnstructuredVolumeObject* volume );
     void create_preintegration_texture();
     void create_decomposition_texture();
-//    void create_framebuffer( const size_t width, const size_t height );
-//    void create_sampling_points();
-//    void update_framebuffer( const size_t width, const size_t height );
     void render_geometry_pass( const kvs::UnstructuredVolumeObject* volume );
     void render_occlusion_pass();
 };

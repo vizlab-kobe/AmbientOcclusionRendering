@@ -9,20 +9,25 @@
 namespace AmbientOcclusionRendering
 {
 
+/*===========================================================================*/
+/**
+ *  @brief  Drawable class for SSAO
+ */
+/*===========================================================================*/
 class SSAODrawable
 {
 private:
-    std::string m_geom_pass_shader_vert_file;
-    std::string m_geom_pass_shader_frag_file;
-    std::string m_occl_pass_shader_vert_file;
-    std::string m_occl_pass_shader_frag_file;
+    std::string m_geom_pass_shader_vert_file; ///< vertex shader file for geometry pass
+    std::string m_geom_pass_shader_frag_file; ///< fragment shader file for geometry pass
+    std::string m_occl_pass_shader_vert_file; ///< vertex shader file for occlusion pass
+    std::string m_occl_pass_shader_frag_file; ///< fragment shader file for occlusion pass
     kvs::ProgramObject m_geom_pass_shader; ///< shader program for geometry-pass (1st pass)
     kvs::ProgramObject m_occl_pass_shader; ///< shader program for occlusion-pass (2nd pass)
-    kvs::FrameBufferObject m_framebuffer;
-    kvs::Texture2D m_color_texture;
-    kvs::Texture2D m_position_texture;
-    kvs::Texture2D m_normal_texture;
-    kvs::Texture2D m_depth_texture;
+    kvs::FrameBufferObject m_framebuffer; ///< framebuffer object
+    kvs::Texture2D m_color_texture; ///< color texture
+    kvs::Texture2D m_position_texture; ///< texture for storing position information
+    kvs::Texture2D m_normal_texture; ///< texture for storing normal vector
+    kvs::Texture2D m_depth_texture; ///< depth texture
     kvs::Real32 m_sampling_sphere_radius; ///< radius of sphere used for point sampling
     size_t m_nsamples; ///< number of sampling points
 
@@ -56,6 +61,8 @@ public:
     void createFramebuffer( const size_t width, const size_t height );
     void updateFramebuffer( const size_t width, const size_t height );
     void renderOcclusionPass();
+
+    kvs::ValueArray<GLfloat> generatePoints( const float radius, const size_t nsamples );
 };
 
 } // end of namespace AmbientOcclusionRendering

@@ -14,7 +14,7 @@
 /*****************************************************************************/
 #include "SSAOStochasticUniformGridRenderer.h"
 //#include "SSAOPointSampling.h"
-#include <AmbientOcclusionRendering/Lib/SSAOPointSampling.h>
+//#include <AmbientOcclusionRendering/Lib/SSAOPointSampling.h>
 #include <cmath>
 #include <cfloat>
 #include <kvs/OpenGL>
@@ -99,7 +99,7 @@ kvs::AnyValueArray SignedToUnsigned( const kvs::StructuredVolumeObject* volume )
 
     return kvs::AnyValueArray( data );
 }
-
+/*
 inline void Draw()
 {
     kvs::OpenGL::WithPushedMatrix p1( GL_MODELVIEW );
@@ -121,7 +121,7 @@ inline void Draw()
         }
     }
 }
-
+*/
 } // end of namespace
 
 
@@ -200,6 +200,8 @@ SSAOStochasticUniformGridRenderer::Engine::Engine():
     m_step( 0.5f ),
     m_transfer_function_changed( true )
 {
+    m_drawable.setGeometryPassShaderFiles( "SSAO_SR_uniform_grid_geom_pass.vert", "SSAO_SR_uniform_grid_geom_pass.frag" );
+    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -219,13 +221,14 @@ void SSAOStochasticUniformGridRenderer::Engine::release()
     m_bounding_cube_shader.release();
     m_transfer_function_changed = true;
 
-    m_shader_geom_pass.release();
-    m_shader_occl_pass.release();
-    m_framebuffer.release();
-    m_color_texture.release();
-    m_position_texture.release();
-    m_normal_texture.release();
-    m_depth_texture.release();
+    // m_shader_geom_pass.release();
+    // m_shader_occl_pass.release();
+    // m_framebuffer.release();
+    // m_color_texture.release();
+    // m_position_texture.release();
+    // m_normal_texture.release();
+    // m_depth_texture.release();
+    m_drawable.releaseResources();
 }
 
 /*===========================================================================*/
@@ -236,7 +239,10 @@ void SSAOStochasticUniformGridRenderer::Engine::release()
  *  @param  light [in] pointer to the light
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+void SSAOStochasticUniformGridRenderer::Engine::create(
+    kvs::ObjectBase* object,
+    kvs::Camera* camera,
+    kvs::Light* light )
 {
     kvs::StructuredVolumeObject* volume = kvs::StructuredVolumeObject::DownCast( object );
     const float dpr = camera->devicePixelRatio();
@@ -245,12 +251,14 @@ void SSAOStochasticUniformGridRenderer::Engine::create( kvs::ObjectBase* object,
 
     attachObject( object );
     createRandomTexture();
+//    m_drawable.createShaderProgram( this->shader(), this->isEnabledShading() );
+//    m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
     this->create_shader_program( volume );
     this->create_volume_texture( volume );
     this->create_transfer_function_texture();
     this->create_bounding_cube_buffer( volume );
     this->create_framebuffer( framebuffer_width, framebuffer_height );
-    this->create_sampling_points();
+//    this->create_sampling_points();
 }
 
 /*===========================================================================*/
@@ -267,6 +275,8 @@ void SSAOStochasticUniformGridRenderer::Engine::update( kvs::ObjectBase* object,
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
     this->update_framebuffer( framebuffer_width, framebuffer_height );
+    // this->update_entry_exit_framebuffer( framebuffer_width, framebuffer_height );
+    // m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
 }
 
 /*===========================================================================*/
@@ -280,7 +290,8 @@ void SSAOStochasticUniformGridRenderer::Engine::update( kvs::ObjectBase* object,
 void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
 //    m_random_index = m_ray_casting_shader.attributeLocation("random_index");
-    m_random_index = m_shader_geom_pass.attributeLocation("random_index");
+//    m_random_index = m_shader_geom_pass.attributeLocation("random_index");
+    m_random_index = m_drawable.geometryPassShader().attributeLocation("random_index");
 
     if ( m_transfer_function_changed )
     {
@@ -290,6 +301,7 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
 
     const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 PM_inverse = PM.inverted();
+    /*
     m_shader_geom_pass.bind();
     m_shader_geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
     m_shader_geom_pass.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
@@ -300,6 +312,18 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
     m_shader_geom_pass.setUniform( "transfer_function_data", 3 );
     m_shader_geom_pass.setUniform( "random_texture", 4 );
     m_shader_geom_pass.unbind();
+    */
+    auto& shader = m_drawable.geometryPassShader();
+    shader.bind();
+    shader.setUniform( "ModelViewProjectionMatrix", PM );
+    shader.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
+    shader.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
+    shader.setUniform( "volume_data", 0 );
+    shader.setUniform( "exit_points", 1 );
+    shader.setUniform( "entry_points", 2 );
+    shader.setUniform( "transfer_function_data", 3 );
+    shader.setUniform( "random_texture", 4 );
+    shader.unbind();
 
     kvs::ProgramObject::Binder unit0( m_bounding_cube_shader );
     kvs::FrameBufferObject::Binder unit1( m_entry_exit_framebuffer );
@@ -389,6 +413,83 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program( const kvs
         m_bounding_cube_shader.build( vert, frag );
     }
 
+    m_drawable.createShaderProgram( this->shader(), this->isEnabledShading() );
+
+    // Set uniform variables.
+    const kvs::Vector3ui r = volume->resolution();
+    const kvs::Real32 max_ngrids = static_cast<kvs::Real32>( kvs::Math::Max( r.x(), r.y(), r.z() ) );
+    const kvs::Vector3f resolution( static_cast<float>(r.x()), static_cast<float>(r.y()), static_cast<float>(r.z()) );
+    const kvs::Vector3f ratio( r.x() / max_ngrids, r.y() / max_ngrids, r.z() / max_ngrids );
+    const kvs::Vector3f reciprocal( 1.0f / r.x(), 1.0f / r.y(), 1.0f / r.z() );
+    kvs::Real32 min_range = 0.0f;
+    kvs::Real32 max_range = 0.0f;
+    kvs::Real32 min_value = m_transfer_function.colorMap().minValue();
+    kvs::Real32 max_value = m_transfer_function.colorMap().maxValue();
+    const std::type_info& type = volume->values().typeInfo()->type();
+    if ( type == typeid( kvs::UInt8 ) )
+    {
+        min_range = 0.0f;
+        max_range = 255.0f;
+        if ( !m_transfer_function.hasRange() )
+        {
+            min_value = 0.0f;
+            max_value = 255.0f;
+        }
+    }
+    else if ( type == typeid( kvs::Int8 ) )
+    {
+        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt8>::Min() );
+        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt8>::Max() );
+        if ( !m_transfer_function.hasRange() )
+        {
+            min_value = -128.0f;
+            max_value = 127.0f;
+        }
+    }
+    else if ( type == typeid( kvs::UInt16 ) )
+    {
+        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt16>::Min() );
+        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt16>::Max() );
+        if ( !m_transfer_function.hasRange() )
+        {
+            min_value = static_cast<kvs::Real32>( volume->minValue() );
+            max_value = static_cast<kvs::Real32>( volume->maxValue() );
+        }
+    }
+    else if ( type == typeid( kvs::Int16 ) )
+    {
+        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::Int16>::Min() );
+        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::Int16>::Max() );
+        if ( !m_transfer_function.hasRange() )
+        {
+            min_value = static_cast<kvs::Real32>( volume->minValue() );
+            max_value = static_cast<kvs::Real32>( volume->maxValue() );
+        }
+    }
+    else if ( type == typeid( kvs::UInt32 ) || type == typeid( kvs::Int32  ) || type == typeid( kvs::Real32 ) )
+    {
+        min_range = 0.0f;
+        max_range = 1.0f;
+        min_value = 0.0f;
+        max_value = 1.0f;
+    }
+    else
+    {
+        kvsMessageError( "Not supported data type '%s'.", volume->values().typeInfo()->typeName() );
+    }
+
+    auto& shader = m_drawable.geometryPassShader();
+    shader.bind();
+    shader.setUniform( "volume.resolution", resolution );
+    shader.setUniform( "volume.resolution_ratio", ratio );
+    shader.setUniform( "volume.resolution_reciprocal", reciprocal );
+    shader.setUniform( "volume.min_range", min_range );
+    shader.setUniform( "volume.max_range", max_range );
+    shader.setUniform( "transfer_function.min_value", min_value );
+    shader.setUniform( "transfer_function.max_value", max_value );
+    shader.setUniform( "dt", m_step );
+    shader.unbind();
+/*
     // Build SSAO shader for geometry-pass (1st pass).
     {
         kvs::ShaderSource vert("SSAO_SR_uniform_grid_geom_pass.vert");
@@ -504,6 +605,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program( const kvs
         m_shader_occl_pass.setUniform( "shading.S",  shader().S );
         m_shader_occl_pass.unbind();
     }
+*/
 }
 
 /*===========================================================================*/
@@ -751,11 +853,15 @@ void SSAOStochasticUniformGridRenderer::Engine::create_framebuffer( const size_t
     m_entry_exit_framebuffer.attachColorTexture( m_exit_texture, 0 );
     m_entry_exit_framebuffer.attachColorTexture( m_entry_texture, 1 );
 
-    m_shader_geom_pass.bind();
-    m_shader_geom_pass.setUniform( "width", static_cast<GLfloat>( width ) );
-    m_shader_geom_pass.setUniform( "height", static_cast<GLfloat>( height ) );
-    m_shader_geom_pass.unbind();
+    /**/
+    auto& shader = m_drawable.geometryPassShader();
+    shader.bind();
+    shader.setUniform( "width", static_cast<GLfloat>( width ) );
+    shader.setUniform( "height", static_cast<GLfloat>( height ) );
+    shader.unbind();
 
+    m_drawable.createFramebuffer( width, height );
+    /*
     m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
     m_color_texture.setWrapT( GL_CLAMP_TO_EDGE );
     m_color_texture.setMagFilter( GL_LINEAR );
@@ -792,8 +898,10 @@ void SSAOStochasticUniformGridRenderer::Engine::create_framebuffer( const size_t
 //    m_framebuffer.attachColorTexture( m_position_texture, 3 );
 //    m_framebuffer.attachColorTexture( m_normal_texture, 4 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
+    */
 }
 
+/*
 void SSAOStochasticUniformGridRenderer::Engine::create_sampling_points()
 {
     const size_t nsamples = m_nsamples;
@@ -804,6 +912,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create_sampling_points()
     m_shader_occl_pass.setUniform( "sampling_points", sampling_points, dim );
     m_shader_occl_pass.unbind();
 }
+*/
 
 /*===========================================================================*/
 /**
@@ -823,11 +932,15 @@ void SSAOStochasticUniformGridRenderer::Engine::update_framebuffer( const size_t
     m_entry_exit_framebuffer.attachColorTexture( m_exit_texture, 0 );
     m_entry_exit_framebuffer.attachColorTexture( m_entry_texture, 1 );
 
-    m_shader_geom_pass.bind();
-    m_shader_geom_pass.setUniform( "width", static_cast<GLfloat>( width ) );
-    m_shader_geom_pass.setUniform( "height", static_cast<GLfloat>( height ) );
-    m_shader_geom_pass.unbind();
+    /**/
+    auto& shader = m_drawable.geometryPassShader();
+    shader.bind();
+    shader.setUniform( "width", static_cast<GLfloat>( width ) );
+    shader.setUniform( "height", static_cast<GLfloat>( height ) );
+    shader.unbind();
 
+    m_drawable.updateFramebuffer( width, height );
+/*
     m_color_texture.release();
     m_color_texture.create( width, height );
 
@@ -847,6 +960,7 @@ void SSAOStochasticUniformGridRenderer::Engine::update_framebuffer( const size_t
 //    m_framebuffer.attachColorTexture( m_position_texture, 3 );
 //    m_framebuffer.attachColorTexture( m_normal_texture, 4 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
+    */
 }
 
 /*===========================================================================*/
@@ -893,7 +1007,8 @@ void SSAOStochasticUniformGridRenderer::Engine::render_geometry_pass(
     const kvs::Camera* camera,
     const kvs::Light* light )
 {
-    kvs::FrameBufferObject::GuardedBinder bind0( m_framebuffer );
+//    kvs::FrameBufferObject::GuardedBinder bind0( m_framebuffer );
+    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
     kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -913,7 +1028,8 @@ void SSAOStochasticUniformGridRenderer::Engine::render_geometry_pass(
     kvs::Texture::Binder unit2( m_entry_texture, 2 );
     kvs::Texture::Binder unit3( m_transfer_function_texture, 3 );
     kvs::Texture::Binder unit4( randomTexture(), 4 );
-    kvs::ProgramObject::Binder unit( m_shader_geom_pass );
+//    kvs::ProgramObject::Binder unit( m_shader_geom_pass );
+    kvs::ProgramObject::Binder unit( m_drawable.geometryPassShader() );
 
     if ( isEnabledShading() ) kvs::OpenGL::Enable( GL_LIGHTING );
     else kvs::OpenGL::Disable( GL_LIGHTING );
@@ -928,19 +1044,20 @@ void SSAOStochasticUniformGridRenderer::Engine::render_geometry_pass(
     const float to_ze2 = ( f - n ) / ( f * n );
 //    const kvs::Vector3f light_position = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( volume ).position();
     const kvs::Vector3f camera_position = kvs::WorldCoordinate( camera->position() ).toObjectCoordinate( volume ).position();
-    m_shader_geom_pass.setUniform( "to_zw1", to_zw1 );
-    m_shader_geom_pass.setUniform( "to_zw2", to_zw2 );
-    m_shader_geom_pass.setUniform( "to_ze1", to_ze1 );
-    m_shader_geom_pass.setUniform( "to_ze2", to_ze2 );
-//    m_shader_geom_pass.setUniform( "light_position", light_position );
-    m_shader_geom_pass.setUniform( "camera_position", camera_position );
+    auto& shader = m_drawable.geometryPassShader();
+    shader.setUniform( "to_zw1", to_zw1 );
+    shader.setUniform( "to_zw2", to_zw2 );
+    shader.setUniform( "to_ze1", to_ze1 );
+    shader.setUniform( "to_ze2", to_ze2 );
+//    shader.setUniform( "light_position", light_position );
+    shader.setUniform( "camera_position", camera_position );
 
     const size_t size = randomTextureSize();
     const int count = repetitionCount() * ::RandomNumber();
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
-    m_shader_geom_pass.setUniform( "random_offset", random_offset );
+    shader.setUniform( "random_offset", random_offset );
     this->draw_quad();
 }
 
@@ -948,6 +1065,7 @@ void SSAOStochasticUniformGridRenderer::Engine::render_occlusion_pass(
     const kvs::StructuredVolumeObject* volume,
     const kvs::Light* light )
 {
+    /*
     kvs::ProgramObject::Binder bind1( m_shader_occl_pass );
     kvs::Texture::Binder unit0( m_color_texture, 0 );
     kvs::Texture::Binder unit1( m_position_texture, 1 );
@@ -966,6 +1084,13 @@ void SSAOStochasticUniformGridRenderer::Engine::render_occlusion_pass(
     kvs::OpenGL::Enable( GL_TEXTURE_2D );
     kvs::OpenGL::Enable( GL_LIGHTING );
     ::Draw();
+    */
+    const kvs::Vec3 light_position = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( volume ).position();
+    auto& shader = m_drawable.occlusionPassShader();
+    shader.bind();
+    shader.setUniform( "light_position", light_position );
+    shader.unbind();
+    m_drawable.renderOcclusionPass();
 }
 
 } // end of namespace AmbientOcclusionRendering

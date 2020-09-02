@@ -23,6 +23,7 @@
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
+#include <AmbientOcclusionRendering/Lib/SSAODrawable.h>
 
 
 namespace AmbientOcclusionRendering
@@ -76,6 +77,7 @@ private:
     kvs::ProgramObject m_bounding_cube_shader; ///< bounding cube shader
 
     // Variables for SSAO
+    /*
     kvs::ProgramObject m_shader_geom_pass; ///< shader program for geometry-pass (1st pass)
     kvs::ProgramObject m_shader_occl_pass; ///< shader program for occlusion-pass (2nd pass)
     kvs::FrameBufferObject m_framebuffer;
@@ -85,6 +87,8 @@ private:
     kvs::Texture2D m_depth_texture;
     kvs::Real32 m_sampling_sphere_radius;
     size_t m_nsamples;
+    */
+    SSAODrawable m_drawable;
 
 public:
     Engine();
@@ -104,10 +108,14 @@ public:
     float samplingStep() const { return m_step; }
     const kvs::TransferFunction& transferFunction() const { return m_transfer_function; }
 
-    void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
-    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
-    size_t numberOfSamplingPoints() const { return m_nsamples; }
+    // void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
+    // void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
+    // kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
+    // size_t numberOfSamplingPoints() const { return m_nsamples; }
+    void setSamplingSphereRadius( const float radius ) { m_drawable.setSamplingSphereRadius( radius ); }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_drawable.setNumberOfSamplingPoints( nsamples ); }
+    kvs::Real32 samplingSphereRadius() const { return m_drawable.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_drawable.numberOfSamplingPoints(); }
 
 private:
     void create_shader_program( const kvs::StructuredVolumeObject* volume );
@@ -115,7 +123,7 @@ private:
     void create_transfer_function_texture();
     void create_bounding_cube_buffer( const kvs::StructuredVolumeObject* volume );
     void create_framebuffer( const size_t width, const size_t height );
-    void create_sampling_points();
+//    void create_sampling_points();
     void update_framebuffer( const size_t width, const size_t height );
     void draw_bounding_cube_buffer();
     void draw_quad();

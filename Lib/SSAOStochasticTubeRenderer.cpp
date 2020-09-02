@@ -1,5 +1,4 @@
 #include "SSAOStochasticTubeRenderer.h"
-#include "SSAOPointSampling.h"
 #include <kvs/OpenGL>
 #include <kvs/ProgramObject>
 #include <kvs/ShaderSource>
