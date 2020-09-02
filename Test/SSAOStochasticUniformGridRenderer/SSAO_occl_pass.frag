@@ -80,8 +80,8 @@ void main()
 //    int resolution = 3;
 //    float occlusion = OcclusionFactor( position, resolution );
     int nsamples = NUMBER_OF_SAMPLING_POINTS;
-//    float occlusion = OcclusionFactor( position, nsamples );
-    float occlusion = 1.0;
+    float occlusion = OcclusionFactor( position, nsamples );
+//    float occlusion = 1.0;
 
     // Shading.
 #if   defined( ENABLE_LAMBERT_SHADING )
