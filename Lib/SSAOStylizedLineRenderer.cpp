@@ -222,6 +222,7 @@ kvs::ValueArray<kvs::Real32> QuadVertexTexCoords(
     return texcoords;
 }
 
+/*
 inline void Draw()
 {
     kvs::OpenGL::WithPushedMatrix p1( GL_MODELVIEW );
@@ -246,6 +247,7 @@ inline void Draw()
         }
     }
 }
+*/
 
 }
 
@@ -265,12 +267,13 @@ SSAOStylizedLineRenderer::SSAOStylizedLineRenderer():
     m_has_connection( false ),
     m_shader( NULL ),
     m_radius_size( 0.05f ),
-    m_halo_size( 0.0f ),
-    m_sampling_sphere_radius( 0.5f ),
-    m_nsamples( 256 )
-
+    m_halo_size( 0.0f )
+//    m_sampling_sphere_radius( 0.5f ),
+//    m_nsamples( 256 )
 {
     this->setShader( kvs::Shader::Lambert() );
+    m_drawable.setGeometryPassShaderFiles( "SSAO_stylized_geom_pass.vert", "SSAO_stylized_geom_pass.frag" );
+    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -316,12 +319,14 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
         m_window_width = width;
         m_window_height = height;
         m_object = object;
-        this->create_shader_program();
+        m_drawable.createShaderProgram( *m_shader, isEnabledShading() );
+        m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
+//        this->create_shader_program();
         this->create_buffer_object( line );
         this->create_shape_texture();
         this->create_diffuse_texture();
-        this->create_framebuffer( framebuffer_width, framebuffer_height );
-        this->create_sampling_points();
+//        this->create_framebuffer( framebuffer_width, framebuffer_height );
+//        this->create_sampling_points();
     }
 
     const bool window_resized = m_window_width != width || m_window_height != height;
@@ -329,22 +334,25 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     {
         m_window_width = width;
         m_window_height = height;
-        this->update_framebuffer( framebuffer_width, framebuffer_height );
+//        this->update_framebuffer( framebuffer_width, framebuffer_height );
+        m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
     }
 
     const bool object_changed = m_object != object;
     if ( object_changed )
     {
         m_object = object;
-        m_shader_geom_pass.release();
-        m_shader_occl_pass.release();
+//        m_shader_geom_pass.release();
+//        m_shader_occl_pass.release();
         m_vbo_manager.release();
-        m_framebuffer.release();
-        m_color_texture.release();
-        m_position_texture.release();
-        m_normal_texture.release();
-        m_depth_texture.release();
-        this->create_shader_program();
+//        m_framebuffer.release();
+//        m_color_texture.release();
+//        m_position_texture.release();
+//        m_normal_texture.release();
+//        m_depth_texture.release();
+//        this->create_shader_program();
+        m_drawable.updateShaderProgram( *m_shader, isEnabledShading() );
+        m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
         this->create_buffer_object( line );
     }
 
@@ -360,6 +368,7 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
  *  @brief  Creates shader program.
  */
 /*===========================================================================*/
+/*
 void SSAOStylizedLineRenderer::create_shader_program()
 {
     // Build SSAO shader for geometry-pass (1st pass).
@@ -401,6 +410,7 @@ void SSAOStylizedLineRenderer::create_shader_program()
         m_shader_occl_pass.unbind();
     }
 }
+*/
 
 /*===========================================================================*/
 /**
@@ -521,6 +531,7 @@ void SSAOStylizedLineRenderer::create_diffuse_texture()
     m_diffuse_texture.create( 1, 1, diffuse.data() );
 }
 
+/*
 void SSAOStylizedLineRenderer::create_framebuffer( const size_t width, const size_t height )
 {
     m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
@@ -588,10 +599,12 @@ void SSAOStylizedLineRenderer::update_framebuffer( const size_t width, const siz
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
+*/
 
 void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line )
 {
-    kvs::FrameBufferObject::Binder bind0( m_framebuffer );
+//    kvs::FrameBufferObject::Binder bind0( m_framebuffer );
+    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
     kvs::OpenGL::SetClearColor( kvs::Vec4::Constant( 0.0f ) );
@@ -605,7 +618,8 @@ void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
-    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
+//    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
+    kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
     kvs::Texture::Binder unit0( m_shape_texture, 0 );
     kvs::Texture::Binder unit1( m_diffuse_texture, 1 );
     {
@@ -614,11 +628,19 @@ void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line
         const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
         const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
         const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+/*
         m_shader_geom_pass.setUniform( "ModelViewMatrix", M );
         m_shader_geom_pass.setUniform( "ProjectionMatrix", P );
         m_shader_geom_pass.setUniform( "NormalMatrix", N );
         m_shader_geom_pass.setUniform( "shape_texture", 0 );
         m_shader_geom_pass.setUniform( "diffuse_texture", 1 );
+*/
+        auto& shader = m_drawable.geometryPassShader();
+        shader.setUniform( "ModelViewMatrix", M );
+        shader.setUniform( "ProjectionMatrix", P );
+        shader.setUniform( "NormalMatrix", N );
+        shader.setUniform( "shape_texture", 0 );
+        shader.setUniform( "diffuse_texture", 1 );
 
         // Draw lines.
         switch ( line->lineType() )
@@ -636,6 +658,7 @@ void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line
 
 void SSAOStylizedLineRenderer::render_occlusion_pass()
 {
+    /*
     kvs::ProgramObject::Binder bind1( m_shader_occl_pass );
     kvs::Texture::Binder unit0( m_color_texture, 0 );
     kvs::Texture::Binder unit1( m_position_texture, 1 );
@@ -647,6 +670,8 @@ void SSAOStylizedLineRenderer::render_occlusion_pass()
     m_shader_occl_pass.setUniform( "depth_texture", 3 );
     m_shader_occl_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
     ::Draw();
+    */
+    m_drawable.renderOcclusionPass();
 }
 
 } // end of namespace AmbientOcclusionRendering
