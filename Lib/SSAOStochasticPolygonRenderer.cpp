@@ -1,5 +1,4 @@
 #include "SSAOStochasticPolygonRenderer.h"
-//#include "SSAOPointSampling.h"
 #include <cmath>
 #include <kvs/OpenGL>
 #include <kvs/PolygonObject>
