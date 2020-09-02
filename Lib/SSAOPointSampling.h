@@ -8,7 +8,7 @@
 namespace AmbientOcclusionRendering
 {
 
-kvs::ValueArray<GLfloat> SSAOPointSampling( const float radius, const size_t nsamples )
+inline kvs::ValueArray<GLfloat> SSAOPointSampling( const float radius, const size_t nsamples )
 {
     kvs::Xorshift128 rand;
     kvs::ValueArray<GLfloat> sampling_points( 3 * nsamples );

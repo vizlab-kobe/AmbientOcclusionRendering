@@ -6,6 +6,7 @@
 #include <kvs/Texture2D>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
+#include "SSAODrawable.h"
 
 
 namespace AmbientOcclusionRendering
@@ -48,6 +49,7 @@ private:
 //    kvs::ProgramObject m_shader_program; ///< shader program
 
     // Variables for SSAO
+    /*
     kvs::ProgramObject m_shader_geom_pass; ///< shader program for geometry-pass (1st pass)
     kvs::ProgramObject m_shader_occl_pass; ///< shader program for occlusion-pass (2nd pass)
     kvs::FrameBufferObject m_framebuffer;
@@ -57,6 +59,8 @@ private:
     kvs::Texture2D m_depth_texture;
     kvs::Real32 m_sampling_sphere_radius;
     size_t m_nsamples;
+    */
+    SSAODrawable m_drawable;
 
 public:
     Engine();
@@ -67,17 +71,21 @@ public:
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
     void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
-    void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
-    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
-    size_t numberOfSamplingPoints() const { return m_nsamples; }
+//    void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
+//    void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
+//    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
+//    size_t numberOfSamplingPoints() const { return m_nsamples; }
+    void setSamplingSphereRadius( const float radius ) { m_drawable.setSamplingSphereRadius( radius ); }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_drawable.setNumberOfSamplingPoints( nsamples ); }
+    kvs::Real32 samplingSphereRadius() const { return m_drawable.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_drawable.numberOfSamplingPoints(); }
 
 private:
-    void create_shader_program();
+//    void create_shader_program();
     void create_buffer_object( const kvs::PolygonObject* polygon );
-    void create_framebuffer( const size_t width, const size_t height );
-    void create_sampling_points();
-    void update_framebuffer( const size_t width, const size_t height );
+//    void create_framebuffer( const size_t width, const size_t height );
+//    void create_sampling_points();
+//    void update_framebuffer( const size_t width, const size_t height );
     void render_geometry_pass( const kvs::PolygonObject* polygon );
     void render_occlusion_pass();
 };

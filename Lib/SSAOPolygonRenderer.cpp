@@ -3,23 +3,15 @@
  *  @file   SSAOPolygonRenderer.cpp
  *  @author Naohisa Sakamoto
  */
-/*----------------------------------------------------------------------------
- *
- *  Copyright (c) Visualization Laboratory, Kyoto University.
- *  All rights reserved.
- *  See http://www.viz.media.kyoto-u.ac.jp/kvs/copyright/ for details.
- *
- *  $Id$
- */
 /*****************************************************************************/
 #include "SSAOPolygonRenderer.h"
-#include "SSAOPointSampling.h"
+//#include "SSAOPointSampling.h"
 #include <kvs/OpenGL>
 #include <kvs/ProgramObject>
-#include <kvs/ShaderSource>
-#include <kvs/VertexShader>
-#include <kvs/FragmentShader>
-#include <kvs/String>
+//#include <kvs/ShaderSource>
+//#include <kvs/VertexShader>
+//#include <kvs/FragmentShader>
+//#include <kvs/String>
 
 
 namespace
@@ -97,6 +89,7 @@ kvs::ValueArray<kvs::Real32> VertexNormals( const kvs::PolygonObject* polygon )
     return normals;
 }
 
+/*
 inline void Draw()
 {
     kvs::OpenGL::WithPushedMatrix p1( GL_MODELVIEW );
@@ -121,6 +114,7 @@ inline void Draw()
         }
     }
 }
+*/
 
 } // end of namespace
 
@@ -139,11 +133,13 @@ SSAOPolygonRenderer::SSAOPolygonRenderer():
     m_object( NULL ),
     m_has_normal( false ),
     m_has_connection( false ),
-    m_shader( NULL ),
-    m_sampling_sphere_radius( 0.5f ),
-    m_nsamples( 256 )
+    m_shader( NULL )
+//    m_sampling_sphere_radius( 0.5f ),
+//    m_nsamples( 256 )
 {
     this->setShader( kvs::Shader::Lambert() );
+    m_drawable.setGeometryPassShaderFiles( "SSAO_polygon_geom_pass.vert", "SSAO_polygon_geom_pass.frag" );
+    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -187,10 +183,13 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
         m_window_width = width;
         m_window_height = height;
         m_object = object;
-        this->create_shader_program();
+        m_drawable.createShaderProgram( *m_shader, isEnabledShading() );
+        m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
         this->create_buffer_object( polygon );
-        this->create_framebuffer( framebuffer_width, framebuffer_height );
-        this->create_sampling_points();
+//        this->create_shader_program();
+//        this->create_buffer_object( polygon );
+//        this->create_framebuffer( framebuffer_width, framebuffer_height );
+//        this->create_sampling_points();
     }
 
     const bool window_resized = m_window_width != width || m_window_height != height;
@@ -198,22 +197,25 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     {
         m_window_width = width;
         m_window_height = height;
-        this->update_framebuffer( framebuffer_width, framebuffer_height );
+        m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
+//        this->update_framebuffer( framebuffer_width, framebuffer_height );
     }
 
     const bool object_changed = m_object != object;
     if ( object_changed )
     {
         m_object = object;
-        m_shader_geom_pass.release();
-        m_shader_occl_pass.release();
+//        m_shader_geom_pass.release();
+//        m_shader_occl_pass.release();
         m_vbo_manager.release();
-        m_framebuffer.release();
-        m_color_texture.release();
-        m_position_texture.release();
-        m_normal_texture.release();
-        m_depth_texture.release();
-        this->create_shader_program();
+//        m_framebuffer.release();
+//        m_color_texture.release();
+//        m_position_texture.release();
+//        m_normal_texture.release();
+//        m_depth_texture.release();
+//        this->create_shader_program();
+        m_drawable.updateShaderProgram( *m_shader, isEnabledShading() );
+        m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
         this->create_buffer_object( polygon );
     }
 
@@ -229,6 +231,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
  *  @brief  Creates shader program.
  */
 /*===========================================================================*/
+/*
 void SSAOPolygonRenderer::create_shader_program()
 {
     // Build SSAO shader for geometry-pass (1st pass).
@@ -271,6 +274,7 @@ void SSAOPolygonRenderer::create_shader_program()
         m_shader_occl_pass.unbind();
     }
 }
+*/
 
 /*===========================================================================*/
 /**
@@ -303,6 +307,7 @@ void SSAOPolygonRenderer::create_buffer_object( const kvs::PolygonObject* polygo
     m_vbo_manager.create();
 }
 
+/*
 void SSAOPolygonRenderer::create_framebuffer( const size_t width, const size_t height )
 {
     m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
@@ -339,7 +344,9 @@ void SSAOPolygonRenderer::create_framebuffer( const size_t width, const size_t h
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
+*/
 
+/*
 void SSAOPolygonRenderer::create_sampling_points()
 {
     const size_t nsamples = m_nsamples;
@@ -350,7 +357,9 @@ void SSAOPolygonRenderer::create_sampling_points()
     m_shader_occl_pass.setUniform( "sampling_points", sampling_points, dim );
     m_shader_occl_pass.unbind();
 }
+*/
 
+/*
 void SSAOPolygonRenderer::update_framebuffer( const size_t width, const size_t height )
 {
     m_color_texture.release();
@@ -370,10 +379,12 @@ void SSAOPolygonRenderer::update_framebuffer( const size_t width, const size_t h
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
+*/
 
 void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygon )
 {
-    kvs::FrameBufferObject::Binder bind0( m_framebuffer );
+//    kvs::FrameBufferObject::Binder bind0( m_framebuffer );
+    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
     kvs::OpenGL::SetClearColor( kvs::Vec4::Constant( 0.0f ) );
@@ -387,7 +398,8 @@ void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygo
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
-    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
+//    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
+    kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
     {
         kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
@@ -409,6 +421,7 @@ void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygo
 
 void SSAOPolygonRenderer::render_occlusion_pass()
 {
+    /*
     kvs::ProgramObject::Binder bind1( m_shader_occl_pass );
     kvs::Texture::Binder unit0( m_color_texture, 0 );
     kvs::Texture::Binder unit1( m_position_texture, 1 );
@@ -420,6 +433,8 @@ void SSAOPolygonRenderer::render_occlusion_pass()
     m_shader_occl_pass.setUniform( "depth_texture", 3 );
     m_shader_occl_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
     ::Draw();
+    */
+    m_drawable.renderOcclusionPass();
 }
 
 } // end of namespace AmbientOcclusionRendering

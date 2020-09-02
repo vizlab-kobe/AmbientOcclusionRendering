@@ -20,7 +20,7 @@
 struct Model
 {
     using SSAORenderer = AmbientOcclusionRendering::SSAOPolygonRenderer;
-    using Renderer = kvs::glsl::PolygonRenderer();
+    using Renderer = kvs::glsl::PolygonRenderer;
 
     bool ssao; ///< SSAO flag
     float radius; ///< radius of point sampling region for SSAM
