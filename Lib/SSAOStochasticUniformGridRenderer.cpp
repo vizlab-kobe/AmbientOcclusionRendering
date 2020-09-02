@@ -1,15 +1,7 @@
 /*****************************************************************************/
 /**
  *  @file   StochasticUniformGridRenderer.cpp
- *  @author Naoya Maeda, Naohisa Sakamoto
- */
-/*----------------------------------------------------------------------------
- *
- *  Copyright (c) Visualization Laboratory, Kyoto University.
- *  All rights reserved.
- *  See http://www.viz.media.kyoto-u.ac.jp/kvs/copyright/ for details.
- *
- *  $Id$
+ *  @author Naohisa Sakamoto
  */
 /*****************************************************************************/
 #include "SSAOStochasticUniformGridRenderer.h"
@@ -177,7 +169,7 @@ SSAOStochasticUniformGridRenderer::Engine::Engine():
     m_transfer_function_changed( true )
 {
     m_drawable.setGeometryPassShaderFiles( "SSAO_SR_uniform_grid_geom_pass.vert", "SSAO_SR_uniform_grid_geom_pass.frag" );
-    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_drawable.setOcclusionPassShaderFiles( "SSAO_SR_uniform_grid_occl_pass.vert", "SSAO_SR_uniform_grid_occl_pass.frag" );
 }
 
 /*===========================================================================*/

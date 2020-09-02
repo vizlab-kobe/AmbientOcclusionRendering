@@ -15,7 +15,7 @@
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
-#include <AmbientOcclusionRendering/Lib/SSAODrawable.h>
+#include "SSAODrawable.h"
 
 
 namespace AmbientOcclusionRendering

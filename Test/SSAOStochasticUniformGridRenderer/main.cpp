@@ -10,7 +10,7 @@
 #include <kvs/TargetChangeEvent>
 #include <kvs/KeyPressEventListener>
 #include <kvs/StochasticUniformGridRenderer>
-#include "SSAOStochasticUniformGridRenderer.h"
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticUniformGridRenderer.h>
 
 
 /*===========================================================================*/
