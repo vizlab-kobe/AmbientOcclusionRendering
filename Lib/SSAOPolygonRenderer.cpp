@@ -104,7 +104,7 @@ SSAOPolygonRenderer::SSAOPolygonRenderer():
     m_shader( NULL )
 {
     this->setShader( kvs::Shader::Lambert() );
-    m_drawable.setGeometryPassShaderFiles( "SSAO_polygon_geom_pass.vert", "SSAO_polygon_geom_pass.frag" );
+    m_drawable.setGeometryPassShaderFiles( "SSAO_geom_pass.vert", "SSAO_geom_pass.frag" );
     m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
