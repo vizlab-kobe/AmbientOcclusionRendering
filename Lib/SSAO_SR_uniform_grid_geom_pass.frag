@@ -26,9 +26,7 @@ FragIn vec3 position_ndc;
 // Uniform parameters.
 uniform sampler2D entry_points; // entry points (front face)
 uniform sampler2D exit_points; // exit points (back face)
-uniform float dt; // sampling step
-//uniform vec3 light_position; // light position in the object coordinate
-uniform vec3 camera_position; // camera position in the object coordinate
+uniform float sampling_step; // sampling step
 uniform VolumeParameter volume; // volume parameter
 uniform sampler3D volume_data; // volume data
 uniform ShadingParameter shading; // shading parameter
@@ -129,7 +127,7 @@ void main()
     // Front face clipping.
     if ( entry_depth == 1.0 )
     {
-        entry_point = NDC2Obj( vec3( position_ndc.xy, -1.0 ) );;
+        entry_point = NDC2Obj( vec3( position_ndc.xy, -1.0 ) );
         entry_depth = 0.0;
     }
 
@@ -137,19 +135,15 @@ void main()
     float segment = distance( exit_point, entry_point );
 #if defined( ENABLE_ALPHA_CORRECTION )
     int nsteps = 300;
-    float dT = segment / float( nsteps );
-    float dTdt = dT / dt;
+    float dt = segment / float( nsteps );
+    float dT = dt / sampling_step;
 #else
+    float dt = sampling_step;
     int nsteps = int( floor( segment / dt ) );
-    if ( nsteps == 0 ) nsteps++;
 #endif
 
     // Ray direction.
-#if defined( ENABLE_ALPHA_CORRECTION )
-    vec3 direction = dT * normalize( exit_point - entry_point );
-#else
     vec3 direction = dt * normalize( exit_point - entry_point );
-#endif
 
     float tfunc_scale = 1.0 / ( transfer_function.max_value - transfer_function.min_value );
 
@@ -159,7 +153,9 @@ void main()
     // Ray traversal.
     float accum_alpha = 0.0;
     vec3 position = entry_point;
-    for ( int i = 0; i < nsteps; i++ )
+    float w = 0.0;
+    float dd = dt / segment;
+    for ( int i = 0; i < nsteps; i++, w += dd )
     {
         // Get the scalar value from the 3D texture.
         // NOTE: The volume index which is a index to access the volume data
@@ -179,7 +175,7 @@ void main()
         vec4 c = LookupTexture1D( transfer_function_data, tfunc_index );
 
 #if defined( ENABLE_ALPHA_CORRECTION )
-        c.a = 1.0 - pow( 1.0 - c.a, dTdt );
+        c.a = 1.0 - pow( 1.0 - c.a, dT );
 #endif
 
         accum_alpha += ( 1.0 - accum_alpha ) * c.a;
@@ -189,33 +185,13 @@ void main()
             vec3 offset_index = vec3( volume.resolution_reciprocal );
             vec3 normal = VolumeGradient( volume_data, volume_index, offset_index );
 
-            // Light vector (L) and normal vector (N) in camera coordinate.
-//            vec3 L = normalize( light_position - position );
+            // Normal vector (N) in camera coordinate.
             vec3 N = normalize( gl_NormalMatrix * normal );
-/*
-#if   defined( ENABLE_LAMBERT_SHADING )
-            c.rgb = ShadingLambert( shading, c.rgb, L, N );
 
-#elif defined( ENABLE_PHONG_SHADING )
-            vec3 V = normalize( camera_position - position );
-            c.rgb = ShadingPhong( shading, c.rgb, L, N, V );
-
-#elif defined( ENABLE_BLINN_PHONG_SHADING )
-            vec3 V = normalize( camera_position - position );
-            c.rgb = ShadingBlinnPhong( shading, c.rgb, L, N, V );
-
-#else // DISABLE SHADING
-            c.rgb = ShadingNone( shading, c.rgb );
-#endif
-*/
-            float w = float(i) / float( nsteps - 1 );
             float depth = RayDepth( w, entry_depth, exit_depth );
 
-//            gl_FragColor = vec4( c.rgb, 1.0 );
-//            gl_FragDepth = depth;
             gl_FragData[0] = vec4( c.rgb, 1.0 );
             gl_FragData[1] = vec4( position, 1.0 );
-//            gl_FragData[2] = vec4( normal, 1.0 );
             gl_FragData[2] = vec4( N, 1.0 );
             gl_FragDepth = depth;
             return;

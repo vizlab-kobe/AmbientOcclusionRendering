@@ -12,10 +12,11 @@ uniform sampler2D depth_texture;
 uniform vec3 sampling_points[ NUMBER_OF_SAMPLING_POINTS ];
 uniform ShadingParameter shading;
 uniform vec3 light_position; // light position in the object coordinate
+uniform vec3 camera_position; // camera position in the object coordinate
 
 // Uniform variables (OpenGL variables).
 uniform mat4 ProjectionMatrix;
-
+uniform mat4 ModelViewMatrix;
 
 float OcclusionFactor( vec4 position, int nsamples )
 {
@@ -25,8 +26,7 @@ float OcclusionFactor( vec4 position, int nsamples )
         vec3 p = sampling_points[i];
         if ( p.x != 0 && p.y != 0 && p.z != 0 )
         {
-//            vec4 q = ProjectionMatrix * ( position + vec4( p, 0.0 ) );
-            vec4 q = gl_ModelViewProjectionMatrix * ( position + vec4( p, 0.0 ) );
+            vec4 q = ProjectionMatrix * ( position + vec4( p, 0.0 ) );
             q = q * 0.5 / q.w + 0.5;
             if ( q.z < LookupTexture2D( depth_texture, q.xy ).z ) count++;
         }
@@ -40,30 +40,27 @@ void main()
     vec4 color = LookupTexture2D( color_texture, gl_TexCoord[0].st );
     if ( color.a == 0.0 ) { discard; return; }
 
-    vec4 position = LookupTexture2D( position_texture, gl_TexCoord[0].st );
-    vec3 normal = LookupTexture2D( normal_texture, gl_TexCoord[0].st ).xyz;
+    vec4 position = LookupTexture2D( position_texture, gl_TexCoord[0].st ); // in object coordinate
+    vec3 normal = LookupTexture2D( normal_texture, gl_TexCoord[0].st ).xyz; // in camera coordinate
 
-    // Light position in camera coordinate.
-//    vec3 light_position = gl_LightSource[0].position.xyz;
-
-    // Light vector (L) and Normal vector (N) in camera coordinate.
-    vec3 L = normalize( light_position - position.xyz );
-    vec3 N = normalize( normal );
+    // Light vector (L) and Normal vector (N).
+    vec3 L = normalize( light_position - position.xyz ); // in object coordinate *
+    vec3 N = normalize( normal ); // in camera coordinate
 
     // Ambient occlusion.
     int nsamples = NUMBER_OF_SAMPLING_POINTS;
-    float occlusion = OcclusionFactor( position, nsamples );
+    float occlusion = OcclusionFactor( ModelViewMatrix * position, nsamples );
 
     // Shading.
 #if   defined( ENABLE_LAMBERT_SHADING )
     vec3 shaded_color = SSAOShadingLambert( shading, color.rgb, L, N, occlusion  );
 
 #elif defined( ENABLE_PHONG_SHADING )
-    vec3 V = normalize( -position.xyz );
+    vec3 V = normalize( camera_position - position.xyz ); // in object coordinate *
     vec3 shaded_color = SSAOShadingPhong( shading, color.rgb, L, N, V, occlusion );
 
 #elif defined( ENABLE_BLINN_PHONG_SHADING )
-    vec3 V = normalize( -position.xyz );
+    vec3 V = normalize( camera_position - position.xyz ); // in object coordinate *
     vec3 shaded_color = SSAOShadingBlinnPhong( shading, color.rgb, L, N, V, occlusion );
 
 #else // DISABLE SHADING

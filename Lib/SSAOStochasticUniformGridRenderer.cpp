@@ -251,7 +251,8 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
         this->create_transfer_function_texture();
     }
 
-    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
     const kvs::Mat4 PM_inverse = PM.inverted();
     {
         auto& shader = m_drawable.geometryPassShader();
@@ -268,10 +269,13 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
     }
 
     const kvs::Vec3 L = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( object ).position();
+    const kvs::Vec3 C = kvs::WorldCoordinate( camera->position() ).toObjectCoordinate( object ).position();
     {
         auto& shader = m_drawable.occlusionPassShader();
         shader.bind();
         shader.setUniform( "light_position", L );
+        shader.setUniform( "camera_position", C );
+        shader.setUniform( "ModelViewMatrix", M );
         shader.unbind();
     }
 
@@ -279,6 +283,7 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
     kvs::FrameBufferObject::Binder unit1( m_entry_exit_framebuffer );
     m_bounding_cube_shader.setUniform( "ModelViewProjectionMatrix", PM );
 
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
     kvs::OpenGL::Enable( GL_CULL_FACE );
     kvs::OpenGL::Disable( GL_LIGHTING );
 
@@ -400,7 +405,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program( const kvs
     shader.setUniform( "volume.max_range", max_range );
     shader.setUniform( "transfer_function.min_value", min_value );
     shader.setUniform( "transfer_function.max_value", max_value );
-    shader.setUniform( "dt", m_step );
+    shader.setUniform( "sampling_step", m_step );
     shader.unbind();
 }
 
@@ -712,7 +717,6 @@ void SSAOStochasticUniformGridRenderer::Engine::draw_quad()
         p2.loadIdentity();
         {
             kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
-            kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
             kvs::OpenGL::Begin( GL_QUADS );
             kvs::OpenGL::Color( kvs::Vec3( 1.0, 1.0, 1.0 ) );
             kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
@@ -751,6 +755,8 @@ void SSAOStochasticUniformGridRenderer::Engine::render_geometry_pass(
     if ( isEnabledShading() ) kvs::OpenGL::Enable( GL_LIGHTING );
     else kvs::OpenGL::Disable( GL_LIGHTING );
 
+    kvs::OpenGL::Disable( GL_CULL_FACE );
+
     kvs::OpenGL::WithEnabled d( GL_DEPTH_TEST );
 
     const float f = camera->back();
@@ -785,6 +791,11 @@ void SSAOStochasticUniformGridRenderer::Engine::render_occlusion_pass(
     // shader.bind();
     // shader.setUniform( "light_position", light_position );
     // shader.unbind();
+    auto& shader = m_drawable.occlusionPassShader();
+    shader.bind();
+    shader.setUniform( "ModelViewMatrix", kvs::OpenGL::ModelViewMatrix() );
+    shader.unbind();
+
     m_drawable.renderOcclusionPass();
 }
 
