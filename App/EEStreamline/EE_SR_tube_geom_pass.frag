@@ -67,14 +67,21 @@ void main()
 
     // Stochastic color assignment.
     float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
-	// Judge drawing this fragment.
-    //if ( R > opacity ) { discard; return; }
 
     vec2 tcd = coord.xy;  // tcd is Texture coordinate 
     tcd.x = ( coord.x / coord.z ) * 0.5 + 0.5; // Convert to clipping space
 
     vec3 tex = LookupTexture2D( shape_texture, tcd.xy ).xyz;
     tex.x = tex.x*2.0 - 1.0; // x = -1.0 ~ 1.0
+
+    //Edge Enhancement
+    vec3 normal = y_i * tex.x - tex.y * x_i; // y_i is up vector, x_i is depth vector
+    vec3 E = normalize( -position.xyz );
+    vec3 N = normalize( normal );
+    opacity = pow( opacity, dot( N, E ) );
+
+    // Judge drawing this fragment.
+    if( R > opacity ) { discard; return; }
 
     vec4 color;
     if ( tcd.x < 0.0 || tcd.x > 1.0 )
@@ -85,17 +92,6 @@ void main()
     {
         color = diffuse * LookupTexture2D( diffuse_texture, tcd.xy );
     }
-
-    vec3 normal = y_i * tex.x - tex.y * x_i; // y_i is up vector, x_i is depth vector
-	
-    vec3 p = normalize( -position.xyz );
-    vec3 n = normalize( normal );
-    float edge = 1 - abs( dot( p, n ) );
-    float a_width = 0.3;   // value increased from an original opacity
-    if( color.a < a_width ) {
-	color.a = clamp( color.a + pow(edge, gamma)*a_width, color.a, 1.0);
-	}
-    if( R > color.a ) { discard; return; }
     
     gl_FragData[0] = color;
     gl_FragData[1] = vec4( position.xyz, 1.0 );
