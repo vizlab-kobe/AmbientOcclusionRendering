@@ -1,8 +1,8 @@
-#include <kvs/glut/Application>
-#include <kvs/glut/Screen>
-#include <kvs/glut/TransferFunctionEditor>
-#include <kvs/glut/Slider>
-#include <kvs/glut/CheckBox>
+#include <kvs/Application>
+#include <kvs/Screen>
+#include <kvs/TransferFunctionEditor>
+#include <kvs/Slider>
+#include <kvs/CheckBox>
 #include <kvs/PolygonObject>
 #include <kvs/ExternalFaces>
 #include <kvs/UnstructuredVolumeObject>
@@ -10,18 +10,124 @@
 #include "SSAOStochasticPolygonRenderer.h"
 #include "SSAOStochasticTetrahedraRenderer.h"
 #include "SSAOStochasticRenderingCompositor.h"
-#include <kvs/Scene>
-#include <kvs/ObjectManager>
-#include <kvs/RendererManager>
 #include <iostream>
 
+
+/*===========================================================================*/
+/**
+ *  @brief  Main function.
+ *  @param  argc [i] argument count
+ *  @param  argv [i] argument values
+ */
+/*===========================================================================*/
+int main( int argc, char** argv )
+{
+    // Shader path.
+    kvs::ShaderSource::AddSearchPath("../../Lib");
+    kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
+
+    // Application and screen.
+    kvs::Application app( argc, argv );
+    kvs::Screen screen( &app );
+    screen.setBackgroundColor( kvs::RGBColor::White() );
+    screen.setTitle("SSAOStochasticRenderingCompositor Tetrahedra and Polygon");
+    screen.setBackgroundColor( kvs::RGBColor::White() );
+    screen.show();
+
+    // Import volume object.
+    kvs::UnstructuredVolumeObject* volume_object = new kvs::UnstructuredVolumeImporter( argv[1] );
+    volume_object->print( std::cout );
+
+    // Declare SSAOStochasticTetrahedraRenderer.
+    AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer* volume_renderer = new AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer();
+    volume_renderer->setName("Renderer");
+
+    // Generate polygon object from volume object.
+    kvs::PolygonObject* polygon_object = new kvs::ExternalFaces( volume_object );
+    polygon_object->setName( "Polygon" );
+    polygon_object->setColor( kvs::RGBColor::White() );
+    polygon_object->setOpacity( 128 );
+    polygon_object->print( std::cout << std::endl );
+
+    // Declare SSAOStochasticPolygonRenderer.
+    AmbientOcclusionRendering::SSAOStochasticPolygonRenderer* polygon_renderer = new AmbientOcclusionRendering::SSAOStochasticPolygonRenderer();
+    polygon_renderer->setPolygonOffset( 0.001f );
+
+    // Register objects and renderers
+    screen.registerObject( volume_object, volume_renderer );
+    screen.registerObject( polygon_object, polygon_renderer );
+
+    // Declare SSAOStochasticRenderingCompositor
+    AmbientOcclusionRendering::SSAOStochasticRenderingCompositor compositor( screen.scene() );
+    compositor.setRepetitionLevel( 50 );
+    compositor.enableLODControl();
+    screen.setEvent( &compositor );
+
+    // Widgets.
+    kvs::TransferFunctionEditor editor( &screen );
+    editor.setPosition( screen.x() + screen.width(), screen.y() );
+    editor.setVolumeObject( volume_object );
+    editor.apply(
+        [&]( kvs::TransferFunction tfunc ) {
+            volume_renderer->setTransferFunction( tfunc );
+            screen.redraw();
+        } );
+    editor.show();
+
+    kvs::CheckBox checkbox( &screen );
+    checkbox.setCaption( "LOD" );
+    checkbox.setMargin( 10 );
+    checkbox.setState( true );
+    checkbox.anchorToTopLeft();
+    checkbox.stateChanged(
+        [&]() {
+            compositor.setEnabledLODControl( checkbox.state() );
+            screen.redraw();
+        } );
+    checkbox.show();
+
+    kvs::Slider opacity( &screen );
+    opacity.setCaption( "Opacity" );
+    opacity.setWidth( 150 );
+    opacity.setMargin( 10 );
+    opacity.setValue( 0.5 );
+    opacity.setRange( 0, 1 );
+    opacity.anchorToBottom( &checkbox );
+    opacity.valueChanged(
+        [&]() {
+            auto* scene = screen.scene();
+            auto* object1 = kvs::PolygonObject::DownCast( scene->object( "Polygon" ) );
+            auto* object2 = new kvs::PolygonObject();
+            object2->shallowCopy( *object1 );
+            object2->setName( "Polygon" );
+            object2->setOpacity( int( opacity.value() * 255 + 0.5 ) );
+            scene->replaceObject( "Polygon", object2 );
+        } );
+    opacity.show();
+
+    kvs::Slider repetition( &screen );
+    repetition.setCaption( "Repetition" );
+    repetition.setWidth( 150 );
+    repetition.setMargin( 10 );
+    repetition.setValue( 50 );
+    repetition.setRange( 1, 100 );
+    repetition.anchorToBottom( &opacity );
+    repetition.valueChanged(
+        [&]() {
+            compositor.setRepetitionLevel( int( repetition.value() + 0.5 ) );
+            screen.redraw();
+        } );
+    repetition.show();
+
+    return app.run();
+}
 
 /*===========================================================================*/
 /**
  *  @brief  Transfer function editor.
  */
 /*===========================================================================*/
-class TransferFunctionEditor : public kvs::glut::TransferFunctionEditor
+/*class TransferFunctionEditor : public kvs::glut::TransferFunctionEditor
 {
 public:
 
@@ -36,14 +142,14 @@ public:
         renderer->setTransferFunction( transferFunction() );
         screen()->redraw();
     }
-};
+    };*/
 
 /*===========================================================================*/
 /**
  *  @brief  LOD check box.
  */
 /*===========================================================================*/
-class LODCheckBox : public kvs::glut::CheckBox
+/*class LODCheckBox : public kvs::glut::CheckBox
 {
     AmbientOcclusionRendering::SSAOStochasticRenderingCompositor* m_compositor;
 
@@ -62,14 +168,14 @@ public:
         m_compositor->setEnabledLODControl( state() );
         screen()->redraw();
     }
-};
+    };*/
 
 /*===========================================================================*/
 /**
  *  @brief  Opacity slider.
  */
 /*===========================================================================*/
-class OpacitySlider : public kvs::glut::Slider
+/*class OpacitySlider : public kvs::glut::Slider
 {
 public:
 
@@ -92,14 +198,14 @@ public:
         object2->setOpacity( int( value() * 255 + 0.5 ) );
         scene->objectManager()->change( "Polygon", object2 );
     }
-};
+    };*/
 
 /*===========================================================================*/
 /**
  *  @brief  Repetition slider.
  */
 /*===========================================================================*/
-class RepetitionSlider : public kvs::glut::Slider
+/*class RepetitionSlider : public kvs::glut::Slider
 {
     AmbientOcclusionRendering::SSAOStochasticRenderingCompositor* m_compositor;
 
@@ -119,68 +225,4 @@ public:
         m_compositor->setRepetitionLevel( int( value() + 0.5 ) );
         screen()->redraw();
     }
-};
-
-/*===========================================================================*/
-/**
- *  @brief  Main function.
- *  @param  argc [i] argument count
- *  @param  argv [i] argument values
- */
-/*===========================================================================*/
-int main( int argc, char** argv )
-{
-    kvs::glut::Application app( argc, argv );
-    kvs::ShaderSource::AddSearchPath("../../Lib");
-    kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
-
-    kvs::UnstructuredVolumeObject* volume_object = new kvs::UnstructuredVolumeImporter( argv[1] );
-    volume_object->print( std::cout );
-
-    AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer* volume_renderer = new AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer();
-    volume_renderer->setName("SSAOStochasticRenderingCompositor");
-
-    kvs::PolygonObject* polygon_object = new kvs::ExternalFaces( volume_object );
-    polygon_object->setName( "Polygon" );
-    polygon_object->setColor( kvs::RGBColor::White() );
-    polygon_object->setOpacity( 128 );
-    polygon_object->print( std::cout << std::endl );
-
-    AmbientOcclusionRendering::SSAOStochasticPolygonRenderer* polygon_renderer = new AmbientOcclusionRendering::SSAOStochasticPolygonRenderer();
-    polygon_renderer->setPolygonOffset( 0.001f );
-
-    kvs::glut::Screen screen( &app );
-    screen.setTitle("Example program for kvs::SSAOStochasticRenderingCompositor");
-    screen.registerObject( polygon_object, polygon_renderer );
-    screen.registerObject( volume_object, volume_renderer );
-    screen.setBackgroundColor( kvs::RGBColor::White() );
-    screen.show();
-
-    AmbientOcclusionRendering::SSAOStochasticRenderingCompositor compositor( screen.scene() );
-    compositor.setRepetitionLevel( 50 );
-    compositor.enableLODControl();
-    screen.setEvent( &compositor );
-
-    TransferFunctionEditor editor( &screen );
-    editor.setVolumeObject( volume_object );
-    editor.show();
-
-    LODCheckBox checkbox( &screen, &compositor );
-    checkbox.setPosition( 0, 0 );
-    checkbox.setState( true );
-    checkbox.show();
-
-    OpacitySlider opacity( &screen );
-    opacity.setPosition( checkbox.x(), checkbox.y() + checkbox.height() );
-    opacity.setValue( 0.5 );
-    opacity.setRange( 0, 1 );
-    opacity.show();
-
-    RepetitionSlider repetition( &screen, &compositor );
-    repetition.setPosition( opacity.x(), opacity.y() + opacity.height() );
-    repetition.setValue( 50 );
-    repetition.setRange( 1, 100 );
-    repetition.show();
-
-    return app.run();
-}
+    };*/

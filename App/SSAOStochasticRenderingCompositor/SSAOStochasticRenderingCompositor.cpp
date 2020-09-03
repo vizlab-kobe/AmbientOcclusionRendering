@@ -40,8 +40,8 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 SSAOStochasticRenderingCompositor::SSAOStochasticRenderingCompositor( kvs::Scene* scene ):
     m_scene( scene ),
-    m_width( 0 ),
-    m_height( 0 ),
+    m_window_width( 0 ),
+    m_window_height( 0 ),
     m_repetition_level( 1 ),
     m_coarse_level( 1 ),
     m_sampling_sphere_radius( 0.5 ),
@@ -147,17 +147,22 @@ void SSAOStochasticRenderingCompositor::draw()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::check_window_created()
 {
-    const bool window_created = m_width == 0 && m_height == 0;
+    const bool window_created = m_window_width == 0 && m_window_height == 0;
     if ( window_created )
     {
         const size_t width = m_scene->camera()->windowWidth();
         const size_t height = m_scene->camera()->windowHeight();
-        m_width = width;
-        m_height = height;
-        m_ensemble_buffer.create( width, height );
-        m_ssao_framebuffer.create( width, height, m_sampling_sphere_radius, m_nsamples );
+        m_window_width = width;
+        m_window_height = height;
+
+        const float dpr = m_scene->camera()->devicePixelRatio();
+        const size_t framebuffer_width = static_cast<size_t>( width * dpr );
+        const size_t framebuffer_height = static_cast<size_t>( height * dpr );
+        m_ensemble_buffer.create( framebuffer_width, framebuffer_height );
+        m_ssao_framebuffer.create( framebuffer_width, framebuffer_height, m_sampling_sphere_radius, m_nsamples );
         m_ensemble_buffer.clear();
         m_ssao_framebuffer.clear();
+        
         m_object_xform = this->object_xform();
         m_camera_position = m_scene->camera()->position();
         m_light_position = m_scene->light()->position();
@@ -174,17 +179,24 @@ void SSAOStochasticRenderingCompositor::check_window_resized()
 {
     const size_t width = m_scene->camera()->windowWidth();
     const size_t height = m_scene->camera()->windowHeight();
-    const bool window_resized = m_width != width || m_height != height;
+    const bool window_resized = m_window_width != width || m_window_height != height;
     if ( window_resized )
     {
-        m_width = width;
-        m_height = height;
+        m_window_width = width;
+        m_window_height = height;
+
+        const float dpr = m_scene->camera()->devicePixelRatio();
+        const size_t framebuffer_width = static_cast<size_t>( width * dpr );
+        const size_t framebuffer_height = static_cast<size_t>( height * dpr );
+        
         m_ensemble_buffer.release();
-        m_ssao_framebuffer.release();
-        m_ensemble_buffer.create( width, height );
-        m_ssao_framebuffer.create( width, height ,m_sampling_sphere_radius, m_nsamples );
+        m_ensemble_buffer.create( framebuffer_width, framebuffer_height );
         m_ensemble_buffer.clear();
+        
+        m_ssao_framebuffer.release();
+        m_ssao_framebuffer.create( framebuffer_width, framebuffer_height ,m_sampling_sphere_radius, m_nsamples );
         m_ssao_framebuffer.clear();
+        
         this->engines_update();
     }
 }
