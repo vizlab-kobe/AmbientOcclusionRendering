@@ -24,7 +24,7 @@
 #include "SSAOFrameBuffer.h"
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 class ObjectBase;
@@ -38,7 +38,7 @@ class Light;
 /*===========================================================================*/
 class SSAOStochasticRendererBase : public kvs::RendererBase
 {
-    kvsModule( AmbientOcclusionRendering::SSAOStochasticRendererBase, Renderer );
+    kvsModule( local::SSAOStochasticRendererBase, Renderer );
 
     friend class StochasticRenderingCompositor;
 
@@ -56,12 +56,12 @@ private:
     kvs::Vec3 m_light_position; ///< light position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
     kvs::Shader::ShadingModel* m_shader; ///< shading method
-    AmbientOcclusionRendering::SSAOStochasticRenderingEngine* m_engine; ///< rendering engine
-	AmbientOcclusionRendering::SSAOFrameBuffer m_ssao_framebuffer; ///< SSAO framebuffer 
+    local::SSAOStochasticRenderingEngine* m_engine; ///< rendering engine
+    local::SSAOFrameBuffer m_ssao_framebuffer; ///< SSAO framebuffer 
 
 public:
 
-    SSAOStochasticRendererBase( AmbientOcclusionRendering::SSAOStochasticRenderingEngine* engine );
+    SSAOStochasticRendererBase( local::SSAOStochasticRenderingEngine* engine );
     virtual ~SSAOStochasticRendererBase();
 
     virtual void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
@@ -81,14 +81,14 @@ public:
     void disableLODControl() { this->setEnabledLODControl( false ); }
     void disableRefinement() { this->setEnabledRefinement( false ); }
     const kvs::Shader::ShadingModel& shader() const { return *m_shader; }
-    const AmbientOcclusionRendering::SSAOStochasticRenderingEngine& engine() const { return *m_engine; }
+    const local::SSAOStochasticRenderingEngine& engine() const { return *m_engine; }
     template <typename ShadingType>
     void setShader( const ShadingType shader );
 
 public:
 
     kvs::Shader::ShadingModel& shader() { return *m_shader; }
-    AmbientOcclusionRendering::SSAOStochasticRenderingEngine& engine() { return *m_engine; }
+    local::SSAOStochasticRenderingEngine& engine() { return *m_engine; }
 };
 
 template <typename ShadingType>

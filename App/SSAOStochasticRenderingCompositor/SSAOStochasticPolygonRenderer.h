@@ -8,7 +8,7 @@
 #include "SSAOStochasticRendererBase.h"
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -16,10 +16,10 @@ namespace AmbientOcclusionRendering
  *  @brief  Stochastic polygon renderer class.
  */
 /*===========================================================================*/
-class SSAOStochasticPolygonRenderer : public AmbientOcclusionRendering::SSAOStochasticRendererBase
+class SSAOStochasticPolygonRenderer : public local::SSAOStochasticRendererBase
 {
-    kvsModule( AmbientOcclusionRendering::SSAOStochasticPolygonRenderer, Renderer );
-    kvsModuleBaseClass( AmbientOcclusionRendering::SSAOStochasticRendererBase );
+    kvsModule( local::SSAOStochasticPolygonRenderer, Renderer );
+    kvsModuleBaseClass( local::SSAOStochasticRendererBase );
 
 public:
     class Engine;
@@ -34,7 +34,7 @@ public:
  *  @brief  Engine class for stochastic polygon renderer.
  */
 /*===========================================================================*/
-class SSAOStochasticPolygonRenderer::Engine : public AmbientOcclusionRendering::SSAOStochasticRenderingEngine
+class SSAOStochasticPolygonRenderer::Engine : public local::SSAOStochasticRenderingEngine
 {
 private:
     bool m_has_normal; ///< check flag for the normal array

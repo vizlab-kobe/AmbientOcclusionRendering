@@ -5,7 +5,7 @@
 #include <kvs/OpenGL>
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -14,7 +14,7 @@ namespace AmbientOcclusionRendering
  *  @param  engine [in] pointer to the stochastic rendering engine
  */
 /*===========================================================================*/
-SSAOStochasticRendererBase::SSAOStochasticRendererBase( AmbientOcclusionRendering::SSAOStochasticRenderingEngine* engine ):
+SSAOStochasticRendererBase::SSAOStochasticRendererBase( local::SSAOStochasticRenderingEngine* engine ):
     m_width( 0 ),
     m_height( 0 ),
     m_repetition_level( 1 ),

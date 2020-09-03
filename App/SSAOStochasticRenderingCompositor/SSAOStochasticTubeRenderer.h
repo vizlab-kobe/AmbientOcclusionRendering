@@ -12,13 +12,13 @@
 #include <kvs/TransferFunction>
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
-class SSAOStochasticTubeRenderer : public AmbientOcclusionRendering::SSAOStochasticRendererBase
+class SSAOStochasticTubeRenderer : public local::SSAOStochasticRendererBase
 {
-    kvsModule( AmbientOcclusionRendering::SSAOStochasticTubeRenderer, Renderer );
-    kvsModuleBaseClass( AmbientOcclusionRendering::SSAOStochasticRendererBase );
+    kvsModule( local::SSAOStochasticTubeRenderer, Renderer );
+    kvsModuleBaseClass( local::SSAOStochasticRendererBase );
 
 public:
     class Engine;
@@ -37,7 +37,7 @@ public:
     size_t numberOfSamplingPoints() const;
 };
 
-class SSAOStochasticTubeRenderer::Engine : public AmbientOcclusionRendering::SSAOStochasticRenderingEngine
+class SSAOStochasticTubeRenderer::Engine : public local::SSAOStochasticRenderingEngine
 {
 private:
     kvs::ValueArray<GLint> m_first_array; ///< array of starting indices for the polyline

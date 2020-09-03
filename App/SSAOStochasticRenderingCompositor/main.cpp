@@ -39,7 +39,7 @@ int main( int argc, char** argv )
     volume_object->print( std::cout );
 
     // Declare SSAOStochasticTetrahedraRenderer.
-    AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer* volume_renderer = new AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer();
+    local::SSAOStochasticTetrahedraRenderer* volume_renderer = new local::SSAOStochasticTetrahedraRenderer();
     volume_renderer->setName("Renderer");
 
     // Generate polygon object from volume object.
@@ -50,7 +50,7 @@ int main( int argc, char** argv )
     polygon_object->print( std::cout << std::endl );
 
     // Declare SSAOStochasticPolygonRenderer.
-    AmbientOcclusionRendering::SSAOStochasticPolygonRenderer* polygon_renderer = new AmbientOcclusionRendering::SSAOStochasticPolygonRenderer();
+    local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
     polygon_renderer->setPolygonOffset( 0.001f );
 
     // Register objects and renderers
@@ -58,7 +58,7 @@ int main( int argc, char** argv )
     screen.registerObject( polygon_object, polygon_renderer );
 
     // Declare SSAOStochasticRenderingCompositor
-    AmbientOcclusionRendering::SSAOStochasticRenderingCompositor compositor( screen.scene() );
+    local::SSAOStochasticRenderingCompositor compositor( screen.scene() );
     compositor.setRepetitionLevel( 50 );
     compositor.enableLODControl();
     screen.setEvent( &compositor );

@@ -29,7 +29,7 @@
 //#include <kvs/ParticleBasedRenderer>
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -208,7 +208,7 @@ void SSAOStochasticRenderingCompositor::check_window_resized()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::check_object_changed()
 {
-    typedef AmbientOcclusionRendering::SSAOStochasticRendererBase Renderer;
+    typedef local::SSAOStochasticRendererBase Renderer;
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
@@ -258,7 +258,7 @@ kvs::Mat4 SSAOStochasticRenderingCompositor::object_xform()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::engines_create()
 {
-    typedef AmbientOcclusionRendering::SSAOStochasticRendererBase Renderer;
+    typedef local::SSAOStochasticRendererBase Renderer;
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
@@ -288,7 +288,7 @@ void SSAOStochasticRenderingCompositor::engines_create()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::engines_update()
 {
-    typedef AmbientOcclusionRendering::SSAOStochasticRendererBase Renderer;
+    typedef local::SSAOStochasticRendererBase Renderer;
 
     kvs::Camera* camera = m_scene->camera();
     kvs::Light* light = m_scene->light();
@@ -316,7 +316,7 @@ void SSAOStochasticRenderingCompositor::engines_update()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::engines_setup()
 {
-    typedef AmbientOcclusionRendering::SSAOStochasticRendererBase Renderer;
+    typedef local::SSAOStochasticRendererBase Renderer;
 
     kvs::Camera* camera = m_scene->camera();
     kvs::Light* light = m_scene->light();
@@ -346,7 +346,7 @@ void SSAOStochasticRenderingCompositor::engines_setup()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::engines_draw()
 {  
-    typedef AmbientOcclusionRendering::SSAOStochasticRendererBase Renderer;
+    typedef local::SSAOStochasticRendererBase Renderer;
 
     kvs::Camera* camera = m_scene->camera();
     kvs::Light* light = m_scene->light();

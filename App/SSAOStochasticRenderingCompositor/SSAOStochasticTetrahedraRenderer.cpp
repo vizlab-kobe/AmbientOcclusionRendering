@@ -219,7 +219,7 @@ inline void Draw()
 }
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -550,4 +550,4 @@ void SSAOStochasticTetrahedraRenderer::Engine::create_decomposition_texture()
     m_decomposition_texture.create( 81, 1, table.data() );
 }
 
-} // end of namespace AmbientOcclusionRendering
+} // end of namespace local

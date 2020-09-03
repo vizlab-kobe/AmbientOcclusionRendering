@@ -34,7 +34,7 @@ inline void Draw()
 
 }
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 SSAOFrameBuffer::SSAOFrameBuffer():
@@ -161,7 +161,7 @@ void SSAOFrameBuffer::create_sampling_points( kvs::Real32 sphere_radius, const s
     //const size_t nsamples = nsamples;
     const float radius = sphere_radius;
     const size_t dim = 3;
-    const kvs::ValueArray<GLfloat> sampling_points = AmbientOcclusionRendering::SSAOPointSampling( radius, nsamples );
+    const kvs::ValueArray<GLfloat> sampling_points = local::SSAOPointSampling( radius, nsamples );
     m_shader_occl_pass.bind();
     m_shader_occl_pass.setUniform( "sampling_points", sampling_points, dim );
     m_shader_occl_pass.unbind();

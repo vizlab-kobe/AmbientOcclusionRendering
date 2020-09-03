@@ -17,7 +17,7 @@
 #include <kvs/Xorshift128>
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/

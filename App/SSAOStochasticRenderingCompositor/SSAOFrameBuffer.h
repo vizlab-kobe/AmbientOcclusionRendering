@@ -4,7 +4,7 @@
 #include <kvs/ProgramObject>
 #include <kvs/Shader>
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/

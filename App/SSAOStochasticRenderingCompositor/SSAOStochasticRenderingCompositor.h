@@ -26,7 +26,7 @@
 #include <kvs/EnsembleAverageBuffer>
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 class Scene;
@@ -53,7 +53,7 @@ private:
     kvs::Vec3 m_light_position; ///< light position used for LOD control
     kvs::Vec3 m_camera_position; ///< camera position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
-	AmbientOcclusionRendering::SSAOFrameBuffer m_ssao_framebuffer;
+    local::SSAOFrameBuffer m_ssao_framebuffer;
 
 public:
     SSAOStochasticRenderingCompositor( kvs::Scene* scene );

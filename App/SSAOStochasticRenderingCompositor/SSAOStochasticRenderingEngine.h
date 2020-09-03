@@ -19,7 +19,7 @@
 #include <kvs/Texture2D>
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 class ObjectBase;

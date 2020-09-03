@@ -347,7 +347,7 @@ kvs::ValueArray<kvs::UInt8> VertexColors( const kvs::PolygonObject* polygon )
 }
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
