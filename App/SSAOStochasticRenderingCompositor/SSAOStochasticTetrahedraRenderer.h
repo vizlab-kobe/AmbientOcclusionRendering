@@ -31,7 +31,7 @@
 #include "SSAOStochasticRendererBase.h"
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -39,10 +39,10 @@ namespace AmbientOcclusionRendering
  *  @brief  Stochastic tetrahedra renderer class.
  */
 /*===========================================================================*/
-class SSAOStochasticTetrahedraRenderer : public AmbientOcclusionRendering::SSAOStochasticRendererBase
+class SSAOStochasticTetrahedraRenderer : public local::SSAOStochasticRendererBase
 {
-    kvsModule( AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer, Renderer );
-    kvsModuleBaseClass( AmbientOcclusionRendering::SSAOStochasticRendererBase );
+    kvsModule( local::SSAOStochasticTetrahedraRenderer, Renderer );
+    kvsModuleBaseClass( local::SSAOStochasticRendererBase );
 
 public:
     class Engine;
@@ -60,7 +60,7 @@ public:
  *  @brief  Engine class for stochastic polygon renderer.
  */
 /*===========================================================================*/
-class SSAOStochasticTetrahedraRenderer::Engine : public AmbientOcclusionRendering::SSAOStochasticRenderingEngine
+class SSAOStochasticTetrahedraRenderer::Engine : public local::SSAOStochasticRenderingEngine
 {
 private:
     bool m_transfer_function_changed; ///< flag for changin transfer function
@@ -102,4 +102,4 @@ private:
     void create_decomposition_texture();
 };
 
-} // end of namespace AmbientOcclusionRendering
+} // end of namespace local

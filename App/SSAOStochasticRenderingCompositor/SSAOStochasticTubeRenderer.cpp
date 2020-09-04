@@ -262,7 +262,7 @@ inline kvs::ValueArray<kvs::Real32> QuadVertexTexCoords(
 
 }
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 SSAOStochasticTubeRenderer::SSAOStochasticTubeRenderer():
@@ -552,4 +552,4 @@ void SSAOStochasticTubeRenderer::Engine::create_transfer_function_texture()
     m_tfunc_changed = false;
 }
 
-} // end of namespace AmbientOcclusionRendering
+} // end of namespace local

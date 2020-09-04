@@ -5,7 +5,7 @@
 #include <cmath>
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 kvs::ValueArray<GLfloat> SSAOPointSampling( const float radius, const size_t nsamples )
