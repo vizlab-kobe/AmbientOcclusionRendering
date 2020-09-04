@@ -346,8 +346,6 @@ SSAOStochasticTubeRenderer::Engine::Engine():
     m_radius_size( 0.05f ),
     m_halo_size( 0.0f ),
     m_tfunc_changed( true )
-//    m_sampling_sphere_radius( 0.5f ),
-//    m_nsamples( 256 )
 {
     m_drawable.setGeometryPassShaderFiles( "SSAO_SR_tube_geom_pass.vert", "SSAO_SR_tube_geom_pass.frag" );
     m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
@@ -355,15 +353,8 @@ SSAOStochasticTubeRenderer::Engine::Engine():
 
 void SSAOStochasticTubeRenderer::Engine::release()
 {
-//    m_shader_geom_pass.release();
-//    m_shader_occl_pass.release();
     m_vbo_manager.release();
     m_tfunc_changed = true;
-//    m_framebuffer.release();
-//    m_color_texture.release();
-//    m_position_texture.release();
-//    m_normal_texture.release();
-//    m_depth_texture.release();
     m_drawable.releaseResources();
 }
 
@@ -376,15 +367,12 @@ void SSAOStochasticTubeRenderer::Engine::create( kvs::ObjectBase* object, kvs::C
 
     attachObject( line );
     createRandomTexture();
-//    this->create_shader_program();
     m_drawable.createShaderProgram( this->shader(), this->isEnabledShading() );
     m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
     this->create_buffer_object( line );
     this->create_shape_texture();
     this->create_diffuse_texture();
     this->create_transfer_function_texture();
-//    this->create_framebuffer( framebuffer_width, framebuffer_height );
-//    this->create_sampling_points();
 
     kvs::Real32 min_value = 0.0f;
     kvs::Real32 max_value = 0.0f;
@@ -418,7 +406,6 @@ void SSAOStochasticTubeRenderer::Engine::update( kvs::ObjectBase* object, kvs::C
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-//    this->update_framebuffer( framebuffer_width, framebuffer_height );
     m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
 }
 
@@ -433,18 +420,6 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
     const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-/*
-    m_shader_geom_pass.bind();
-    m_shader_geom_pass.setUniform( "ModelViewMatrix", M );
-    m_shader_geom_pass.setUniform( "ProjectionMatrix", P );
-    m_shader_geom_pass.setUniform( "NormalMatrix", N );
-    m_shader_geom_pass.setUniform( "shape_texture", 0 );
-    m_shader_geom_pass.setUniform( "diffuse_texture", 1 );
-    m_shader_geom_pass.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-    m_shader_geom_pass.setUniform( "random_texture", 2 );
-    m_shader_geom_pass.setUniform( "transfer_function_texture", 3 );
-    m_shader_geom_pass.unbind();
-*/
     auto& shader = m_drawable.geometryPassShader();
     shader.bind();
     shader.setUniform( "ModelViewMatrix", M );
@@ -460,81 +435,11 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
 
 void SSAOStochasticTubeRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
-//    this->render_geometry_pass( kvs::LineObject::DownCast( object ) );
-//    this->render_occlusion_pass();
     m_drawable.bind();
     this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
     m_drawable.unbind();
     m_drawable.draw();
 }
-
-/*
-void SSAOStochasticTubeRenderer::Engine::create_shader_program()
-{
-    // Build SSAO shader for geometry-pass (1st pass).
-    {
-        kvs::ShaderSource vert( "SSAO_SR_tube_geom_pass.vert" );
-        kvs::ShaderSource frag( "SSAO_SR_tube_geom_pass.frag" );
-        m_shader_geom_pass.build( vert, frag );
-
-        kvs::Real32 min_value = 0.0f;
-        kvs::Real32 max_value = 0.0f;
-        if ( m_tfunc.hasRange() )
-        {
-            min_value = m_tfunc.minValue();
-            max_value = m_tfunc.maxValue();
-        }
-        else
-        {
-            const kvs::LineObject* line = kvs::LineObject::DownCast( object() );
-            const kvs::ValueArray<kvs::Real32>& values = line->sizes();
-            min_value = values[0];
-            max_value = values[1];
-            for ( size_t i = 0; i < values.size(); i++ )
-            {
-                min_value = kvs::Math::Min( min_value, values[i] );
-                max_value = kvs::Math::Max( max_value, values[i] );
-            }
-        }
-
-        m_shader_geom_pass.bind();
-        m_shader_geom_pass.setUniform( "min_value", min_value );
-        m_shader_geom_pass.setUniform( "max_value", max_value );
-        m_shader_geom_pass.unbind();
-    }
-
-    // Build SSAO shader for occlusion-pass (2nd pass).
-    {
-        kvs::ShaderSource vert( "SSAO_occl_pass.vert" );
-        kvs::ShaderSource frag( "SSAO_occl_pass.frag" );
-        if ( isEnabledShading() )
-        {
-            switch ( shader().type() )
-            {
-            case kvs::Shader::LambertShading: frag.define("ENABLE_LAMBERT_SHADING"); break;
-            case kvs::Shader::PhongShading: frag.define("ENABLE_PHONG_SHADING"); break;
-            case kvs::Shader::BlinnPhongShading: frag.define("ENABLE_BLINN_PHONG_SHADING"); break;
-            default: break; // NO SHADING
-            }
-
-            if ( kvs::OpenGL::Boolean( GL_LIGHT_MODEL_TWO_SIDE ) == GL_TRUE )
-            {
-                frag.define("ENABLE_TWO_SIDE_LIGHTING");
-            }
-
-            frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
-        }
-
-        m_shader_occl_pass.build( vert, frag );
-        m_shader_occl_pass.bind();
-        m_shader_occl_pass.setUniform( "shading.Ka", shader().Ka );
-        m_shader_occl_pass.setUniform( "shading.Kd", shader().Kd );
-        m_shader_occl_pass.setUniform( "shading.Ks", shader().Ks );
-        m_shader_occl_pass.setUniform( "shading.S",  shader().S );
-        m_shader_occl_pass.unbind();
-    }
-}
-*/
 
 void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineObject* line )
 {
@@ -550,8 +455,6 @@ void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineOb
     const kvs::ValueArray<kvs::UInt8> colors = ::QuadVertexColors( line );
     const kvs::ValueArray<kvs::Real32> normals = ::QuadVertexNormals( line );
     const kvs::ValueArray<kvs::Real32> texcoords = ::QuadVertexTexCoords( line, m_halo_size, m_radius_size );
-//    m_vbo_manager.setVertexAttribArray( indices, m_shader_geom_pass.attributeLocation("random_index"), 2 );
-//    m_vbo_manager.setVertexAttribArray( values, m_shader_geom_pass.attributeLocation("value"), 1 );
     m_vbo_manager.setVertexAttribArray( indices, m_drawable.geometryPassShader().attributeLocation( "random_index" ), 2 );
     m_vbo_manager.setVertexAttribArray( values, m_drawable.geometryPassShader().attributeLocation( "value" ), 1 );
     m_vbo_manager.setVertexArray( coords, 3 );
@@ -666,94 +569,9 @@ void SSAOStochasticTubeRenderer::Engine::create_transfer_function_texture()
     m_tfunc_changed = false;
 }
 
-/*
-void SSAOStochasticTubeRenderer::Engine::create_framebuffer( const size_t width, const size_t height )
-{
-    m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
-    m_color_texture.setWrapT( GL_CLAMP_TO_EDGE );
-    m_color_texture.setMagFilter( GL_LINEAR );
-    m_color_texture.setMinFilter( GL_LINEAR );
-    m_color_texture.setPixelFormat( GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE );
-    m_color_texture.create( width, height );
-
-    m_position_texture.setWrapS( GL_CLAMP_TO_EDGE );
-    m_position_texture.setWrapT( GL_CLAMP_TO_EDGE );
-    m_position_texture.setMagFilter( GL_LINEAR );
-    m_position_texture.setMinFilter( GL_LINEAR );
-    m_position_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT );
-    m_position_texture.create( width, height );
-
-    m_normal_texture.setWrapS( GL_CLAMP_TO_EDGE );
-    m_normal_texture.setWrapT( GL_CLAMP_TO_EDGE );
-    m_normal_texture.setMagFilter( GL_LINEAR );
-    m_normal_texture.setMinFilter( GL_LINEAR );
-    m_normal_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT );
-    m_normal_texture.create( width, height );
-
-    m_depth_texture.setWrapS( GL_CLAMP_TO_EDGE );
-    m_depth_texture.setWrapT( GL_CLAMP_TO_EDGE );
-    m_depth_texture.setMagFilter( GL_LINEAR );
-    m_depth_texture.setMinFilter( GL_LINEAR );
-    m_depth_texture.setPixelFormat( GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT  );
-    m_depth_texture.create( width, height );
-
-    m_framebuffer.create();
-    m_framebuffer.attachColorTexture( m_color_texture, 0 );
-    m_framebuffer.attachColorTexture( m_position_texture, 1 );
-    m_framebuffer.attachColorTexture( m_normal_texture, 2 );
-    m_framebuffer.attachDepthTexture( m_depth_texture );
-}
-
-void SSAOStochasticTubeRenderer::Engine::create_sampling_points()
-{
-    const size_t nsamples = m_nsamples;
-    const float radius = m_sampling_sphere_radius;
-    const size_t dim = 3;
-    const kvs::ValueArray<GLfloat> sampling_points = AmbientOcclusionRendering::SSAOPointSampling( radius, nsamples );
-    m_shader_occl_pass.bind();
-    m_shader_occl_pass.setUniform( "sampling_points", sampling_points, dim );
-    m_shader_occl_pass.unbind();
-}
-
-void SSAOStochasticTubeRenderer::Engine::update_framebuffer( const size_t width, const size_t height )
-{
-    m_color_texture.release();
-    m_color_texture.create( width, height );
-
-    m_position_texture.release();
-    m_position_texture.create( width, height );
-
-    m_normal_texture.release();
-    m_normal_texture.create( width, height );
-
-    m_depth_texture.release();
-    m_depth_texture.create( width, height );
-
-    m_framebuffer.attachColorTexture( m_color_texture, 0 );
-    m_framebuffer.attachColorTexture( m_position_texture, 1 );
-    m_framebuffer.attachColorTexture( m_normal_texture, 2 );
-    m_framebuffer.attachDepthTexture( m_depth_texture );
-}
-*/
-
-//void SSAOStochasticTubeRenderer::Engine::render_geometry_pass( const kvs::LineObject* line )
 void SSAOStochasticTubeRenderer::Engine::draw_buffer_object( const kvs::LineObject* line )
 {
-//    kvs::FrameBufferObject::GuardedBinder bind0( m_framebuffer );
-//    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
-
-    // Initialize FBO.
-//    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-    // Enable MRT rendering.
-//    const GLenum buffers[3] = {
-//        GL_COLOR_ATTACHMENT0_EXT,
-//        GL_COLOR_ATTACHMENT1_EXT,
-//        GL_COLOR_ATTACHMENT2_EXT };
-//    kvs::OpenGL::SetDrawBuffers( 3, buffers );
-
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
-//    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
     kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
     kvs::Texture::Binder unit0( m_shape_texture, 0 );
     kvs::Texture::Binder unit1( m_diffuse_texture, 1 );
@@ -768,7 +586,6 @@ void SSAOStochasticTubeRenderer::Engine::draw_buffer_object( const kvs::LineObje
         const float offset_x = static_cast<float>( ( count ) % size );
         const float offset_y = static_cast<float>( ( count / size ) % size );
         const kvs::Vec2 random_offset( offset_x, offset_y );
-//        m_shader_geom_pass.setUniform( "random_offset", random_offset );
         m_drawable.geometryPassShader().setUniform( "random_offset", random_offset );
 
         // Draw lines.
@@ -785,10 +602,5 @@ void SSAOStochasticTubeRenderer::Engine::draw_buffer_object( const kvs::LineObje
         }
     }
 }
-
-// void SSAOStochasticTubeRenderer::Engine::render_occlusion_pass()
-// {
-//     m_drawable.renderOcclusionPass();
-// }
 
 } // end of namespace AmbientOcclusionRendering

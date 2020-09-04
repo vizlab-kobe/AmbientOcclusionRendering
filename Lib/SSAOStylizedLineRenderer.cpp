@@ -315,8 +315,6 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     }
 
     // Ambient occlusion.
-//    this->render_geometry_pass( line );
-//    this->render_occlusion_pass();
     m_drawable.bind();
     this->draw_buffer_object( line );
     m_drawable.unbind();
@@ -444,22 +442,8 @@ void SSAOStylizedLineRenderer::create_diffuse_texture()
     m_diffuse_texture.create( 1, 1, diffuse.data() );
 }
 
-//void SSAOStylizedLineRenderer::render_geometry_pass( const kvs::LineObject* line )
 void SSAOStylizedLineRenderer::draw_buffer_object( const kvs::LineObject* line )
 {
-//    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
-
-    // Initialize FBO.
-//    kvs::OpenGL::SetClearColor( kvs::Vec4::Constant( 0.0f ) );
-//    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-    // Enable MRT rendering.
-//    const GLenum buffers[3] = {
-//        GL_COLOR_ATTACHMENT0_EXT,
-//        GL_COLOR_ATTACHMENT1_EXT,
-//        GL_COLOR_ATTACHMENT2_EXT };
-//    kvs::OpenGL::SetDrawBuffers( 3, buffers );
-
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
     kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
     kvs::Texture::Binder unit0( m_shape_texture, 0 );
@@ -490,10 +474,5 @@ void SSAOStylizedLineRenderer::draw_buffer_object( const kvs::LineObject* line )
         }
     }
 }
-
-// void SSAOStylizedLineRenderer::render_occlusion_pass()
-// {
-//     m_drawable.renderOcclusionPass();
-// }
 
 } // end of namespace AmbientOcclusionRendering

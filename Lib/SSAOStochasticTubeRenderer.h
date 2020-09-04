@@ -82,8 +82,6 @@ private:
     void create_shape_texture();
     void create_diffuse_texture();
     void create_transfer_function_texture();
-//    void render_geometry_pass( const kvs::LineObject* line );
-//    void render_occlusion_pass();
     void draw_buffer_object( const kvs::LineObject* line );
 };
 
