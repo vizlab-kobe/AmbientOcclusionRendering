@@ -502,7 +502,6 @@ void SSAOStochasticTetrahedraRenderer::Engine::draw_buffer_object(
     const kvs::UnstructuredVolumeObject* volume )
 {
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
-    kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
     kvs::Texture::Binder bind3( randomTexture(), 0 );
     kvs::Texture::Binder bind4( m_preintegration_texture, 1 );
     kvs::Texture::Binder bind5( m_decomposition_texture, 2 );

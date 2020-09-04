@@ -45,10 +45,7 @@ class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEng
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
 
 private:
-//    bool m_has_normal; ///< check flag for the normal array
-//    bool m_has_connection; ///< check flag for the connection array
     float m_polygon_offset; ///< polygon offset
-//    kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
     BufferObject m_buffer_object;
     SSAODrawable m_drawable;
 

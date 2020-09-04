@@ -750,7 +750,6 @@ void SSAOStochasticUniformGridRenderer::Engine::draw_buffer_object(
     kvs::Texture::Binder unit2( m_entry_texture, 2 );
     kvs::Texture::Binder unit3( m_transfer_function_texture, 3 );
     kvs::Texture::Binder unit4( randomTexture(), 4 );
-    kvs::ProgramObject::Binder unit( m_drawable.geometryPassShader() );
 
     if ( isEnabledShading() ) kvs::OpenGL::Enable( GL_LIGHTING );
     else kvs::OpenGL::Disable( GL_LIGHTING );

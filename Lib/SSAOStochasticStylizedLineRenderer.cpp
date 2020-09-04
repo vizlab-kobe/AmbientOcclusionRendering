@@ -495,7 +495,6 @@ void SSAOStochasticStylizedLineRenderer::Engine::create_diffuse_texture()
 void SSAOStochasticStylizedLineRenderer::Engine::draw_buffer_object( const kvs::LineObject* line )
 {
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
-    kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
     kvs::Texture::Binder unit0( m_shape_texture, 0 );
     kvs::Texture::Binder unit1( m_diffuse_texture, 1 );
     kvs::Texture::Binder unit2( randomTexture(), 2 );

@@ -73,10 +73,14 @@ void SSAODrawable::bind()
         GL_COLOR_ATTACHMENT1_EXT,
         GL_COLOR_ATTACHMENT2_EXT };
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
+
+    m_geom_pass_shader.bind();
 }
 
 void SSAODrawable::unbind()
 {
+    m_geom_pass_shader.unbind();
+
     if ( m_id != m_framebuffer.id() )
     {
         KVS_GL_CALL( glBindFramebufferEXT( GL_FRAMEBUFFER, m_id ) );

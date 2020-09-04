@@ -243,7 +243,6 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::Polyg
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
-    kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
     m_drawable.geometryPassShader().setUniform( "random_offset", random_offset );
 
     kvs::Texture::Binder bind3( randomTexture() );

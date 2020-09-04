@@ -69,9 +69,9 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
 
     // Ambient occlusion.
     m_drawable.bind();
-    m_drawable.geometryPassShader().bind();
+//    m_drawable.geometryPassShader().bind();
     BaseClass::drawBufferObject( polygon );
-    m_drawable.geometryPassShader().unbind();
+//    m_drawable.geometryPassShader().unbind();
     m_drawable.unbind();
     m_drawable.draw();
 
