@@ -113,8 +113,9 @@ private:
     void create_buffer_object( const kvs::UnstructuredVolumeObject* volume );
     void create_preintegration_texture();
     void create_decomposition_texture();
-    void render_geometry_pass( const kvs::UnstructuredVolumeObject* volume );
-    void render_occlusion_pass();
+//    void render_geometry_pass( const kvs::UnstructuredVolumeObject* volume );
+//    void render_occlusion_pass();
+    void draw_buffer_object( const kvs::UnstructuredVolumeObject* volume );
 };
 
 } // end of namespace AmbientOcclusionRendering

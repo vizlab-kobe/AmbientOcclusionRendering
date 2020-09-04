@@ -372,8 +372,12 @@ void SSAOStochasticStylizedLineRenderer::Engine::setup( kvs::ObjectBase* object,
 
 void SSAOStochasticStylizedLineRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
-    this->render_geometry_pass( kvs::LineObject::DownCast( object ) );
-    this->render_occlusion_pass();
+//    this->render_geometry_pass( kvs::LineObject::DownCast( object ) );
+//    this->render_occlusion_pass();
+    m_drawable.bind();
+    this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
+    m_drawable.unbind();
+    m_drawable.draw();
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::create_buffer_object( const kvs::LineObject* line )
@@ -490,19 +494,20 @@ void SSAOStochasticStylizedLineRenderer::Engine::create_diffuse_texture()
     m_diffuse_texture.create( 1, 1, diffuse.data() );
 }
 
-void SSAOStochasticStylizedLineRenderer::Engine::render_geometry_pass( const kvs::LineObject* line )
+//void SSAOStochasticStylizedLineRenderer::Engine::render_geometry_pass( const kvs::LineObject* line )
+void SSAOStochasticStylizedLineRenderer::Engine::draw_buffer_object( const kvs::LineObject* line )
 {
-    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
+//    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
-    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+//    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Enable MRT rendering.
-    const GLenum buffers[3] = {
-        GL_COLOR_ATTACHMENT0_EXT,
-        GL_COLOR_ATTACHMENT1_EXT,
-        GL_COLOR_ATTACHMENT2_EXT };
-    kvs::OpenGL::SetDrawBuffers( 3, buffers );
+//    const GLenum buffers[3] = {
+//        GL_COLOR_ATTACHMENT0_EXT,
+//        GL_COLOR_ATTACHMENT1_EXT,
+//        GL_COLOR_ATTACHMENT2_EXT };
+//    kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
     kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
@@ -535,9 +540,9 @@ void SSAOStochasticStylizedLineRenderer::Engine::render_geometry_pass( const kvs
     }
 }
 
-void SSAOStochasticStylizedLineRenderer::Engine::render_occlusion_pass()
-{
-    m_drawable.renderOcclusionPass();
-}
+// void SSAOStochasticStylizedLineRenderer::Engine::render_occlusion_pass()
+// {
+//     m_drawable.renderOcclusionPass();
+// }
 
 } // end of namespace AmbientOcclusionRendering

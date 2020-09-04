@@ -64,8 +64,9 @@ public:
 
 private:
     void create_buffer_object( const kvs::PolygonObject* polygon );
-    void render_geometry_pass( const kvs::PolygonObject* polygon );
-    void render_occlusion_pass();
+    void draw_buffer_object( const kvs::PolygonObject* polygon );
+//    void render_geometry_pass( const kvs::PolygonObject* polygon );
+//    void render_occlusion_pass();
 };
 
 } // end of namespace AmbientOcclusionRendering

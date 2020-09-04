@@ -100,8 +100,9 @@ private:
     void update_framebuffer( const size_t width, const size_t height );
     void draw_bounding_cube_buffer();
     void draw_quad();
-    void render_geometry_pass( const kvs::StructuredVolumeObject* volume, const kvs::Camera* camera, const kvs::Light* light );
-    void render_occlusion_pass( const kvs::StructuredVolumeObject* volume, const kvs::Light* light );
+//    void render_geometry_pass( const kvs::StructuredVolumeObject* volume, const kvs::Camera* camera, const kvs::Light* light );
+//    void render_occlusion_pass( const kvs::StructuredVolumeObject* volume, const kvs::Light* light );
+    void draw_buffer_object( const kvs::StructuredVolumeObject* volume );
 };
 
 } // end of namespace AmbientOcclusionRendering

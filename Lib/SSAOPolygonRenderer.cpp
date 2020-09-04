@@ -173,8 +173,12 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     }
 
     // Ambient occlusion.
-    this->render_geometry_pass( polygon );
-    this->render_occlusion_pass();
+//    this->render_geometry_pass( polygon );
+//    this->render_occlusion_pass();
+    m_drawable.bind();
+    this->draw_buffer_object( polygon );
+    m_drawable.unbind();
+    m_drawable.draw();
 
     BaseClass::stopTimer();
 }
@@ -210,8 +214,11 @@ void SSAOPolygonRenderer::create_buffer_object( const kvs::PolygonObject* polygo
     m_vbo_manager.create();
 }
 
-void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygon )
+//void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygon )
+void SSAOPolygonRenderer::draw_buffer_object( const kvs::PolygonObject* polygon )
 {
+//    m_drawable.bind();
+    /*
     kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
@@ -224,6 +231,7 @@ void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygo
         GL_COLOR_ATTACHMENT1_EXT,
         GL_COLOR_ATTACHMENT2_EXT };
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
+    */
 
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
     kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
@@ -244,11 +252,15 @@ void SSAOPolygonRenderer::render_geometry_pass( const kvs::PolygonObject* polygo
             m_vbo_manager.drawArrays( GL_TRIANGLES, 0, 3 * npolygons );
         }
     }
+//    m_drawable.unbind();
 }
 
+/*
 void SSAOPolygonRenderer::render_occlusion_pass()
 {
-    m_drawable.renderOcclusionPass();
+//    m_drawable.renderOcclusionPass();
+    m_drawable.draw();
 }
+*/
 
 } // end of namespace AmbientOcclusionRendering

@@ -460,8 +460,12 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
 
 void SSAOStochasticTubeRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
-    this->render_geometry_pass( kvs::LineObject::DownCast( object ) );
-    this->render_occlusion_pass();
+//    this->render_geometry_pass( kvs::LineObject::DownCast( object ) );
+//    this->render_occlusion_pass();
+    m_drawable.bind();
+    this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
+    m_drawable.unbind();
+    m_drawable.draw();
 }
 
 /*
@@ -732,20 +736,21 @@ void SSAOStochasticTubeRenderer::Engine::update_framebuffer( const size_t width,
 }
 */
 
-void SSAOStochasticTubeRenderer::Engine::render_geometry_pass( const kvs::LineObject* line )
+//void SSAOStochasticTubeRenderer::Engine::render_geometry_pass( const kvs::LineObject* line )
+void SSAOStochasticTubeRenderer::Engine::draw_buffer_object( const kvs::LineObject* line )
 {
 //    kvs::FrameBufferObject::GuardedBinder bind0( m_framebuffer );
-    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
+//    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
-    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+//    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Enable MRT rendering.
-    const GLenum buffers[3] = {
-        GL_COLOR_ATTACHMENT0_EXT,
-        GL_COLOR_ATTACHMENT1_EXT,
-        GL_COLOR_ATTACHMENT2_EXT };
-    kvs::OpenGL::SetDrawBuffers( 3, buffers );
+//    const GLenum buffers[3] = {
+//        GL_COLOR_ATTACHMENT0_EXT,
+//        GL_COLOR_ATTACHMENT1_EXT,
+//        GL_COLOR_ATTACHMENT2_EXT };
+//    kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
 //    kvs::ProgramObject::Binder bind2( m_shader_geom_pass );
@@ -781,25 +786,9 @@ void SSAOStochasticTubeRenderer::Engine::render_geometry_pass( const kvs::LineOb
     }
 }
 
-void SSAOStochasticTubeRenderer::Engine::render_occlusion_pass()
-{
-    /*
-    kvs::ProgramObject::Binder bind1( m_shader_occl_pass );
-    kvs::Texture::Binder unit0( m_color_texture, 0 );
-    kvs::Texture::Binder unit1( m_position_texture, 1 );
-    kvs::Texture::Binder unit2( m_normal_texture, 2 );
-    kvs::Texture::Binder unit3( m_depth_texture, 3 );
-    m_shader_occl_pass.setUniform( "color_texture", 0 );
-    m_shader_occl_pass.setUniform( "position_texture", 1 );
-    m_shader_occl_pass.setUniform( "normal_texture", 2 );
-    m_shader_occl_pass.setUniform( "depth_texture", 3 );
-    m_shader_occl_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
-
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
-    kvs::OpenGL::Enable( GL_TEXTURE_2D );
-    ::Draw();
-    */
-    m_drawable.renderOcclusionPass();
-}
+// void SSAOStochasticTubeRenderer::Engine::render_occlusion_pass()
+// {
+//     m_drawable.renderOcclusionPass();
+// }
 
 } // end of namespace AmbientOcclusionRendering

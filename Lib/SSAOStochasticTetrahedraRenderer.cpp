@@ -385,8 +385,12 @@ void SSAOStochasticTetrahedraRenderer::Engine::draw(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    this->render_geometry_pass( kvs::UnstructuredVolumeObject::DownCast( object ) );
-    this->render_occlusion_pass();
+//    this->render_geometry_pass( kvs::UnstructuredVolumeObject::DownCast( object ) );
+//    this->render_occlusion_pass();
+    m_drawable.bind();
+    this->draw_buffer_object( kvs::UnstructuredVolumeObject::DownCast( object ) );
+    m_drawable.unbind();
+    m_drawable.draw();
 }
 
 /*===========================================================================*/
@@ -496,20 +500,21 @@ void SSAOStochasticTetrahedraRenderer::Engine::create_decomposition_texture()
     m_decomposition_texture.create( 81, 1, table.data() );
 }
 
-void SSAOStochasticTetrahedraRenderer::Engine::render_geometry_pass(
+//void SSAOStochasticTetrahedraRenderer::Engine::render_geometry_pass(
+void SSAOStochasticTetrahedraRenderer::Engine::draw_buffer_object(
     const kvs::UnstructuredVolumeObject* volume )
 {
-    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
+//    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
-    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+//    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Enable MRT rendering.
-    const GLenum buffers[3] = {
-        GL_COLOR_ATTACHMENT0_EXT,
-        GL_COLOR_ATTACHMENT1_EXT,
-        GL_COLOR_ATTACHMENT2_EXT };
-    kvs::OpenGL::SetDrawBuffers( 3, buffers );
+//    const GLenum buffers[3] = {
+//        GL_COLOR_ATTACHMENT0_EXT,
+//        GL_COLOR_ATTACHMENT1_EXT,
+//        GL_COLOR_ATTACHMENT2_EXT };
+//    kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
     kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
@@ -534,10 +539,10 @@ void SSAOStochasticTetrahedraRenderer::Engine::render_geometry_pass(
     }
 }
 
-void SSAOStochasticTetrahedraRenderer::Engine::render_occlusion_pass()
-{
-    m_drawable.renderOcclusionPass();
-}
+//void SSAOStochasticTetrahedraRenderer::Engine::render_occlusion_pass()
+//{
+//    m_drawable.renderOcclusionPass();
+//}
 
 void SSAOStochasticTetrahedraRenderer::Engine::Drawable::setGeometryPassShaderFiles(
     const std::string& vert_file,

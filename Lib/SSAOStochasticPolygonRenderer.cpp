@@ -503,8 +503,12 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    this->render_geometry_pass( kvs::PolygonObject::DownCast( object ) );
-    this->render_occlusion_pass();
+//    this->render_geometry_pass( kvs::PolygonObject::DownCast( object ) );
+//    this->render_occlusion_pass();
+    m_drawable.bind();
+    this->draw_buffer_object( kvs::PolygonObject::DownCast( object ) );
+    m_drawable.unbind();
+    m_drawable.draw();
 }
 
 /*===========================================================================*/
@@ -541,19 +545,20 @@ void SSAOStochasticPolygonRenderer::Engine::create_buffer_object( const kvs::Pol
     m_vbo_manager.create();
 }
 
-void SSAOStochasticPolygonRenderer::Engine::render_geometry_pass( const kvs::PolygonObject* polygon )
+//void SSAOStochasticPolygonRenderer::Engine::render_geometry_pass( const kvs::PolygonObject* polygon )
+void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::PolygonObject* polygon )
 {
-    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
+//    kvs::FrameBufferObject::GuardedBinder bind0( m_drawable.framebuffer() );
 
     // Initialize FBO.
-    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+//    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Enable MRT rendering.
-    const GLenum buffers[3] = {
-        GL_COLOR_ATTACHMENT0_EXT,
-        GL_COLOR_ATTACHMENT1_EXT,
-        GL_COLOR_ATTACHMENT2_EXT };
-    kvs::OpenGL::SetDrawBuffers( 3, buffers );
+//    const GLenum buffers[3] = {
+//        GL_COLOR_ATTACHMENT0_EXT,
+//        GL_COLOR_ATTACHMENT1_EXT,
+//        GL_COLOR_ATTACHMENT2_EXT };
+//    kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
     kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
     kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
@@ -579,9 +584,9 @@ void SSAOStochasticPolygonRenderer::Engine::render_geometry_pass( const kvs::Pol
     }
 }
 
-void SSAOStochasticPolygonRenderer::Engine::render_occlusion_pass()
-{
-    m_drawable.renderOcclusionPass();
-}
+//void SSAOStochasticPolygonRenderer::Engine::render_occlusion_pass()
+//{
+//    m_drawable.renderOcclusionPass();
+//}
 
 } // end of namespace AmbientOcclusionRendering

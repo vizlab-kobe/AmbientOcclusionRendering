@@ -36,6 +36,7 @@ namespace AmbientOcclusionRendering
 {
 
 SSAODrawable::SSAODrawable():
+    m_id( 0 ),
     m_geom_pass_shader_vert_file("SSAO_geom_pass.vert"),
     m_geom_pass_shader_frag_file("SSAO_geom_pass.frag"),
     m_occl_pass_shader_vert_file("SSAO_occl_pass.vert"),
@@ -55,6 +56,49 @@ void SSAODrawable::setOcclusionPassShaderFiles( const std::string& vert_file, co
 {
     m_occl_pass_shader_vert_file = vert_file;
     m_occl_pass_shader_frag_file = frag_file;
+}
+
+void SSAODrawable::bind()
+{
+    // Gaurded bind.
+    m_id = kvs::OpenGL::Integer( GL_FRAMEBUFFER_BINDING );
+    if ( m_id != m_framebuffer.id() ) { m_framebuffer.bind(); }
+
+    // Initialize FBO.
+    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+     // Enable MRT rendering.
+    const GLenum buffers[3] = {
+        GL_COLOR_ATTACHMENT0_EXT,
+        GL_COLOR_ATTACHMENT1_EXT,
+        GL_COLOR_ATTACHMENT2_EXT };
+    kvs::OpenGL::SetDrawBuffers( 3, buffers );
+}
+
+void SSAODrawable::unbind()
+{
+    if ( m_id != m_framebuffer.id() )
+    {
+        KVS_GL_CALL( glBindFramebufferEXT( GL_FRAMEBUFFER, m_id ) );
+    }
+}
+
+void SSAODrawable::draw()
+{
+    kvs::ProgramObject::Binder bind1( m_occl_pass_shader );
+    kvs::Texture::Binder unit0( m_color_texture, 0 );
+    kvs::Texture::Binder unit1( m_position_texture, 1 );
+    kvs::Texture::Binder unit2( m_normal_texture, 2 );
+    kvs::Texture::Binder unit3( m_depth_texture, 3 );
+    m_occl_pass_shader.setUniform( "color_texture", 0 );
+    m_occl_pass_shader.setUniform( "position_texture", 1 );
+    m_occl_pass_shader.setUniform( "normal_texture", 2 );
+    m_occl_pass_shader.setUniform( "depth_texture", 3 );
+    m_occl_pass_shader.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
+
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::Enable( GL_TEXTURE_2D );
+    ::Draw();
 }
 
 void SSAODrawable::releaseResources()
@@ -105,7 +149,6 @@ void SSAODrawable::createShaderProgram( const kvs::Shader::ShadingModel& shading
     const size_t nsamples = m_nsamples;
     const float radius = m_sampling_sphere_radius;
     const size_t dim = 3;
-//    const auto sampling_points = AmbientOcclusionRendering::SSAOPointSampling( radius, nsamples );
     const auto sampling_points = this->generatePoints( radius, nsamples );
 
     m_occl_pass_shader.bind();
@@ -179,24 +222,6 @@ void SSAODrawable::updateFramebuffer( const size_t width, const size_t height )
     m_framebuffer.attachColorTexture( m_position_texture, 1 );
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
-}
-
-void SSAODrawable::renderOcclusionPass()
-{
-    kvs::ProgramObject::Binder bind1( m_occl_pass_shader );
-    kvs::Texture::Binder unit0( m_color_texture, 0 );
-    kvs::Texture::Binder unit1( m_position_texture, 1 );
-    kvs::Texture::Binder unit2( m_normal_texture, 2 );
-    kvs::Texture::Binder unit3( m_depth_texture, 3 );
-    m_occl_pass_shader.setUniform( "color_texture", 0 );
-    m_occl_pass_shader.setUniform( "position_texture", 1 );
-    m_occl_pass_shader.setUniform( "normal_texture", 2 );
-    m_occl_pass_shader.setUniform( "depth_texture", 3 );
-    m_occl_pass_shader.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
-
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
-    kvs::OpenGL::Enable( GL_TEXTURE_2D );
-    ::Draw();
 }
 
 kvs::ValueArray<GLfloat> SSAODrawable::generatePoints( const float radius, const size_t nsamples )
