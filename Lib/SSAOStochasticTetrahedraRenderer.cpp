@@ -283,7 +283,7 @@ void SSAOStochasticTetrahedraRenderer::Engine::release()
     m_T_texture.release();
     m_inv_T_texture.release();
     m_transfer_function_changed = true;
-    m_ao_buffer.releaseResources();
+    m_ao_buffer.release();
 }
 
 /*===========================================================================*/

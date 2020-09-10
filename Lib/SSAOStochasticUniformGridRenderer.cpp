@@ -187,7 +187,7 @@ void SSAOStochasticUniformGridRenderer::Engine::release()
     m_bounding_cube_buffer.release();
     m_bounding_cube_shader.release();
     m_transfer_function_changed = true;
-    m_ao_buffer.releaseResources();
+    m_ao_buffer.release();
 }
 
 /*===========================================================================*/

@@ -105,7 +105,7 @@ void AmbientOcclusionBuffer::draw()
     ::Draw();
 }
 
-void AmbientOcclusionBuffer::releaseResources()
+void AmbientOcclusionBuffer::release()
 {
     m_geom_pass_shader.release();
     m_occl_pass_shader.release();

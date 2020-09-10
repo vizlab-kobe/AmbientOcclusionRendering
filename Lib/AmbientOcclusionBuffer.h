@@ -62,8 +62,8 @@ public:
     void bind();
     void unbind();
     void draw();
+    void release();
 
-    void releaseResources();
     void createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
     void updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
     void createFramebuffer( const size_t width, const size_t height );

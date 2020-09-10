@@ -96,7 +96,7 @@ SSAOStochasticStylizedLineRenderer::Engine::Engine():
 void SSAOStochasticStylizedLineRenderer::Engine::release()
 {
     m_buffer_object.release();
-    m_ao_buffer.releaseResources();
+    m_ao_buffer.release();
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::create(

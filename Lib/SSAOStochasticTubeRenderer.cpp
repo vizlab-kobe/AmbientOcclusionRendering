@@ -110,7 +110,7 @@ void SSAOStochasticTubeRenderer::Engine::release()
     m_buffer_object.release();
 
     m_tfunc_changed = true;
-    m_ao_buffer.releaseResources();
+    m_ao_buffer.release();
 }
 
 void SSAOStochasticTubeRenderer::Engine::create(

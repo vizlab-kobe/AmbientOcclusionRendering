@@ -111,7 +111,7 @@ SSAOStochasticPolygonRenderer::Engine::Engine():
 /*===========================================================================*/
 void SSAOStochasticPolygonRenderer::Engine::release()
 {
-    m_ao_buffer.releaseResources();
+    m_ao_buffer.release();
     m_buffer_object.release();
 }
 
