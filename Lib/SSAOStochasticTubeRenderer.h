@@ -10,6 +10,7 @@
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
 #include <kvs/TransferFunction>
+#include <kvs/StylizedLineRenderer>
 #include "SSAODrawable.h"
 
 
@@ -40,21 +41,16 @@ public:
 
 class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine
 {
-private:
-    kvs::ValueArray<GLint> m_first_array; ///< array of starting indices for the polyline
-    kvs::ValueArray<GLsizei> m_count_array; ///< array of the number of indices for the polyline
+    using BufferObject = kvs::StylizedLineRenderer::BufferObject;
 
-    // Variables for tube rendering
+private:
     kvs::Real32 m_radius_size;
     kvs::Real32 m_halo_size;
-    kvs::Texture2D m_shape_texture;
-    kvs::Texture2D m_diffuse_texture;
-    kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
+    BufferObject m_buffer_object;
 
     bool m_tfunc_changed; ///< flag for changing transfer function
     kvs::TransferFunction m_tfunc; ///< transfer function
     kvs::Texture1D m_tfunc_texture; ///< transfer function texture
-
     SSAODrawable m_drawable;
 
 public:
@@ -79,8 +75,6 @@ public:
 
 private:
     void create_buffer_object( const kvs::LineObject* line );
-    void create_shape_texture();
-    void create_diffuse_texture();
     void create_transfer_function_texture();
     void draw_buffer_object( const kvs::LineObject* line );
 };
