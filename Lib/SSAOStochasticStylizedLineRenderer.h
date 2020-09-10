@@ -9,6 +9,7 @@
 #include <kvs/Texture2D>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
+#include <kvs/StylizedLineRenderer>
 #include "SSAODrawable.h"
 
 
@@ -39,17 +40,14 @@ public:
 
 class SSAOStochasticStylizedLineRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BufferObject = kvs::StylizedLineRenderer::BufferObject;
+
 private:
     kvs::UInt8 m_line_opacity; ///< line opacity
-    kvs::ValueArray<GLint> m_first_array; ///< array of starting indices for the polyline
-    kvs::ValueArray<GLsizei> m_count_array; ///< array of the number of indices for the polyline
 
-    // Variables for tube rendering
     kvs::Real32 m_radius_size;
     kvs::Real32 m_halo_size;
-    kvs::Texture2D m_shape_texture;
-    kvs::Texture2D m_diffuse_texture;
-    kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
+    BufferObject m_buffer_object;
 
     // SSAO
     SSAODrawable m_drawable;
@@ -76,8 +74,6 @@ public:
 
 private:
     void create_buffer_object( const kvs::LineObject* line );
-    void create_shape_texture();
-    void create_diffuse_texture();
     void draw_buffer_object( const kvs::LineObject* line );
 };
 
