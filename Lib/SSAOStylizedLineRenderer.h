@@ -8,7 +8,7 @@
 #include <kvs/FrameBufferObject>
 #include <kvs/Texture2D>
 #include <kvs/VertexBufferObjectManager>
-#include "SSAODrawable.h"
+#include "AmbientOcclusionBuffer.h"
 
 
 namespace AmbientOcclusionRendering
@@ -35,7 +35,7 @@ private:
     kvs::Texture2D m_diffuse_texture;
     kvs::VertexBufferObjectManager m_vbo_manager;
 
-    SSAODrawable m_drawable;
+    AmbientOcclusionBuffer m_ao_buffer;
 
 public:
     SSAOStylizedLineRenderer();
@@ -49,10 +49,10 @@ public:
     void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
     kvs::Real32 radiusSize() const { return m_radius_size; }
     kvs::Real32 haloSize() const { return m_halo_size; }
-    void setSamplingSphereRadius( const float radius ) { m_drawable.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_drawable.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_drawable.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_drawable.numberOfSamplingPoints(); }
+    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
+    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
     void create_buffer_object( const kvs::LineObject* line );

@@ -89,14 +89,14 @@ SSAOStochasticStylizedLineRenderer::Engine::Engine():
     m_radius_size( 0.05f ),
     m_halo_size( 0.0f )
 {
-    m_drawable.setGeometryPassShaderFiles( "SSAO_SR_stylized_geom_pass.vert", "SSAO_SR_stylized_geom_pass.frag" );
-    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_stylized_geom_pass.vert", "SSAO_SR_stylized_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::release()
 {
     m_buffer_object.release();
-    m_drawable.releaseResources();
+    m_ao_buffer.releaseResources();
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::create(
@@ -111,8 +111,8 @@ void SSAOStochasticStylizedLineRenderer::Engine::create(
 
     attachObject( line );
     createRandomTexture();
-    m_drawable.createShaderProgram( this->shader(), this->isEnabledShading() );
-    m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
+    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
     this->create_buffer_object( line );
 }
 
@@ -124,7 +124,7 @@ void SSAOStochasticStylizedLineRenderer::Engine::update(
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
+    m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
@@ -132,24 +132,24 @@ void SSAOStochasticStylizedLineRenderer::Engine::setup( kvs::ObjectBase* object,
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
     const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-    m_drawable.geometryPassShader().bind();
-    m_drawable.geometryPassShader().setUniform( "ModelViewMatrix", M );
-    m_drawable.geometryPassShader().setUniform( "ProjectionMatrix", P );
-    m_drawable.geometryPassShader().setUniform( "NormalMatrix", N );
-    m_drawable.geometryPassShader().setUniform( "shape_texture", 0 );
-    m_drawable.geometryPassShader().setUniform( "diffuse_texture", 1 );
-    m_drawable.geometryPassShader().setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-    m_drawable.geometryPassShader().setUniform( "random_texture", 2 );
-    m_drawable.geometryPassShader().setUniform( "opacity", m_line_opacity / 255.0f );
-    m_drawable.geometryPassShader().unbind();
+    m_ao_buffer.geometryPassShader().bind();
+    m_ao_buffer.geometryPassShader().setUniform( "ModelViewMatrix", M );
+    m_ao_buffer.geometryPassShader().setUniform( "ProjectionMatrix", P );
+    m_ao_buffer.geometryPassShader().setUniform( "NormalMatrix", N );
+    m_ao_buffer.geometryPassShader().setUniform( "shape_texture", 0 );
+    m_ao_buffer.geometryPassShader().setUniform( "diffuse_texture", 1 );
+    m_ao_buffer.geometryPassShader().setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
+    m_ao_buffer.geometryPassShader().setUniform( "random_texture", 2 );
+    m_ao_buffer.geometryPassShader().setUniform( "opacity", m_line_opacity / 255.0f );
+    m_ao_buffer.geometryPassShader().unbind();
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
-    m_drawable.bind();
+    m_ao_buffer.bind();
     this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
-    m_drawable.unbind();
-    m_drawable.draw();
+    m_ao_buffer.unbind();
+    m_ao_buffer.draw();
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::create_buffer_object( const kvs::LineObject* line )
@@ -164,7 +164,7 @@ void SSAOStochasticStylizedLineRenderer::Engine::create_buffer_object( const kvs
         indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
     }
 
-    auto location = m_drawable.geometryPassShader().attributeLocation( "random_index" );
+    auto location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
     m_buffer_object.set( line, m_halo_size, m_radius_size );
     m_buffer_object.create();
@@ -180,7 +180,7 @@ void SSAOStochasticStylizedLineRenderer::Engine::draw_buffer_object( const kvs::
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
-    m_drawable.geometryPassShader().setUniform( "random_offset", random_offset );
+    m_ao_buffer.geometryPassShader().setUniform( "random_offset", random_offset );
 
     kvs::Texture::Binder unit2( randomTexture(), 2 );
     m_buffer_object.draw( line );

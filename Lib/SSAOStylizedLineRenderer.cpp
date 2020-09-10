@@ -242,8 +242,8 @@ SSAOStylizedLineRenderer::SSAOStylizedLineRenderer():
     m_halo_size( 0.0f )
 {
     this->setShader( kvs::Shader::Lambert() );
-    m_drawable.setGeometryPassShaderFiles( "SSAO_stylized_geom_pass.vert", "SSAO_stylized_geom_pass.frag" );
-    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_stylized_geom_pass.vert", "SSAO_stylized_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -289,8 +289,8 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
         m_window_width = width;
         m_window_height = height;
         m_object = object;
-        m_drawable.createShaderProgram( *m_shader, isEnabledShading() );
-        m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
+        m_ao_buffer.createShaderProgram( *m_shader, isEnabledShading() );
+        m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
         this->create_buffer_object( line );
         this->create_shape_texture();
         this->create_diffuse_texture();
@@ -301,7 +301,7 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     {
         m_window_width = width;
         m_window_height = height;
-        m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
+        m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
     }
 
     const bool object_changed = m_object != object;
@@ -309,16 +309,16 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     {
         m_object = object;
         m_vbo_manager.release();
-        m_drawable.updateShaderProgram( *m_shader, isEnabledShading() );
-        m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
+        m_ao_buffer.updateShaderProgram( *m_shader, isEnabledShading() );
+        m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
         this->create_buffer_object( line );
     }
 
     // Ambient occlusion.
-    m_drawable.bind();
+    m_ao_buffer.bind();
     this->draw_buffer_object( line );
-    m_drawable.unbind();
-    m_drawable.draw();
+    m_ao_buffer.unbind();
+    m_ao_buffer.draw();
 
     BaseClass::stopTimer();
 }
@@ -453,7 +453,7 @@ void SSAOStylizedLineRenderer::draw_buffer_object( const kvs::LineObject* line )
         const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
         const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
         const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-        auto& shader = m_drawable.geometryPassShader();
+        auto& shader = m_ao_buffer.geometryPassShader();
         shader.setUniform( "ModelViewMatrix", M );
         shader.setUniform( "ProjectionMatrix", P );
         shader.setUniform( "NormalMatrix", N );

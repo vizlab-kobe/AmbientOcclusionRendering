@@ -21,7 +21,7 @@
 #include <kvs/VertexBufferObjectManager>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
-#include "SSAODrawable.h"
+#include "AmbientOcclusionBuffer.h"
 
 
 namespace AmbientOcclusionRendering
@@ -60,13 +60,14 @@ public:
 class SSAOStochasticTetrahedraRenderer::Engine : public kvs::StochasticRenderingEngine
 {
 private:
-    class Drawable : public SSAODrawable
+    class AmbientOcclusionBuffer : public AmbientOcclusionRendering::AmbientOcclusionBuffer
     {
     private:
         const Engine* m_engine;
         std::string m_geom_pass_shader_geom_file;
     public:
-        Drawable( const Engine* engine ) : SSAODrawable(), m_engine( engine ) {}
+//        Drawable( const Engine* engine ) : AmbientOcclusionBuffer(), m_engine( engine ) {}
+        AmbientOcclusionBuffer( const Engine* engine ) : AmbientOcclusionRendering::AmbientOcclusionBuffer(), m_engine( engine ) {}
         const std::string& geometryPassGeometryShaderFile() const { return m_geom_pass_shader_geom_file; }
         void setGeometryPassShaderFiles( const std::string& vert_file, const std::string& geom_file, const std::string& frag_file );
         void createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
@@ -84,7 +85,8 @@ private:
     kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
     float m_sampling_step; ///< sampling step
     float m_maxT; ///< maximum value of T
-    Drawable m_drawable; ///< drawable for SSAO
+//    Drawable m_ao_buffer; ///< drawable for SSAO
+    AmbientOcclusionBuffer m_ao_buffer;
 
 public:
     Engine();
@@ -104,10 +106,10 @@ public:
     float samplingStep() const { return m_sampling_step; }
     const kvs::TransferFunction& transferFunction() const { return m_transfer_function; }
 
-    void setSamplingSphereRadius( const float radius ) { m_drawable.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_drawable.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_drawable.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_drawable.numberOfSamplingPoints(); }
+    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
+    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
     void create_buffer_object( const kvs::UnstructuredVolumeObject* volume );

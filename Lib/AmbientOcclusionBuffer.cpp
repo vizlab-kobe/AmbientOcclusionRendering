@@ -1,4 +1,4 @@
-#include "SSAODrawable.h"
+#include "AmbientOcclusionBuffer.h"
 #include <kvs/OpenGL>
 #include <kvs/ValueArray>
 #include <kvs/Xorshift128>
@@ -35,7 +35,7 @@ inline void Draw()
 namespace AmbientOcclusionRendering
 {
 
-SSAODrawable::SSAODrawable():
+AmbientOcclusionBuffer::AmbientOcclusionBuffer():
     m_id( 0 ),
     m_geom_pass_shader_vert_file("SSAO_geom_pass.vert"),
     m_geom_pass_shader_frag_file("SSAO_geom_pass.frag"),
@@ -46,19 +46,19 @@ SSAODrawable::SSAODrawable():
 {
 }
 
-void SSAODrawable::setGeometryPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
+void AmbientOcclusionBuffer::setGeometryPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
 {
     m_geom_pass_shader_vert_file = vert_file;
     m_geom_pass_shader_frag_file = frag_file;
 }
 
-void SSAODrawable::setOcclusionPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
+void AmbientOcclusionBuffer::setOcclusionPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
 {
     m_occl_pass_shader_vert_file = vert_file;
     m_occl_pass_shader_frag_file = frag_file;
 }
 
-void SSAODrawable::bind()
+void AmbientOcclusionBuffer::bind()
 {
     // Gaurded bind.
     m_id = kvs::OpenGL::Integer( GL_FRAMEBUFFER_BINDING );
@@ -77,7 +77,7 @@ void SSAODrawable::bind()
     m_geom_pass_shader.bind();
 }
 
-void SSAODrawable::unbind()
+void AmbientOcclusionBuffer::unbind()
 {
     m_geom_pass_shader.unbind();
 
@@ -87,7 +87,7 @@ void SSAODrawable::unbind()
     }
 }
 
-void SSAODrawable::draw()
+void AmbientOcclusionBuffer::draw()
 {
     kvs::ProgramObject::Binder bind1( m_occl_pass_shader );
     kvs::Texture::Binder unit0( m_color_texture, 0 );
@@ -105,7 +105,7 @@ void SSAODrawable::draw()
     ::Draw();
 }
 
-void SSAODrawable::releaseResources()
+void AmbientOcclusionBuffer::releaseResources()
 {
     m_geom_pass_shader.release();
     m_occl_pass_shader.release();
@@ -116,7 +116,7 @@ void SSAODrawable::releaseResources()
     m_depth_texture.release();
 }
 
-void SSAODrawable::createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
+void AmbientOcclusionBuffer::createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
 {
     // Build SSAO shader for geometry-pass (1st pass).
     {
@@ -164,14 +164,14 @@ void SSAODrawable::createShaderProgram( const kvs::Shader::ShadingModel& shading
     m_occl_pass_shader.unbind();
 }
 
-void SSAODrawable::updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
+void AmbientOcclusionBuffer::updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
 {
     m_geom_pass_shader.release();
     m_occl_pass_shader.release();
     this->createShaderProgram( shading_model, shading_enabled );
 }
 
-void SSAODrawable::createFramebuffer( const size_t width, const size_t height )
+void AmbientOcclusionBuffer::createFramebuffer( const size_t width, const size_t height )
 {
     m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
     m_color_texture.setWrapT( GL_CLAMP_TO_EDGE );
@@ -208,7 +208,7 @@ void SSAODrawable::createFramebuffer( const size_t width, const size_t height )
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
 
-void SSAODrawable::updateFramebuffer( const size_t width, const size_t height )
+void AmbientOcclusionBuffer::updateFramebuffer( const size_t width, const size_t height )
 {
     m_color_texture.release();
     m_color_texture.create( width, height );
@@ -228,7 +228,7 @@ void SSAODrawable::updateFramebuffer( const size_t width, const size_t height )
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
 
-kvs::ValueArray<GLfloat> SSAODrawable::generatePoints( const float radius, const size_t nsamples )
+kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float radius, const size_t nsamples )
 {
     kvs::Xorshift128 rand;
     kvs::ValueArray<GLfloat> sampling_points( 3 * nsamples );

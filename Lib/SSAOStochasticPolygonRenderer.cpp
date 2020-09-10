@@ -100,8 +100,8 @@ size_t SSAOStochasticPolygonRenderer::numberOfSamplingPoints() const
 SSAOStochasticPolygonRenderer::Engine::Engine():
     m_polygon_offset( 0.0f )
 {
-    m_drawable.setGeometryPassShaderFiles( "SSAO_SR_polygon_geom_pass.vert", "SSAO_SR_polygon_geom_pass.frag" );
-    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_polygon_geom_pass.vert", "SSAO_SR_polygon_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -111,7 +111,7 @@ SSAOStochasticPolygonRenderer::Engine::Engine():
 /*===========================================================================*/
 void SSAOStochasticPolygonRenderer::Engine::release()
 {
-    m_drawable.releaseResources();
+    m_ao_buffer.releaseResources();
     m_buffer_object.release();
 }
 
@@ -140,7 +140,7 @@ void SSAOStochasticPolygonRenderer::Engine::create(
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
+    m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
 }
 
 /*===========================================================================*/
@@ -159,7 +159,7 @@ void SSAOStochasticPolygonRenderer::Engine::update(
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
+    m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
 }
 
 /*===========================================================================*/
@@ -178,14 +178,14 @@ void SSAOStochasticPolygonRenderer::Engine::setup(
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
     const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-    m_drawable.geometryPassShader().bind();
-    m_drawable.geometryPassShader().setUniform( "ModelViewMatrix", M );
-    m_drawable.geometryPassShader().setUniform( "ModelViewProjectionMatrix", PM );
-    m_drawable.geometryPassShader().setUniform( "NormalMatrix", N );
-    m_drawable.geometryPassShader().setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-    m_drawable.geometryPassShader().setUniform( "random_texture", 0 );
-    m_drawable.geometryPassShader().setUniform( "polygon_offset", m_polygon_offset );
-    m_drawable.geometryPassShader().unbind();
+    m_ao_buffer.geometryPassShader().bind();
+    m_ao_buffer.geometryPassShader().setUniform( "ModelViewMatrix", M );
+    m_ao_buffer.geometryPassShader().setUniform( "ModelViewProjectionMatrix", PM );
+    m_ao_buffer.geometryPassShader().setUniform( "NormalMatrix", N );
+    m_ao_buffer.geometryPassShader().setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
+    m_ao_buffer.geometryPassShader().setUniform( "random_texture", 0 );
+    m_ao_buffer.geometryPassShader().setUniform( "polygon_offset", m_polygon_offset );
+    m_ao_buffer.geometryPassShader().unbind();
 }
 
 /*===========================================================================*/
@@ -201,15 +201,15 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    m_drawable.bind();
+    m_ao_buffer.bind();
     this->draw_buffer_object( kvs::PolygonObject::DownCast( object ) );
-    m_drawable.unbind();
-    m_drawable.draw();
+    m_ao_buffer.unbind();
+    m_ao_buffer.draw();
 }
 
 void SSAOStochasticPolygonRenderer::Engine::create_shader_program()
 {
-    m_drawable.createShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
 }
 
 /*===========================================================================*/
@@ -230,7 +230,7 @@ void SSAOStochasticPolygonRenderer::Engine::create_buffer_object( const kvs::Pol
         indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
     }
 
-    auto location = m_drawable.geometryPassShader().attributeLocation( "random_index" );
+    auto location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
     m_buffer_object.set( polygon );
     m_buffer_object.create();
@@ -243,7 +243,7 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::Polyg
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
-    m_drawable.geometryPassShader().setUniform( "random_offset", random_offset );
+    m_ao_buffer.geometryPassShader().setUniform( "random_offset", random_offset );
 
     kvs::Texture::Binder bind3( randomTexture() );
     m_buffer_object.draw( polygon );

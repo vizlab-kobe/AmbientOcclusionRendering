@@ -19,8 +19,8 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 SSAOPolygonRenderer::SSAOPolygonRenderer()
 {
-    m_drawable.setGeometryPassShaderFiles( "SSAO_geom_pass.vert", "SSAO_geom_pass.frag" );
-    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_geom_pass.vert", "SSAO_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -65,32 +65,32 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     }
 
     // Ambient occlusion.
-    m_drawable.bind();
+    m_ao_buffer.bind();
     BaseClass::drawBufferObject( camera );
-    m_drawable.unbind();
-    m_drawable.draw();
+    m_ao_buffer.unbind();
+    m_ao_buffer.draw();
 
     BaseClass::stopTimer();
 }
 
 void SSAOPolygonRenderer::createShaderProgram()
 {
-    m_drawable.createShaderProgram( BaseClass::shadingModel(), BaseClass::isEnabledShading() );
+    m_ao_buffer.createShaderProgram( BaseClass::shadingModel(), BaseClass::isEnabledShading() );
 }
 
 void SSAOPolygonRenderer::updateShaderProgram()
 {
-    m_drawable.updateShaderProgram( BaseClass::shadingModel(), BaseClass::isEnabledShading() );
+    m_ao_buffer.updateShaderProgram( BaseClass::shadingModel(), BaseClass::isEnabledShading() );
 }
 
 void SSAOPolygonRenderer::createFramebuffer( const size_t width, const size_t height )
 {
-    m_drawable.createFramebuffer( width, height );
+    m_ao_buffer.createFramebuffer( width, height );
 }
 
 void SSAOPolygonRenderer::updateFramebuffer( const size_t width, const size_t height )
 {
-    m_drawable.updateFramebuffer( width, height );
+    m_ao_buffer.updateFramebuffer( width, height );
 }
 
 } // end of namespace AmbientOcclusionRendering

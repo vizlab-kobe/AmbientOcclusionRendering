@@ -14,7 +14,7 @@ namespace AmbientOcclusionRendering
  *  @brief  Drawable class for SSAO
  */
 /*===========================================================================*/
-class SSAODrawable
+class AmbientOcclusionBuffer
 {
 private:
     GLuint m_id;
@@ -35,8 +35,8 @@ private:
     size_t m_nsamples; ///< number of sampling points
 
 public:
-    SSAODrawable();
-    virtual ~SSAODrawable() {}
+    AmbientOcclusionBuffer();
+    virtual ~AmbientOcclusionBuffer() {}
 
     void setGeometryPassShaderFiles( const std::string& vert_file, const std::string& frag_file );
     const std::string& geometryPassVertexShaderFile() const { return m_geom_pass_shader_vert_file; }

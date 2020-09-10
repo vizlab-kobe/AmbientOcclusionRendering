@@ -7,7 +7,7 @@
 #include <kvs/Texture2D>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
-#include "SSAODrawable.h"
+#include "AmbientOcclusionBuffer.h"
 
 
 namespace AmbientOcclusionRendering
@@ -47,7 +47,7 @@ class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEng
 private:
     float m_polygon_offset; ///< polygon offset
     BufferObject m_buffer_object;
-    SSAODrawable m_drawable;
+    AmbientOcclusionBuffer m_ao_buffer;
 
 public:
     Engine();
@@ -58,10 +58,10 @@ public:
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
 
-    void setSamplingSphereRadius( const float radius ) { m_drawable.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_drawable.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_drawable.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_drawable.numberOfSamplingPoints(); }
+    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
+    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
     void create_shader_program();

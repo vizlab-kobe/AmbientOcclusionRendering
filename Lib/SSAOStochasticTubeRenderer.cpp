@@ -101,8 +101,8 @@ SSAOStochasticTubeRenderer::Engine::Engine():
     m_halo_size( 0.0f ),
     m_tfunc_changed( true )
 {
-    m_drawable.setGeometryPassShaderFiles( "SSAO_SR_tube_geom_pass.vert", "SSAO_SR_tube_geom_pass.frag" );
-    m_drawable.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_tube_geom_pass.vert", "SSAO_SR_tube_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
 }
 
 void SSAOStochasticTubeRenderer::Engine::release()
@@ -110,7 +110,7 @@ void SSAOStochasticTubeRenderer::Engine::release()
     m_buffer_object.release();
 
     m_tfunc_changed = true;
-    m_drawable.releaseResources();
+    m_ao_buffer.releaseResources();
 }
 
 void SSAOStochasticTubeRenderer::Engine::create(
@@ -125,8 +125,8 @@ void SSAOStochasticTubeRenderer::Engine::create(
 
     attachObject( line );
     createRandomTexture();
-    m_drawable.createShaderProgram( this->shader(), this->isEnabledShading() );
-    m_drawable.createFramebuffer( framebuffer_width, framebuffer_height );
+    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
     this->create_buffer_object( line );
     this->create_transfer_function_texture();
 
@@ -150,7 +150,7 @@ void SSAOStochasticTubeRenderer::Engine::create(
         }
     }
 
-    auto& shader = m_drawable.geometryPassShader();
+    auto& shader = m_ao_buffer.geometryPassShader();
     shader.bind();
     shader.setUniform( "min_value", min_value );
     shader.setUniform( "max_value", max_value );
@@ -162,7 +162,7 @@ void SSAOStochasticTubeRenderer::Engine::update( kvs::ObjectBase* object, kvs::C
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_drawable.updateFramebuffer( framebuffer_width, framebuffer_height );
+    m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
 }
 
 void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
@@ -176,7 +176,7 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
     const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-    auto& shader = m_drawable.geometryPassShader();
+    auto& shader = m_ao_buffer.geometryPassShader();
     shader.bind();
     shader.setUniform( "ModelViewMatrix", M );
     shader.setUniform( "ProjectionMatrix", P );
@@ -191,10 +191,10 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
 
 void SSAOStochasticTubeRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
-    m_drawable.bind();
+    m_ao_buffer.bind();
     this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
-    m_drawable.unbind();
-    m_drawable.draw();
+    m_ao_buffer.unbind();
+    m_ao_buffer.draw();
 }
 
 void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineObject* line )
@@ -209,11 +209,11 @@ void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineOb
         indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
     }
 
-    auto indices_location = m_drawable.geometryPassShader().attributeLocation( "random_index" );
+    auto indices_location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, indices_location, 2 );
 
     const auto values = ::QuadVertexValues( line );
-    auto values_location = m_drawable.geometryPassShader().attributeLocation( "value" );
+    auto values_location = m_ao_buffer.geometryPassShader().attributeLocation( "value" );
     m_buffer_object.manager().setVertexAttribArray( values, values_location, 1 );
 
     m_buffer_object.set( line, m_halo_size, m_radius_size );
@@ -242,8 +242,8 @@ void SSAOStochasticTubeRenderer::Engine::draw_buffer_object( const kvs::LineObje
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
-    kvs::ProgramObject::Binder bind2( m_drawable.geometryPassShader() );
-    m_drawable.geometryPassShader().setUniform( "random_offset", random_offset );
+    kvs::ProgramObject::Binder bind2( m_ao_buffer.geometryPassShader() );
+    m_ao_buffer.geometryPassShader().setUniform( "random_offset", random_offset );
 
     kvs::Texture::Binder unit2( randomTexture(), 2 );
     kvs::Texture::Binder unit3( m_tfunc_texture, 3 );
