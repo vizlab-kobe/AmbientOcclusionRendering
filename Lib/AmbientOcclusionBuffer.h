@@ -19,13 +19,17 @@ class AmbientOcclusionBuffer
 private:
     GLuint m_id;
 
+    // Geometry pass shader
     std::string m_geom_pass_shader_vert_file; ///< vertex shader file for geometry pass
     std::string m_geom_pass_shader_frag_file; ///< fragment shader file for geometry pass
     kvs::ProgramObject m_geom_pass_shader; ///< shader program for geometry-pass (1st pass)
 
+    // Occlusion pass shader
     std::string m_occl_pass_shader_vert_file; ///< vertex shader file for occlusion pass
     std::string m_occl_pass_shader_frag_file; ///< fragment shader file for occlusion pass
     kvs::ProgramObject m_occl_pass_shader; ///< shader program for occlusion-pass (2nd pass)
+
+    // Framebuffer for SSAO
     kvs::FrameBufferObject m_framebuffer; ///< framebuffer object
     kvs::Texture2D m_color_texture; ///< color texture
     kvs::Texture2D m_position_texture; ///< texture for storing position information
