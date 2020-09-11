@@ -70,7 +70,7 @@ struct Model
             renderer->setName( "Renderer" );
             renderer->setSamplingSphereRadius( radius );
             renderer->setNumberOfSamplingPoints( points );
-            renderer->setShader( kvs::Shader::BlinnPhong() );
+            renderer->setShadingModel( kvs::Shader::BlinnPhong() );
             renderer->enableShading();
             return renderer;
         }
@@ -78,7 +78,7 @@ struct Model
         {
             auto* renderer = new Renderer();
             renderer->setName( "Renderer" );
-            renderer->setShader( kvs::Shader::BlinnPhong() );
+            renderer->setShadingModel( kvs::Shader::BlinnPhong() );
             renderer->enableShading();
             return renderer;
         }

@@ -8,33 +8,19 @@
 #include <kvs/FrameBufferObject>
 #include <kvs/Texture2D>
 #include <kvs/VertexBufferObjectManager>
+#include <kvs/StylizedLineRenderer>
 #include "AmbientOcclusionBuffer.h"
 
 
 namespace AmbientOcclusionRendering
 {
 
-class SSAOStylizedLineRenderer : public kvs::LineRenderer
+class SSAOStylizedLineRenderer : public kvs::StylizedLineRenderer
 {
     kvsModule( AmbientOcclusionRendering::SSAOStylizedLineRenderer, Renderer );
-    kvsModuleBaseClass( kvs::LineRenderer );
+    kvsModuleBaseClass( kvs::StylizedLineRenderer );
 
 private:
-    size_t m_window_width; ///< window width
-    size_t m_window_height; ///< window height
-    const kvs::ObjectBase* m_object; ///< pointer to the rendering object
-    kvs::ValueArray<GLint> m_first_array; ///< array of starting indices for the polyline
-    kvs::ValueArray<GLsizei> m_count_array; ///< array of the number of indices for the polyline
-    bool m_has_connection; ///< check flag for the connection array
-    kvs::Shader::ShadingModel* m_shader; ///< shading method
-
-    // Variables for tube rendering
-    kvs::Real32 m_radius_size;
-    kvs::Real32 m_halo_size;
-    kvs::Texture2D m_shape_texture;
-    kvs::Texture2D m_diffuse_texture;
-    kvs::VertexBufferObjectManager m_vbo_manager;
-
     AmbientOcclusionBuffer m_ao_buffer;
 
 public:
@@ -43,38 +29,18 @@ public:
 
     void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
-    template <typename ShadingType>
-    void setShader( const ShadingType shader );
-    void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
-    void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
-    kvs::Real32 radiusSize() const { return m_radius_size; }
-    kvs::Real32 haloSize() const { return m_halo_size; }
     void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
     kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
-    void create_buffer_object( const kvs::LineObject* line );
-    void create_shape_texture();
-    void create_diffuse_texture();
-    void draw_buffer_object( const kvs::LineObject* line );
-};
+    void createShaderProgram();
+    void updateShaderProgram();
+    void setupShaderProgram();
 
-template <typename ShadingType>
-inline void SSAOStylizedLineRenderer::setShader( const ShadingType shader )
-{
-    if ( m_shader )
-    {
-        delete m_shader;
-        m_shader = NULL;
-    }
-
-    m_shader = new ShadingType( shader );
-    if ( !m_shader )
-    {
-        kvsMessageError("Cannot create a specified shader.");
-    }
+    void createFramebuffer( const size_t width, const size_t height );
+    void updateFramebuffer( const size_t width, const size_t height );
 };
 
 } // end of namespace AmbientOcclusionRendering
