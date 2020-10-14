@@ -215,9 +215,7 @@ void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineOb
     const auto values = ::QuadVertexValues( line );
     auto values_location = m_ao_buffer.geometryPassShader().attributeLocation( "value" );
     m_buffer_object.manager().setVertexAttribArray( values, values_location, 1 );
-
-    m_buffer_object.set( line, m_halo_size, m_radius_size );
-    m_buffer_object.create();
+    m_buffer_object.create( line, m_halo_size, m_radius_size );
 }
 
 void SSAOStochasticTubeRenderer::Engine::create_transfer_function_texture()

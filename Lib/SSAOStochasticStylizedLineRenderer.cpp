@@ -166,8 +166,7 @@ void SSAOStochasticStylizedLineRenderer::Engine::create_buffer_object( const kvs
 
     auto location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
-    m_buffer_object.set( line, m_halo_size, m_radius_size );
-    m_buffer_object.create();
+    m_buffer_object.create( line, m_halo_size, m_radius_size );
 }
 
 void SSAOStochasticStylizedLineRenderer::Engine::draw_buffer_object( const kvs::LineObject* line )

@@ -232,8 +232,7 @@ void SSAOStochasticPolygonRenderer::Engine::create_buffer_object( const kvs::Pol
 
     auto location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
-    m_buffer_object.set( polygon );
-    m_buffer_object.create();
+    m_buffer_object.create( polygon );
 }
 
 void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::PolygonObject* polygon )
