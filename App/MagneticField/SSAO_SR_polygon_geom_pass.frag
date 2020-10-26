@@ -28,7 +28,7 @@ uniform sampler2D random_texture; // random texture to generate random number
 uniform float random_texture_size_inv; // reciprocal value of the random texture size
 uniform vec2 random_offset; // offset values for accessing to the random texture
 uniform ShadingParameter shading; // shading parameters
-
+uniform float edge_control;
 
 /*===========================================================================*/
 /**
@@ -59,8 +59,9 @@ void main()
     
     //Edge Enhancement
     vec3 N = normalize( normal );
-    vec3 E = normalize( -position.xyz );
-    alpha = pow( alpha, pow( dot( N, E ), 3 )*0.8 );
+    vec3 E = normalize( -position );
+    //alpha = pow( alpha, pow( dot( N, E ), 3 )*2 );
+    alpha = min( 1.0, alpha / abs( pow( dot( N, E ), edge_control ) ) );
 
     if ( R > alpha ) { discard; return; }
 

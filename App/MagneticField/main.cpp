@@ -11,7 +11,7 @@
 #include <kvs/KeyPressEventListener>
 #include <kvs/PolygonToPolygon>
 #include <kvs/StochasticPolygonRenderer>
-#include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
+#include "SSAOStochasticPolygonRenderer.h"
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
 
@@ -23,7 +23,7 @@
 /*===========================================================================*/
 struct Model
 {
-    using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
+    using SSAORenderer = local::SSAOStochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;
 
     bool ssao; ///< SSAO flag
@@ -35,6 +35,7 @@ struct Model
     double minValue;
     double maxValue;
     double isovalue;
+    float edge;
 
     kvs::PolygonObject* import( const std::string filename )
     {
@@ -81,6 +82,7 @@ struct Model
             renderer->setEnabledLODControl( lod );
             renderer->setSamplingSphereRadius( radius );
             renderer->setNumberOfSamplingPoints( points );
+            renderer->setEdgeControl( edge );
             renderer->enableShading();
             return renderer;
         }
@@ -122,6 +124,7 @@ int main( int argc, char** argv )
     model.radius = 0.5;
     model.points = 256;
     model.opacity = 0.5f;
+    model.edge = 3;
 
     // Visualization pipeline.
     const std::string filename = argv[1];
@@ -256,7 +259,7 @@ int main( int argc, char** argv )
     isovalue_slider.setValue( model.isovalue );
     isovalue_slider.setRange( model.minValue, model.maxValue );
     isovalue_slider.setMargin( 10 );
-    isovalue_slider.anchorToBottom( &opacity_slider );
+    isovalue_slider.anchorToTopRight();
     isovalue_slider.show();
     isovalue_slider.sliderMoved( [&] ()
     {
@@ -266,6 +269,23 @@ int main( int argc, char** argv )
     isovalue_slider.sliderReleased( [&] ()
     {
         screen.scene()->replaceObject( "Object", model.changeIsovalue( filename ) );
+    } );
+
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::ToString( model.edge ) );
+    edge_slider.setValue( model.edge );
+    edge_slider.setRange( 0.1, 5.0 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &opacity_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        model.edge = edge_slider.value();
+        edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
     } );
 
     // Events.
@@ -283,6 +303,7 @@ int main( int argc, char** argv )
             points_slider.setVisible( !visible );
             opacity_slider.setVisible( !visible );
             isovalue_slider.setVisible( !visible );
+            edge_slider.setVisible( visible );
             screen.redraw();
             break;
         }
