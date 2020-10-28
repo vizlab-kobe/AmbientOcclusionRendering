@@ -12,8 +12,12 @@
 #include <kvs/PolygonToPolygon>
 #include <kvs/StochasticPolygonRenderer>
 #include "SSAOStochasticPolygonRenderer.h"
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
+#include "StochasticPolygonRenderer.h"
+#include <kvs/RadioButton>
+#include <kvs/RadioButtonGroup>
 
 
 /*===========================================================================*/
@@ -23,10 +27,20 @@
 /*===========================================================================*/
 struct Model
 {
-    using SSAORenderer = local::SSAOStochasticPolygonRenderer;
+    using EESSAORenderer = local::SSAOStochasticPolygonRenderer;
+    using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
+    using EERenderer = local::StochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;
 
-    bool ssao; ///< SSAO flag
+    enum Renderers
+    {
+        EESSAO,
+        SSAO,
+        EE,
+        SR
+    };
+    
+    int type;
     bool lod; ///< LoD flag
     size_t repeats; ///< number of repetitions for stochasti rendering
     float radius; ///< radius of point sampling region for SSAO
@@ -74,7 +88,21 @@ struct Model
 
     kvs::RendererBase* renderer()
     {
-        if ( ssao )
+        switch  ( type )
+        {
+        case EESSAO:
+        {
+            auto* renderer = new EESSAORenderer();
+            renderer->setName( "Renderer" );
+            renderer->setRepetitionLevel( repeats );
+            renderer->setEnabledLODControl( lod );
+            renderer->setSamplingSphereRadius( radius );
+            renderer->setNumberOfSamplingPoints( points );
+            renderer->setEdgeFactor( edge );
+            renderer->enableShading();
+            return renderer;
+        }
+        case SSAO:
         {
             auto* renderer = new SSAORenderer();
             renderer->setName( "Renderer" );
@@ -82,11 +110,22 @@ struct Model
             renderer->setEnabledLODControl( lod );
             renderer->setSamplingSphereRadius( radius );
             renderer->setNumberOfSamplingPoints( points );
-            renderer->setEdgeControl( edge );
             renderer->enableShading();
             return renderer;
+            break;
         }
-        else
+        case EE:
+        {
+            auto* renderer = new EERenderer();
+            renderer->setName( "Renderer" );
+            renderer->setRepetitionLevel( repeats );
+            renderer->setEnabledLODControl( lod );
+            renderer->enableShading();
+            renderer->setEdgeFactor( edge );
+            return renderer;
+            break;
+        }
+        case SR:
         {
             auto* renderer = new Renderer();
             renderer->setName( "Renderer" );
@@ -94,6 +133,8 @@ struct Model
             renderer->setEnabledLODControl( lod );
             renderer->enableShading();
             return renderer;
+        }
+        
         }
     }
 };
@@ -118,7 +159,7 @@ int main( int argc, char** argv )
 
     // Parameters.
     Model model;
-    model.ssao = true;
+    model.type = Model::EESSAO;
     model.lod = true;
     model.repeats = 20;
     model.radius = 0.5;
@@ -131,36 +172,107 @@ int main( int argc, char** argv )
     screen.registerObject( model.import( filename ), model.renderer() );
 
     // Widgets.
-    kvs::CheckBox ssao_check_box( &screen );
-    ssao_check_box.setCaption( "SSAO" );
-    ssao_check_box.setState( model.ssao );
-    ssao_check_box.setMargin( 10 );
-    ssao_check_box.show();
-    ssao_check_box.stateChanged( [&] ()
+    kvs::RadioButton eessao_button( &screen );
+    eessao_button.setCaption( "EESSAO" );
+    eessao_button.setMargin( 10 );
+    eessao_button.show();
+    eessao_button.setState( true );
+    eessao_button.stateChanged( [&] ()
     {
-        model.ssao = ssao_check_box.state();
-        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        if ( eessao_button.state() )
+        {
+            model.type = Model::EESSAO;
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }       
     } );
 
+    kvs::RadioButton ssao_button( &screen );
+    ssao_button.setCaption( "SSAO" );
+    ssao_button.setMargin( 10 );
+    ssao_button.anchorToRight( &eessao_button );
+    ssao_button.show();
+    ssao_button.stateChanged( [&] ()
+    {
+        if ( ssao_button.state() )
+        {
+            model.type = Model::SSAO;
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }       
+    } );
+
+    kvs::RadioButton ee_button( &screen );
+    ee_button.setCaption( "EE" );
+    ee_button.setMargin( 10 );
+    ee_button.anchorToBottom( &ssao_button );
+    ee_button.show();
+    ee_button.stateChanged( [&] ()
+    {
+        if ( ee_button.state() )
+        {
+            model.type = Model::EE;
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }       
+    } );
+
+    kvs::RadioButton sr_button( &screen );
+    sr_button.setCaption( "SR" );
+    sr_button.setMargin( 10 );
+    sr_button.anchorToBottom( &eessao_button );
+    sr_button.show();
+    sr_button.stateChanged( [&] ()
+    {
+        if ( sr_button.state() )
+        {
+            model.type = Model::SR;
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }       
+    } );
+
+    kvs::RadioButtonGroup group;
+    group.add( &eessao_button );
+    group.add( &ssao_button );
+    group.add( &ee_button );
+    group.add( &sr_button );
+    group.show();
+    
     kvs::CheckBox lod_check_box( &screen );
     lod_check_box.setCaption( "LOD" );
     lod_check_box.setState( model.lod );
     lod_check_box.setMargin( 10 );
-    lod_check_box.anchorToBottom( &ssao_check_box );
+    lod_check_box.anchorToBottom( &sr_button );
     lod_check_box.show();
     lod_check_box.stateChanged( [&] ()
     {
         model.lod = lod_check_box.state();
         auto* scene = screen.scene();
-        if ( model.ssao )
+        switch ( model.type )
         {
-            auto* renderer = Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+            
+        case Model::EESSAO:
+        {
+            auto* renderer = Model::EESSAORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setEnabledLODControl( model.lod );
+            break;
         }
-        else
+        case Model::SSAO:
+        {
+             auto* renderer = Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+            renderer->setEnabledLODControl( model.lod );
+            break;
+        }
+        case Model::EE:
+        {
+             auto* renderer = Model::EERenderer::DownCast( scene->renderer( "Renderer" ) );
+            renderer->setEnabledLODControl( model.lod );
+            break;
+        }
+        case Model::SR:
         {
             auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setEnabledLODControl( model.lod );
+            break;
+        }
+        
         }
     } );
 
@@ -179,15 +291,34 @@ int main( int argc, char** argv )
     repeat_slider.sliderReleased( [&] ()
     {
         auto* scene = screen.scene();
-        if ( model.ssao )
+        switch ( model.type )
+        {
+            
+        case Model::EESSAO:
+        {
+            auto* renderer = Model::EESSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+            renderer->setRepetitionLevel( model.repeats );
+            break;
+        }
+        case Model::SSAO:
         {
             auto* renderer = Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( model.repeats );
+            break;
         }
-        else
+        case Model::EE:
+        {
+            auto* renderer = Model::EERenderer::DownCast( scene->renderer( "Renderer" ) );
+            renderer->setRepetitionLevel( model.repeats );
+            break;
+        }
+        case Model::SR:
         {
             auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( model.repeats );
+            break;
+        }
+        
         }
     } );
 
@@ -208,7 +339,7 @@ int main( int argc, char** argv )
     } );
     radius_slider.sliderReleased( [&] ()
     {
-        if ( model.ssao )
+        if ( model.type == Model::EESSAO || model.type == Model::SSAO )
         {
             screen.scene()->replaceRenderer( "Renderer", model.renderer() );
         }
@@ -228,8 +359,8 @@ int main( int argc, char** argv )
     } );
     points_slider.sliderReleased( [&] ()
     {
-        if ( model.ssao )
-        {
+        if ( model.type == Model::EESSAO || model.type == Model::SSAO )
+        {  
             screen.scene()->replaceRenderer( "Renderer", model.renderer() );
         }
     } );
@@ -295,19 +426,23 @@ int main( int argc, char** argv )
         {
         case kvs::Key::i:
         {
-            const bool visible = ssao_check_box.isVisible();
-            ssao_check_box.setVisible( !visible );
+            const bool visible = lod_check_box.isVisible();
+            eessao_button.setVisible( !visible );
+            ssao_button.setVisible( !visible );
+            ee_button.setVisible( !visible );
+            sr_button.setVisible( !visible );
             lod_check_box.setVisible( !visible );
             repeat_slider.setVisible( !visible );
             radius_slider.setVisible( !visible );
             points_slider.setVisible( !visible );
             opacity_slider.setVisible( !visible );
             isovalue_slider.setVisible( !visible );
-            edge_slider.setVisible( visible );
+            edge_slider.setVisible( !visible );
             screen.redraw();
             break;
         }
-        default: break;
+        default:
+            break;
         }
     } );
     screen.addEvent( &key_event );
