@@ -12,13 +12,3 @@ MIN_COORD="0 0 0"
 MAX_COORD="250 250 250"
 
 ./$PROGRAM $FILENAME $FILENAME2
-	   << COMMENTOUT
-    -ssao \
-    -lod \
-    -s $SCALE \
-    -r $REPEATS \
-    -radius $RADIUS \
-    -points $POINTS \
-    -min_coord $MIN_COORD \
-    -max_coord $MAX_COORD \
-COMMENTOUT
