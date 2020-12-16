@@ -45,7 +45,9 @@ struct UniformGridModel
     kvs::StructuredVolumeObject* import( const std::string& filename )
     {
         kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( filename );
-        return new kvs::StructuredVectorToScalar( volume );
+	kvs::StructuredVolumeObject* scalar_volume = new kvs::StructuredVectorToScalar( volume );
+	scalar_volume->setName( "UniformGrid" );
+        return scalar_volume;
     }
 
     kvs::RendererBase* renderer()
@@ -220,14 +222,12 @@ int main( int argc, char** argv )
     screen.setEvent( &compositor );
 
     // Widgets.
-    /*kvs::IDManager::IDPair id = screen.scene()->IDManager()->id( 1 );
-    kvs::TransferFunctionEditor editor( &screen );
-    editor.setPosition( screen.x() + screen.width(), screen.y() );
-    editor.setVolumeObject( kvs::StructuredVolumeObject::DownCast( screen.scene()->objectManager()->object( id.first ) ) );
-    std::cout << "debug" << std::endl;
-    editor.setTransferFunction( tube_model.tfunc );
-    editor.show();
-    editor.apply(
+    kvs::TransferFunctionEditor editor1( &screen );
+    editor1.setPosition( screen.x() + screen.width(), screen.y() );
+    editor1.setVolumeObject( kvs::StructuredVolumeObject::DownCast( screen.scene()->object( "UniformGrid" ) ) );
+    editor1.setTransferFunction( uniform_model.tfunc );
+    editor1.show();
+    editor1.apply(
         [&]( kvs::TransferFunction tfunc )
         {
             uniform_model.tfunc = tfunc;
@@ -244,13 +244,48 @@ int main( int argc, char** argv )
             }
             screen.redraw();
         } );
-    */
+
+    kvs::TransferFunctionEditor editor2( &screen );
+    editor2.setPosition( screen.x() + screen.width(), screen.y() );
+    editor2.setTransferFunction( tube_model.tfunc );
+    editor2.show();
+    editor2.apply( [&] ( kvs::TransferFunction tfunc )
+    {
+        tube_model.tfunc = tfunc;
+        auto* scene = screen.scene();
+        if ( tube_model.ssao )
+        {
+            auto* renderer = TubeModel::SSAORenderer::DownCast( scene->renderer( "TubeRenderer" ) );
+            renderer->setTransferFunction( tfunc );
+        }
+        else
+        {
+            auto* renderer = TubeModel::Renderer::DownCast( scene->renderer( "TubeRenderer" ) );
+            renderer->setTransferFunction( tfunc );
+        }
+        //m_bar.setColorMap( tfunc.colorMap() );
+        screen.redraw();
+    } );
+
+    kvs::CheckBox ssao_check_box( &screen );
+    ssao_check_box.setCaption( "SSAO" );
+    ssao_check_box.setState( uniform_model.ssao );
+    ssao_check_box.setMargin( 10 );
+    ssao_check_box.anchorToTopLeft();
+    ssao_check_box.show();
+    ssao_check_box.stateChanged( [&] ()
+    {
+        uniform_model.ssao = ssao_check_box.state();
+	tube_model.ssao = ssao_check_box.state();
+        screen.scene()->replaceRenderer( "UniformRenderer", uniform_model.renderer() );
+	screen.scene()->replaceRenderer( "TubeRenderer", tube_model.renderer() );
+    } );
 
     kvs::CheckBox checkbox( &screen );
     checkbox.setCaption( "LOD" );
     checkbox.setMargin( 10 );
     checkbox.setState( true );
-    checkbox.anchorToTopLeft();
+    checkbox.anchorToBottom( &ssao_check_box );
     checkbox.stateChanged(
         [&]() {
             compositor.setEnabledLODControl( checkbox.state() );
@@ -262,7 +297,7 @@ int main( int argc, char** argv )
     repetition.setCaption( "Repetition" );
     repetition.setWidth( 150 );
     repetition.setMargin( 10 );
-    repetition.setValue( 20 );
+    repetition.setValue( uniform_model.repeats );
     repetition.setRange( 1, 100 );
     repetition.anchorToBottom( &checkbox );
     repetition.valueChanged(
@@ -281,11 +316,13 @@ int main( int argc, char** argv )
         {
             if ( checkbox.isVisible() )
             {
+	        ssao_check_box.hide();
                 checkbox.hide();
                 repetition.hide();
             }
             else
             {
+	        ssao_check_box.show();
                 checkbox.show();
                 repetition.show();
             }
