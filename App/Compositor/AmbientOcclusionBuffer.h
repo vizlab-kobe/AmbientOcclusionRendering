@@ -75,6 +75,9 @@ public:
     void renderOcclusionPass() { this->draw(); }
 
     kvs::ValueArray<GLfloat> generatePoints( const float radius, const size_t nsamples );
+
+    void setGeometryPassShader( const kvs::ProgramObject& geom_shader ) { m_geom_pass_shader = geom_shader; }
+    void createGeometryShaderProgram();
 };
 
 } // end of namespace local

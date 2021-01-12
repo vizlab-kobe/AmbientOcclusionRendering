@@ -42,7 +42,6 @@ public:
             m_input.ssao = false;
             m_input.repeats = renderer->repetitionLevel();
             m_input.tfunc = renderer->transferFunction();
-            m_input.shader = renderer->ShaderMode();
         }
         m_scene->replaceRenderer( "Renderer", m_vis.renderer() );
     }

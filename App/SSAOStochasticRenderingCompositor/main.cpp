@@ -10,6 +10,9 @@
 #include "SSAOStochasticPolygonRenderer.h"
 #include "SSAOStochasticTetrahedraRenderer.h"
 #include "SSAOStochasticRenderingCompositor.h"
+#include <kvs/KeyPressEventListener>
+#include <kvs/TargetChangeEvent>
+#include <kvs/ScreenCaptureEvent>
 #include <iostream>
 
 
@@ -31,7 +34,6 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Tetrahedra and Polygon");
-    screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.show();
 
     // Import volume object.
@@ -119,6 +121,35 @@ int main( int argc, char** argv )
         } );
     repetition.show();
 
+    kvs::KeyPressEventListener h_key;
+    h_key.update( [&] ( kvs::KeyEvent* event )
+    {
+        switch( event->key() )
+        {
+        case kvs::Key::h:
+        {
+            if ( checkbox.isVisible() )
+            {
+                checkbox.hide();
+                opacity.hide();
+                repetition.hide();
+            }
+            else
+            {
+                checkbox.show();
+                opacity.show();
+                repetition.show();
+            }
+        }
+        default: break;
+        }
+    } );
+
+    kvs::ScreenCaptureEvent capture_event;
+    
+    screen.addEvent( &h_key );
+    screen.addEvent( &capture_event );
+                
     return app.run();
 }
 

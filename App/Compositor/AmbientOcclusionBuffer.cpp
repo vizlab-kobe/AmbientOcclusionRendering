@@ -63,7 +63,7 @@ void AmbientOcclusionBuffer::bind()
     // Gaurded bind.
     m_id = kvs::OpenGL::Integer( GL_FRAMEBUFFER_BINDING );
     if ( m_id != m_framebuffer.id() ) { m_framebuffer.bind(); }
-
+    
     // Initialize FBO.
     kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -74,12 +74,12 @@ void AmbientOcclusionBuffer::bind()
         GL_COLOR_ATTACHMENT2_EXT };
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
-    m_geom_pass_shader.bind();
+    //m_geom_pass_shader.bind();
 }
 
 void AmbientOcclusionBuffer::unbind()
 {
-    m_geom_pass_shader.unbind();
+    //m_geom_pass_shader.unbind();
 
     if ( m_id != m_framebuffer.id() )
     {
@@ -252,6 +252,14 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float rad
     }
 
     return sampling_points;
+}
+
+void AmbientOcclusionBuffer::createGeometryShaderProgram()
+{
+    std::cout << m_geom_pass_shader.id() << std::endl;
+    kvs::ShaderSource vert( m_geom_pass_shader_vert_file );
+    kvs::ShaderSource frag( m_geom_pass_shader_frag_file );
+    m_geom_pass_shader.build( vert, frag );
 }
 
 } // end of namespace local

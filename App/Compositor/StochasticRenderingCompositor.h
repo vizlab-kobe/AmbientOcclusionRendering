@@ -11,6 +11,8 @@
 #include <kvs/Vector3>
 #include <kvs/Deprecated>
 #include <kvs/EnsembleAverageBuffer>
+#include "AmbientOcclusionBuffer.h"
+#include <kvs/Shader>
 
 
 namespace local
@@ -38,7 +40,9 @@ private:
     kvs::Vec3 m_light_position; ///< light position used for LOD control
     kvs::Vec3 m_camera_position; ///< camera position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
-
+    kvs::Shader::ShadingModel* m_shader;
+    AmbientOcclusionBuffer m_ao_buffer;
+    
 public:
     StochasticRenderingCompositor( kvs::Scene* scene );
     const kvs::Timer& timer() const { return m_timer; }
@@ -52,7 +56,12 @@ public:
     void enableRefinement() { this->setEnabledRefinement( true ); }
     void disableLODControl() { this->setEnabledLODControl( false ); }
     void disableRefinement() { this->setEnabledRefinement( false ); }
+    const kvs::Shader::ShadingModel& shader() const { return *m_shader; }
     void update();
+    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
+    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
     StochasticRenderingCompositor();

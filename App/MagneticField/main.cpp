@@ -18,6 +18,7 @@
 #include "StochasticPolygonRenderer.h"
 #include <kvs/RadioButton>
 #include <kvs/RadioButtonGroup>
+#include <kvs/PaintEventListener>
 
 
 /*===========================================================================*/
@@ -165,7 +166,7 @@ int main( int argc, char** argv )
     model.radius = 0.5;
     model.points = 256;
     model.opacity = 0.5f;
-    model.edge = 3;
+    model.edge = 1.0;
 
     // Visualization pipeline.
     const std::string filename = argv[1];
@@ -452,6 +453,25 @@ int main( int argc, char** argv )
 
     kvs::TargetChangeEvent target_change_event;
     screen.addEvent( &target_change_event );
+
+    // Measure time. 10 times average.
+    /*kvs::PaintEventListener time;
+    time.update( [&] ()
+    {
+        static size_t counter = 1;
+        static float time = 0.0f;
+
+        time += screen.scene()->renderer("Renderer")->timer().msec();
+        if ( counter++ == 10 )
+        {
+            std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
+            counter = 1;
+            time = 0.0f;
+        }
+
+        } );*/
+    
+    //screen.addEvent( &time );
 
     return app.run();
 }

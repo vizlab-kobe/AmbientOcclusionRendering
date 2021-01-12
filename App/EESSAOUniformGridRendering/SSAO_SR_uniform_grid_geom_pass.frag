@@ -190,7 +190,7 @@ void main()
 	if ( length( N ) > 0 )
 	{
 	    float cos_theta = dot( N, E );
-	    c.a = min( 1.0, c.a / pow( abs( cos_theta ), 1 ) );
+	    c.a = min( 1.0, c.a / pow( abs( cos_theta ), 2.0 ) );
 	}
 
         accum_alpha += ( 1.0 - accum_alpha ) * c.a;

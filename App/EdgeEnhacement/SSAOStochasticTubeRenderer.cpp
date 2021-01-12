@@ -105,7 +105,7 @@ SSAOStochasticTubeRenderer::Engine::Engine():
     m_radius_size( 0.05f ),
     m_halo_size( 0.0f ),
     m_tfunc_changed( true ),
-    m_edge_factor( 3.0f )
+    m_edge_factor( 0.8f )
 {
     m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_tube_geom_pass.vert", "SSAO_SR_tube_geom_pass.frag" );
     m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );

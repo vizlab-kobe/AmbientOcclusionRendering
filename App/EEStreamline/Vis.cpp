@@ -50,7 +50,6 @@ kvs::RendererBase* Vis::renderer() const
         renderer->enableShading();
         renderer->setSamplingSphereRadius( m_input.radius );
         renderer->setNumberOfSamplingPoints( m_input.points );
-        renderer->setShaderMode( m_input.shader );
         return renderer;
     }
     else

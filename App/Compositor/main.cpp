@@ -19,6 +19,7 @@
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
 
+
 kvs::Vec3i min_coord( 0, 0, 0 );
 kvs::Vec3i max_coord( 250, 250, 250 );
 
@@ -29,14 +30,14 @@ kvs::PolygonObject* createIsosurface( std::string filename )
 
     double min_value = scalar_volume->minValue();
     double max_value = scalar_volume->maxValue();
-    double isovalue = ( max_value + min_value ) * 0.2;  // Isolevel parameter.
-    double opacity = 0.5;
+    double isovalue = ( max_value + min_value ) * 0.1;  // Isolevel parameter.
+    double opacity = 1.0;
     const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
     const bool d = false;
     const kvs::TransferFunction t( 256 );
     auto* polygon = new kvs::Isosurface( scalar_volume, isovalue, n, d, t );
     delete scalar_volume;
-    polygon->setName( "Object" );
+    polygon->setName( "Polygon" );
     polygon->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
     return polygon;
 }
@@ -92,7 +93,7 @@ int main( int argc, char** argv )
 {
     // Shader path.
     kvs::ShaderSource::AddSearchPath("../../Lib");
-    kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
+    //kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
 
     // Application and screen.
     kvs::Application app( argc, argv );
@@ -110,21 +111,22 @@ int main( int argc, char** argv )
     kvs::LineObject* streamline = createStreamline( velocity_file );
     
     // Declare SSAOStochasticPolygonRenderer
-    AmbientOcclusionRendering::SSAOStochasticPolygonRenderer* polygon_renderer = new AmbientOcclusionRendering::SSAOStochasticPolygonRenderer();
+    local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
     polygon_renderer->setName( "StochasticPolygonRenderer" );
 
     // Declare SSAOStochasticTubeRenderer
-    AmbientOcclusionRendering::SSAOStochasticTubeRenderer* tube_renderer = new AmbientOcclusionRendering::SSAOStochasticTubeRenderer();
+    local::SSAOStochasticTubeRenderer* tube_renderer = new local::SSAOStochasticTubeRenderer();
     tube_renderer->setName( "StochasticTubeRenderer" );
     tube_renderer->setTransferFunction( kvs::DivergingColorMap::CoolWarm( 256 ) );
-
+    
     // Register objects and renderers
     screen.registerObject( polygon, polygon_renderer );
     screen.registerObject( streamline, tube_renderer );
+    
 
-    // Declare StochasticRenderingCompositor
+    // Declare StochasticRenderingCompositor.
     local::StochasticRenderingCompositor compositor( screen.scene() );
-    compositor.setRepetitionLevel( 20 );
+    compositor.setRepetitionLevel( 1 );
     compositor.enableLODControl();
     screen.setEvent( &compositor );
 
@@ -163,7 +165,7 @@ int main( int argc, char** argv )
         [&]() {
             auto* scene = screen.scene();
             auto* object1 = kvs::PolygonObject::DownCast( scene->object( "Polygon" ) );
-            auto* object2 = new kvs::PolygonObject();
+            auto* object2 = new kvs::PolygonObject();           
             object2->shallowCopy( *object1 );
             object2->setName( "Polygon" );
             object2->setOpacity( int( opacity.value() * 255 + 0.5 ) );
@@ -184,6 +186,28 @@ int main( int argc, char** argv )
             screen.redraw();
         } );
     repetition.show();
+
+    double radius = 0.5;
+    kvs::Slider radius_slider( &screen );
+    radius_slider.setCaption( "Radius: " + kvs::String::ToString( radius ) );
+    radius_slider.setValue( 0.5 );
+    radius_slider.setRange( 0.1, 5.0 );
+    radius_slider.setMargin( 10 );
+    radius_slider.anchorToBottom( &repetition );
+    radius_slider.show();
+    radius_slider.sliderMoved( [&] ()
+    {
+        const float min_value = radius_slider.minValue();
+        const float max_value = radius_slider.maxValue();
+        const float v = int( radius_slider.value() * 2 ) * 0.5f;
+        radius = kvs::Math::Clamp( v, min_value, max_value );
+        radius_slider.setCaption( "Radius: " + kvs::String::From( radius ) );
+    } );
+    radius_slider.sliderReleased( [&] ()
+    {
+        compositor.setSamplingSphereRadius( radius );
+        screen.redraw();
+    } );
 
     kvs::KeyPressEventListener h_key;
     h_key.update( [&] ( kvs::KeyEvent* event )
@@ -208,7 +232,7 @@ int main( int argc, char** argv )
         default: break;
         }
     } );
-
+    
     kvs::ScreenCaptureEvent capture_event;
     
     screen.addEvent( &h_key );

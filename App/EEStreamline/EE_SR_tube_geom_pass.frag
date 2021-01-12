@@ -78,7 +78,8 @@ void main()
     vec3 normal = y_i * tex.x - tex.y * x_i; // y_i is up vector, x_i is depth vector
     vec3 E = normalize( -position.xyz );
     vec3 N = normalize( normal );
-    opacity = pow( opacity, dot( N, E ) );
+    //opacity = pow( opacity, dot( N, E ) );
+    opacity = pow( opacity, 1 - length( cross( N, E ) ) );
 
     // Judge drawing this fragment.
     if( R > opacity ) { discard; return; }

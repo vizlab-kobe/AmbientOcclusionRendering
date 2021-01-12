@@ -14,12 +14,12 @@
 #include "AmbientOcclusionBuffer.h"
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 class SSAOStochasticTubeRenderer : public local::StochasticRendererBase
 {
-    kvsModule( AmbientOcclusionRendering::SSAOStochasticTubeRenderer, Renderer );
+    kvsModule( local::SSAOStochasticTubeRenderer, Renderer );
     kvsModuleBaseClass( local::StochasticRendererBase );
 
 public:
@@ -53,6 +53,8 @@ private:
     kvs::Texture1D m_tfunc_texture; ///< transfer function texture
     local::AmbientOcclusionBuffer m_ao_buffer;
 
+    kvs::ProgramObject m_geom_pass_shader;
+
 public:
     Engine();
     void release();
@@ -61,6 +63,11 @@ public:
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
+    void create_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    void update_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    void setup_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    void draw_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    
 public:
     void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
@@ -77,6 +84,9 @@ private:
     void create_buffer_object( const kvs::LineObject* line );
     void create_transfer_function_texture();
     void draw_buffer_object( const kvs::LineObject* line );
+    void create_geom_shader_program();
+    void create_buffer_object_c( const kvs::LineObject* line );
+    void draw_buffer_object_c( const kvs::LineObject* line );
 };
 
 } // end of namespace local

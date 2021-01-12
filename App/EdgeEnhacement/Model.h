@@ -18,8 +18,8 @@ private:
     mutable kvs::StructuredVolumeObject* m_cached_volume;
 
 public:
-    typedef local::SSAOStochasticTubeRenderer SSAORenderer;
-    typedef StochasticStreamline::StochasticTubeRenderer NoSSAORenderer;
+    using SSAORenderer = local::SSAOStochasticTubeRenderer;
+    using NoSSAORenderer = StochasticStreamline::StochasticTubeRenderer;
 
 public:
     Model( local::Input& input );

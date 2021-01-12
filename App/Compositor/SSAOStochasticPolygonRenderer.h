@@ -10,7 +10,7 @@
 #include "AmbientOcclusionBuffer.h"
 
 
-namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -20,7 +20,7 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 class SSAOStochasticPolygonRenderer : public local::StochasticRendererBase
 {
-    kvsModule( AmbientOcclusionRendering::SSAOStochasticPolygonRenderer, Renderer );
+    kvsModule( local::SSAOStochasticPolygonRenderer, Renderer );
     kvsModuleBaseClass( local::StochasticRendererBase );
 
 public:
@@ -56,17 +56,26 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
 
+    void create_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    void update_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    void setup_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    void draw_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    
+    void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
     void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
     kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
-
+    //kvs::ProgramObject& geometryPassShader() { return m_geom_pass_shader; }
+    
 private:
     void create_shader_program();
     void create_buffer_object( const kvs::PolygonObject* polygon );
     void draw_buffer_object( const kvs::PolygonObject* polygon );
+    void create_geom_shader_program();
+    void create_buffer_object_c( const kvs::PolygonObject* polygon );
+    void draw_buffer_object_c( const kvs::PolygonObject* polygon );
 };
 
-} // end of namespace AmbientOcclusionRendering
+} // end of namespace local
