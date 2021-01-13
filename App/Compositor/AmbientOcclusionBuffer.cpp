@@ -37,19 +37,11 @@ namespace local
 
 AmbientOcclusionBuffer::AmbientOcclusionBuffer():
     m_id( 0 ),
-    m_geom_pass_shader_vert_file("SSAO_geom_pass.vert"),
-    m_geom_pass_shader_frag_file("SSAO_geom_pass.frag"),
     m_occl_pass_shader_vert_file("SSAO_occl_pass.vert"),
     m_occl_pass_shader_frag_file("SSAO_occl_pass.frag"),
     m_sampling_sphere_radius( 0.5f ),
     m_nsamples( 256 )
 {
-}
-
-void AmbientOcclusionBuffer::setGeometryPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
-{
-    m_geom_pass_shader_vert_file = vert_file;
-    m_geom_pass_shader_frag_file = frag_file;
 }
 
 void AmbientOcclusionBuffer::setOcclusionPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
@@ -73,14 +65,10 @@ void AmbientOcclusionBuffer::bind()
         GL_COLOR_ATTACHMENT1_EXT,
         GL_COLOR_ATTACHMENT2_EXT };
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
-
-    //m_geom_pass_shader.bind();
 }
 
 void AmbientOcclusionBuffer::unbind()
 {
-    //m_geom_pass_shader.unbind();
-
     if ( m_id != m_framebuffer.id() )
     {
         KVS_GL_CALL( glBindFramebufferEXT( GL_FRAMEBUFFER, m_id ) );
@@ -107,7 +95,6 @@ void AmbientOcclusionBuffer::draw()
 
 void AmbientOcclusionBuffer::release()
 {
-    m_geom_pass_shader.release();
     m_occl_pass_shader.release();
     m_framebuffer.release();
     m_color_texture.release();
@@ -118,13 +105,6 @@ void AmbientOcclusionBuffer::release()
 
 void AmbientOcclusionBuffer::createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
 {
-    // Build SSAO shader for geometry-pass (1st pass).
-    {
-        kvs::ShaderSource vert( m_geom_pass_shader_vert_file );
-        kvs::ShaderSource frag( m_geom_pass_shader_frag_file );
-        m_geom_pass_shader.build( vert, frag );
-    }
-
     // Build SSAO shader for occlusion-pass (2nd pass).
     {
         kvs::ShaderSource vert( m_occl_pass_shader_vert_file );
@@ -166,7 +146,6 @@ void AmbientOcclusionBuffer::createShaderProgram( const kvs::Shader::ShadingMode
 
 void AmbientOcclusionBuffer::updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
 {
-    m_geom_pass_shader.release();
     m_occl_pass_shader.release();
     this->createShaderProgram( shading_model, shading_enabled );
 }
@@ -252,14 +231,6 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float rad
     }
 
     return sampling_points;
-}
-
-void AmbientOcclusionBuffer::createGeometryShaderProgram()
-{
-    std::cout << m_geom_pass_shader.id() << std::endl;
-    kvs::ShaderSource vert( m_geom_pass_shader_vert_file );
-    kvs::ShaderSource frag( m_geom_pass_shader_frag_file );
-    m_geom_pass_shader.build( vert, frag );
 }
 
 } // end of namespace local

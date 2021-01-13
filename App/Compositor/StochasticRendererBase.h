@@ -42,6 +42,7 @@ private:
     kvs::Mat4 m_modelview; ///< modelview matrix used for LOD control
     kvs::Vec3 m_light_position; ///< light position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
+    local::AmbientOcclusionBuffer m_ao_buffer; /// ambient occlusion buffer
     kvs::Shader::ShadingModel* m_shader; ///< shading method
     StochasticRenderingEngine* m_engine; ///< rendering engine
 
@@ -72,6 +73,11 @@ public:
     const StochasticRenderingEngine& engine() const { return *m_engine; }
     template <typename ShadingType>
     void setShader( const ShadingType shader );
+
+    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
+    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
+    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 protected:
     kvs::Shader::ShadingModel& shader() { return *m_shader; }

@@ -145,9 +145,10 @@ void StochasticRenderingCompositor::check_window_created()
         const size_t framebuffer_width = static_cast<size_t>( width * dpr );
         const size_t framebuffer_height = static_cast<size_t>( height * dpr );
         m_ensemble_buffer.create( framebuffer_width, framebuffer_height );
+        m_ensemble_buffer.clear();
+
         m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
         m_ao_buffer.createShaderProgram( this->shader(), true );
-        m_ensemble_buffer.clear();
 
         m_object_xform = this->object_xform();
         m_camera_position = m_scene->camera()->position();
@@ -177,6 +178,9 @@ void StochasticRenderingCompositor::check_window_resized()
         m_ensemble_buffer.release();
         m_ensemble_buffer.create( framebuffer_width, framebuffer_height );
         m_ensemble_buffer.clear();
+
+        //m_ao_buffer.release();
+        m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
 
         this->engines_update();
     }
@@ -211,7 +215,7 @@ void StochasticRenderingCompositor::check_object_changed()
 
                 kvs::OpenGL::PushMatrix();
                 m_scene->updateGLModelingMatrix( object );
-                stochastic_renderer->engine().create_c( object, m_scene->camera(), m_scene->light() );
+                stochastic_renderer->engine().create( object, m_scene->camera(), m_scene->light() );
                 kvs::OpenGL::PopMatrix();
             }
         }
@@ -255,7 +259,7 @@ void StochasticRenderingCompositor::engines_create()
 
             kvs::OpenGL::PushMatrix();
             m_scene->updateGLModelingMatrix( object );
-            stochastic_renderer->engine().create_c( object, m_scene->camera(), m_scene->light() );
+            stochastic_renderer->engine().create( object, m_scene->camera(), m_scene->light() );
             kvs::OpenGL::PopMatrix();
         }
     }
@@ -272,7 +276,6 @@ void StochasticRenderingCompositor::engines_update()
 
     kvs::Camera* camera = m_scene->camera();
     kvs::Light* light = m_scene->light();
-    m_ao_buffer.updateFramebuffer( m_window_width, m_window_height );
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
@@ -284,7 +287,7 @@ void StochasticRenderingCompositor::engines_update()
         {
             kvs::OpenGL::PushMatrix();
             m_scene->updateGLModelingMatrix( object );
-            stochastic_renderer->engine().update_c( object, camera, light );
+            stochastic_renderer->engine().update( object, camera, light );
             kvs::OpenGL::PopMatrix();
         }
     }
@@ -303,6 +306,8 @@ void StochasticRenderingCompositor::engines_setup()
     kvs::Light* light = m_scene->light();
     const bool reset_count = !m_enable_refinement;
 
+    m_ao_buffer.updateShaderProgram( this->shader(), true );
+
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
     {
@@ -314,7 +319,7 @@ void StochasticRenderingCompositor::engines_setup()
             kvs::OpenGL::PushMatrix();
             m_scene->updateGLModelingMatrix( object );
             if ( reset_count ) stochastic_renderer->engine().resetRepetitions();
-            stochastic_renderer->engine().setup_c( object, camera, light );
+            stochastic_renderer->engine().setup( object, camera, light );
             kvs::OpenGL::PopMatrix();
         }
     }
@@ -344,11 +349,7 @@ void StochasticRenderingCompositor::engines_draw()
             {
                 kvs::OpenGL::PushMatrix();
                 m_scene->updateGLModelingMatrix( object );
-                m_ao_buffer.setGeometryPassShader( stochastic_renderer->engine().geometryPassShader() );
-                m_ao_buffer.createGeometryShaderProgram();
-                m_ao_buffer.bind();
-                stochastic_renderer->engine().draw_c( object, camera, light );
-                m_ao_buffer.unbind();
+                stochastic_renderer->engine().draw( object, camera, light );
                 stochastic_renderer->engine().countRepetitions();
                 kvs::OpenGL::PopMatrix();
             }

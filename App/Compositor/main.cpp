@@ -187,11 +187,11 @@ int main( int argc, char** argv )
         } );
     repetition.show();
 
-    double radius = 0.5;
+    float radius = 0.5;
     kvs::Slider radius_slider( &screen );
     radius_slider.setCaption( "Radius: " + kvs::String::ToString( radius ) );
     radius_slider.setValue( 0.5 );
-    radius_slider.setRange( 0.1, 5.0 );
+    radius_slider.setRange( 0.01, 5.0 );
     radius_slider.setMargin( 10 );
     radius_slider.anchorToBottom( &repetition );
     radius_slider.show();
@@ -199,7 +199,7 @@ int main( int argc, char** argv )
     {
         const float min_value = radius_slider.minValue();
         const float max_value = radius_slider.maxValue();
-        const float v = int( radius_slider.value() * 2 ) * 0.5f;
+        const float v = int( radius_slider.value() * 100 ) * 0.01f;
         radius = kvs::Math::Clamp( v, min_value, max_value );
         radius_slider.setCaption( "Radius: " + kvs::String::From( radius ) );
     } );

@@ -47,7 +47,7 @@ class SSAOStochasticPolygonRenderer::Engine : public local::StochasticRenderingE
 private:
     float m_polygon_offset; ///< polygon offset
     BufferObject m_buffer_object;
-    local::AmbientOcclusionBuffer m_ao_buffer;
+    kvs::ProgramObject m_geom_pass_shader;
 
 public:
     Engine();
@@ -63,17 +63,11 @@ public:
     void draw_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     
     void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
-    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
-    //kvs::ProgramObject& geometryPassShader() { return m_geom_pass_shader; }
     
 private:
-    void create_shader_program();
+    void create_geometry_shader_program();
     void create_buffer_object( const kvs::PolygonObject* polygon );
     void draw_buffer_object( const kvs::PolygonObject* polygon );
-    void create_geom_shader_program();
     void create_buffer_object_c( const kvs::PolygonObject* polygon );
     void draw_buffer_object_c( const kvs::PolygonObject* polygon );
 };

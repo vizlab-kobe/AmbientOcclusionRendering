@@ -85,6 +85,10 @@ void StochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* camera,
 
         m_ensemble_buffer.create( this->framebufferWidth(), this->framebufferHeight() );
         m_ensemble_buffer.clear();
+
+        m_ao_buffer.createFramebuffer( this->framebufferWidth(), this->framebufferHeight() );
+        m_ao_buffer.createShaderProgram( this->shader(), kvs::RendererBase::isEnabledShading() );
+        
         m_modelview = kvs::OpenGL::ModelViewMatrix();
         m_light_position = light->position();
         m_engine->setShader( &shader() );
@@ -105,6 +109,9 @@ void StochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* camera,
         m_ensemble_buffer.create( this->framebufferWidth(), this->framebufferHeight() );
         m_ensemble_buffer.clear();
 
+        m_ao_buffer.updateFramebuffer( this->framebufferWidth(), this->framebufferHeight() );
+        m_ao_buffer.updateShaderProgram( this->shader(), kvs::RendererBase::isEnabledShading() );
+        
         m_engine->update( object, camera, light );
     }
 
@@ -144,7 +151,14 @@ void StochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* camera,
     {
         // Render to the ensemble buffer.
         m_ensemble_buffer.bind();
+        
+        m_ao_buffer.bind();
+        
         m_engine->draw( object, camera, light );
+        
+        m_ao_buffer.unbind();
+        m_ao_buffer.draw();
+        
         m_engine->countRepetitions();
         m_ensemble_buffer.unbind();
 

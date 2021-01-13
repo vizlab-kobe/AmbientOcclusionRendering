@@ -19,11 +19,6 @@ class AmbientOcclusionBuffer
 private:
     GLuint m_id;
 
-    // Geometry pass shader
-    std::string m_geom_pass_shader_vert_file; ///< vertex shader file for geometry pass
-    std::string m_geom_pass_shader_frag_file; ///< fragment shader file for geometry pass
-    kvs::ProgramObject m_geom_pass_shader; ///< shader program for geometry-pass (1st pass)
-
     // Occlusion pass shader
     std::string m_occl_pass_shader_vert_file; ///< vertex shader file for occlusion pass
     std::string m_occl_pass_shader_frag_file; ///< fragment shader file for occlusion pass
@@ -41,11 +36,6 @@ private:
 public:
     AmbientOcclusionBuffer();
     virtual ~AmbientOcclusionBuffer() {}
-
-    void setGeometryPassShaderFiles( const std::string& vert_file, const std::string& frag_file );
-    const std::string& geometryPassVertexShaderFile() const { return m_geom_pass_shader_vert_file; }
-    const std::string& geometryPassFragmentShaderFile() const { return m_geom_pass_shader_frag_file; }
-    kvs::ProgramObject& geometryPassShader() { return m_geom_pass_shader; }
 
     void setOcclusionPassShaderFiles( const std::string& vert_file, const std::string& frag_file );
     void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
@@ -75,9 +65,6 @@ public:
     void renderOcclusionPass() { this->draw(); }
 
     kvs::ValueArray<GLfloat> generatePoints( const float radius, const size_t nsamples );
-
-    void setGeometryPassShader( const kvs::ProgramObject& geom_shader ) { m_geom_pass_shader = geom_shader; }
-    void createGeometryShaderProgram();
 };
 
 } // end of namespace local
