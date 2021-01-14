@@ -11,6 +11,7 @@
 #include <kvs/Module>
 #include <kvs/EnsembleAverageBuffer>
 #include "StochasticRenderingEngine.h"
+#include "AmbientOcclusionBuffer.h"
 
 
 namespace local
@@ -42,7 +43,7 @@ private:
     kvs::Mat4 m_modelview; ///< modelview matrix used for LOD control
     kvs::Vec3 m_light_position; ///< light position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
-    local::AmbientOcclusionBuffer m_ao_buffer; /// ambient occlusion buffer
+    AmbientOcclusionBuffer m_ao_buffer; /// ambient occlusion buffer
     kvs::Shader::ShadingModel* m_shader; ///< shading method
     StochasticRenderingEngine* m_engine; ///< rendering engine
 

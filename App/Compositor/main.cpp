@@ -84,7 +84,7 @@ kvs::LineObject* createStreamline( std::string filename )
 
 /*===========================================================================*/
 /**
- *  @brief  Main function.
+ *  @brief  Main function. Tube and polygon visualization.
  *  @param  argc [i] argument count
  *  @param  argv [i] argument values
  */
@@ -199,7 +199,7 @@ int main( int argc, char** argv )
     {
         const float min_value = radius_slider.minValue();
         const float max_value = radius_slider.maxValue();
-        const float v = int( radius_slider.value() * 100 ) * 0.01f;
+        const float v = int( radius_slider.value() * 10 ) * 0.1f;
         radius = kvs::Math::Clamp( v, min_value, max_value );
         radius_slider.setCaption( "Radius: " + kvs::String::From( radius ) );
     } );

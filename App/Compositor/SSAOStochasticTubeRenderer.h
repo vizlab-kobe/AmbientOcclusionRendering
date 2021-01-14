@@ -11,7 +11,6 @@
 #include "StochasticRendererBase.h"
 #include <kvs/TransferFunction>
 #include <kvs/StylizedLineRenderer>
-#include "AmbientOcclusionBuffer.h"
 
 
 namespace local
@@ -30,13 +29,9 @@ public:
     void setTransferFunction( const kvs::TransferFunction& tfunc );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
-    void setSamplingSphereRadius( const float radius );
-    void setNumberOfSamplingPoints( const size_t nsamples );
     const kvs::TransferFunction& transferFunction() const;
     kvs::Real32 radiusSize() const;
     kvs::Real32 haloSize() const;
-    kvs::Real32 samplingSphereRadius() const;
-    size_t numberOfSamplingPoints() const;
 };
 
 class SSAOStochasticTubeRenderer::Engine : public local::StochasticRenderingEngine
@@ -60,11 +55,6 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-
-    void create_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void update_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void setup_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void draw_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     
 public:
     void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
@@ -79,8 +69,6 @@ private:
     void create_transfer_function_texture();
     void draw_buffer_object( const kvs::LineObject* line );
     void create_geometry_shader_program();
-    void create_buffer_object_c( const kvs::LineObject* line );
-    void draw_buffer_object_c( const kvs::LineObject* line );
 };
 
 } // end of namespace local

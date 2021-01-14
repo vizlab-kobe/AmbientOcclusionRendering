@@ -7,7 +7,6 @@
 #include <kvs/Texture2D>
 #include "StochasticRenderingEngine.h"
 #include "StochasticRendererBase.h"
-#include "AmbientOcclusionBuffer.h"
 
 
 namespace local
@@ -29,10 +28,6 @@ public:
 public:
     SSAOStochasticPolygonRenderer();
     void setPolygonOffset( const float polygon_offset );
-    void setSamplingSphereRadius( const float radius );
-    void setNumberOfSamplingPoints( const size_t nsamples );
-    kvs::Real32 samplingSphereRadius() const;
-    size_t numberOfSamplingPoints() const;
 };
 
 /*===========================================================================*/
@@ -56,11 +51,6 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-
-    void create_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void update_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void setup_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void draw_c( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     
     void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
     
@@ -68,8 +58,6 @@ private:
     void create_geometry_shader_program();
     void create_buffer_object( const kvs::PolygonObject* polygon );
     void draw_buffer_object( const kvs::PolygonObject* polygon );
-    void create_buffer_object_c( const kvs::PolygonObject* polygon );
-    void draw_buffer_object_c( const kvs::PolygonObject* polygon );
 };
 
 } // end of namespace local
