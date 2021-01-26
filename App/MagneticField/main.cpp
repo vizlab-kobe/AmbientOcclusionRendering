@@ -90,53 +90,52 @@ struct Model
     kvs::RendererBase* renderer()
     {
         switch  ( type )
-        {
-        case EESSAO:
-        {
-            auto* renderer = new EESSAORenderer();
-            renderer->setName( "Renderer" );
-            renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
-            renderer->setSamplingSphereRadius( radius );
-            renderer->setNumberOfSamplingPoints( points );
-            renderer->setEdgeFactor( edge );
-            renderer->enableShading();
-            return renderer;
-        }
-        case SSAO:
-        {
-            auto* renderer = new SSAORenderer();
-            renderer->setName( "Renderer" );
-            renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
-            renderer->setSamplingSphereRadius( radius );
-            renderer->setNumberOfSamplingPoints( points );
-            renderer->enableShading();
-            return renderer;
-            break;
-        }
-        case EE:
-        {
-            auto* renderer = new EERenderer();
-            renderer->setName( "Renderer" );
-            renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
-            renderer->enableShading();
-            renderer->setEdgeFactor( edge );
-            return renderer;
-            break;
-        }
-        case SR:
-        {
-            auto* renderer = new Renderer();
-            renderer->setName( "Renderer" );
-            renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
-            renderer->enableShading();
-            return renderer;
-        }
-        
-        }
+	  {
+	  case EESSAO:
+	    {
+	      auto* renderer = new EESSAORenderer();
+	      renderer->setName( "Renderer" );
+	      renderer->setRepetitionLevel( repeats );
+	      renderer->setEnabledLODControl( lod );
+	      renderer->setSamplingSphereRadius( radius );
+	      renderer->setNumberOfSamplingPoints( points );
+	      renderer->setEdgeFactor( edge );
+	      renderer->enableShading();
+	      return renderer;
+	    }
+	  case SSAO:
+	    {
+	      auto* renderer = new SSAORenderer();
+	      renderer->setName( "Renderer" );
+	      renderer->setRepetitionLevel( repeats );
+	      renderer->setEnabledLODControl( lod );
+	      renderer->setSamplingSphereRadius( radius );
+	      renderer->setNumberOfSamplingPoints( points );
+	      renderer->enableShading();
+	      return renderer;
+	      break;
+	    }
+	  case EE:
+	    {
+	      auto* renderer = new EERenderer();
+	      renderer->setName( "Renderer" );
+	      renderer->setRepetitionLevel( repeats );
+	      renderer->setEnabledLODControl( lod );
+	      renderer->enableShading();
+	      renderer->setEdgeFactor( edge );
+	      return renderer;
+	      break;
+	    }
+	  default:
+	    {
+	      auto* renderer = new Renderer();
+	      renderer->setName( "Renderer" );
+	      renderer->setRepetitionLevel( repeats );
+	      renderer->setEnabledLODControl( lod );
+	      renderer->enableShading();
+	      return renderer;
+	    }
+	  }
     }
 };
 
@@ -148,36 +147,40 @@ struct Model
 int main( int argc, char** argv )
 {
     // Shader path.
-    kvs::ShaderSource::AddSearchPath( "../../Lib" );
-    kvs::ShaderSource::AddSearchPath( "../../../StochasticStreamline/Lib" );
+    //kvs::ShaderSource::AddSearchPath( "../../Lib" );
+    //kvs::ShaderSource::AddSearchPath( "../../../StochasticStreamline/Lib" );
 
     // Application and screen.
     kvs::Application app( argc, argv );
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "MagneticField" );
+    //screen.setSize( 1024, 1024 );
     screen.show();
 
     // Parameters.
     Model model;
-    model.type = Model::EESSAO;
+    model.type = Model::SR;
     model.lod = true;
     model.repeats = 20;
     model.radius = 0.5;
     model.points = 256;
-    model.opacity = 0.5f;
+    model.opacity = 0.1f;
     model.edge = 1.0;
 
     // Visualization pipeline.
     const std::string filename = argv[1];
-    screen.registerObject( model.import( filename ), model.renderer() );
+    auto* ko = model.import( filename );
+    std::cout << int(ko->opacity()) << std::endl;
+    kvs::StochasticPolygonRenderer* renderer = new kvs::StochasticPolygonRenderer();
+    screen.registerObject( ko, renderer );
 
     // Widgets.
-    kvs::RadioButton eessao_button( &screen );
+    /*kvs::RadioButton eessao_button( &screen );
     eessao_button.setCaption( "EESSAO" );
     eessao_button.setMargin( 10 );
     eessao_button.show();
-    eessao_button.setState( true );
+    //eessao_button.setState( true );
     eessao_button.stateChanged( [&] ()
     {
         if ( eessao_button.state() )
@@ -382,7 +385,7 @@ int main( int argc, char** argv )
     {
         auto* object = new kvs::PolygonObject();
         object->shallowCopy( *kvs::PolygonObject::DownCast( screen.scene()->object( "Object" ) ) );
-        object->setOpacity( kvs::Math::Round( model.opacity * 255 ) );
+        object->setOpacity( kvs::Math::Round( opacity_slider.value() * 255 ) );
         screen.scene()->replaceObject( "Object", object );
     } );
 
@@ -452,7 +455,7 @@ int main( int argc, char** argv )
     screen.addEvent( &capture_event );
 
     kvs::TargetChangeEvent target_change_event;
-    screen.addEvent( &target_change_event );
+    screen.addEvent( &target_change_event );*/
 
     // Measure time. 10 times average.
     /*kvs::PaintEventListener time;
