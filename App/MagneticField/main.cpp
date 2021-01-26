@@ -147,7 +147,7 @@ struct Model
 int main( int argc, char** argv )
 {
     // Shader path.
-    //kvs::ShaderSource::AddSearchPath( "../../Lib" );
+    kvs::ShaderSource::AddSearchPath( "../../Lib" );
     //kvs::ShaderSource::AddSearchPath( "../../../StochasticStreamline/Lib" );
 
     // Application and screen.
@@ -155,12 +155,12 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "MagneticField" );
-    //screen.setSize( 1024, 1024 );
+    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Parameters.
     Model model;
-    model.type = Model::SR;
+    model.type = Model::EESSAO;
     model.lod = true;
     model.repeats = 20;
     model.radius = 0.5;
@@ -170,17 +170,14 @@ int main( int argc, char** argv )
 
     // Visualization pipeline.
     const std::string filename = argv[1];
-    auto* ko = model.import( filename );
-    std::cout << int(ko->opacity()) << std::endl;
-    kvs::StochasticPolygonRenderer* renderer = new kvs::StochasticPolygonRenderer();
-    screen.registerObject( ko, renderer );
+    screen.registerObject( model.import( filename ), model.renderer() );
 
     // Widgets.
-    /*kvs::RadioButton eessao_button( &screen );
+    kvs::RadioButton eessao_button( &screen );
     eessao_button.setCaption( "EESSAO" );
     eessao_button.setMargin( 10 );
     eessao_button.show();
-    //eessao_button.setState( true );
+    eessao_button.setState( true );
     eessao_button.stateChanged( [&] ()
     {
         if ( eessao_button.state() )
@@ -415,7 +412,8 @@ int main( int argc, char** argv )
     edge_slider.show();
     edge_slider.sliderMoved( [&] ()
     {
-        model.edge = edge_slider.value();
+        float v = int( edge_slider.value() * 10 ) * 0.1f;
+        model.edge = v;
         edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
     } );
     edge_slider.sliderReleased( [&] ()
@@ -455,7 +453,7 @@ int main( int argc, char** argv )
     screen.addEvent( &capture_event );
 
     kvs::TargetChangeEvent target_change_event;
-    screen.addEvent( &target_change_event );*/
+    screen.addEvent( &target_change_event );
 
     // Measure time. 10 times average.
     /*kvs::PaintEventListener time;

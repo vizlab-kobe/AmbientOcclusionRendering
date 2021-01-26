@@ -44,6 +44,7 @@ public:
     void setNumberOfSamplingPoints( const size_t nsamples );
     kvs::Real32 samplingSphereRadius() const;
     size_t numberOfSamplingPoints() const;
+    void setEdgeFactor( const float edge_factor );
 };
 
 /*===========================================================================*/
@@ -65,6 +66,7 @@ private:
     kvs::FrameBufferObject m_entry_exit_framebuffer; ///< framebuffer object for entry/exit point texture
     kvs::VertexBufferObjectManager m_bounding_cube_buffer; ///< bounding cube (VBO)
     kvs::ProgramObject m_bounding_cube_shader; ///< bounding cube shader
+    float m_edge_factor;
 
     AmbientOcclusionBuffer m_ao_buffer;
 
@@ -90,6 +92,7 @@ public:
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
     kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
+    void setEdgeFactor( const float edge_factor ) { m_edge_factor = edge_factor; }
 
 private:
     void create_shader_program( const kvs::StructuredVolumeObject* volume );

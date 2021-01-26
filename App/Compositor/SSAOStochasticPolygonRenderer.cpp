@@ -72,13 +72,19 @@ void SSAOStochasticPolygonRenderer::setPolygonOffset( const float offset )
     static_cast<Engine&>( engine() ).setPolygonOffset( offset );
 }
 
+void SSAOStochasticPolygonRenderer::setEdgeFactor( const float edge_factor )
+{
+    static_cast<Engine&>( engine() ).setEdgeFactor( edge_factor );
+}
+  
 /*===========================================================================*/
 /**
  *  @brief  Constructs a new Engine class.
  */
 /*===========================================================================*/
 SSAOStochasticPolygonRenderer::Engine::Engine():
-    m_polygon_offset( 0.0f )
+    m_polygon_offset( 0.0f ),
+    m_edge_factor( 1.0f )
 {
 }
 
@@ -154,6 +160,7 @@ void SSAOStochasticPolygonRenderer::Engine::setup(
     m_geom_pass_shader.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
     m_geom_pass_shader.setUniform( "random_texture", 0 );
     m_geom_pass_shader.setUniform( "polygon_offset", m_polygon_offset );
+    m_geom_pass_shader.setUniform( "edge_factor", m_edge_factor );
     m_geom_pass_shader.unbind();
 }
 
@@ -217,7 +224,5 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::Polyg
     kvs::Texture::Binder bind3( randomTexture() );
     m_buffer_object.draw( polygon );
 }
-
-
 
 } // end of namespace local

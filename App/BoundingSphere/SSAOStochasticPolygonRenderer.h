@@ -28,6 +28,7 @@ public:
 public:
     SSAOStochasticPolygonRenderer();
     void setPolygonOffset( const float polygon_offset );
+    void setEdgeFactor( const float edge_control );
 };
 
 /*===========================================================================*/
@@ -41,6 +42,7 @@ class SSAOStochasticPolygonRenderer::Engine : public local::StochasticRenderingE
 
 private:
     float m_polygon_offset; ///< polygon offset
+    float m_edge_factor; ///< edge enhancement control factor
     BufferObject m_buffer_object;
     kvs::ProgramObject m_geom_pass_shader;
 
@@ -53,6 +55,7 @@ public:
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     
     void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
+    void setEdgeFactor( const float edge_factor ) { m_edge_factor = edge_factor; }
     
 private:
     void create_geometry_shader_program();

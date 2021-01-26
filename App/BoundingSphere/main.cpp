@@ -63,7 +63,7 @@ kvs::PolygonObject* createBoundingSphere()
     }
 
     int point_index = 0;
-    for( int i = 0; point_index < connect.size() / 6; i += 6 )
+    for( int i = 0; point_index < int( connect.size() ) / 6; i += 6 )
     {
         if( point_index % dim_phi != dim_phi - 1 )
         {
@@ -90,7 +90,7 @@ kvs::PolygonObject* createBoundingSphere()
     }
 
     point_index = 0;
-    for( int i = 0; point_index < connect.size() / 6; i += 6 )
+    for( int i = 0; point_index < int( connect.size() ) / 6; i += 6 )
     {
         if( point_index % dim_phi != dim_phi - 1 )
         {
@@ -172,7 +172,8 @@ kvs::PolygonObject* createBoundingSphere()
     polygon->setName( "Polygon" );
 
     kvs::PolygonObject* sphere = new kvs::PolygonToPolygon( polygon );
-    sphere->setColor( kvs::RGBColor( 128, 128, 128 ) );
+    //sphere->setColor( kvs::RGBColor( 128, 128, 128 ) );
+    sphere->setColor( kvs::RGBColor::White() );
     sphere->setName( "Polygon" );
     
     return sphere;
@@ -186,7 +187,7 @@ kvs::PolygonObject* createIsosurface( std::string filename )
     double min_value = scalar_volume->minValue();
     double max_value = scalar_volume->maxValue();
     double isovalue = ( max_value + min_value ) * 0.1;  // Isolevel parameter.
-    double opacity = 1.0;
+    double opacity = 0.5;
     const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
     const bool d = false;
     const kvs::TransferFunction t( 256 );
@@ -255,6 +256,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and Polygon");
+    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Import volume object.

@@ -61,7 +61,7 @@ void main()
     vec3 N = normalize( normal );
     vec3 E = normalize( -position );
     //alpha = pow( alpha, pow( dot( N, E ), 3 )*2 );
-    alpha = min( 1.0, alpha / abs( pow( dot( N, E ), edge_factor ) ) );
+    alpha = min( 1.0, alpha / pow( abs( dot( N, E ) ), edge_factor ) );
 
     if ( R > alpha ) { discard; return; }
 

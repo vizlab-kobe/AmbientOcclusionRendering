@@ -60,7 +60,7 @@ void main()
 
     // Sihouette enhancement
     vec3 E = normalize( -position );
-    alpha = min( 1.0, alpha / abs( pow( dot( N, E ), edge_factor ) ) );
+    alpha = min( 1.0, alpha / pow( abs( dot( N, E ) ), edge_factor ) );
     
     if ( R > alpha ) { discard; return; }
     

@@ -158,6 +158,10 @@ size_t SSAOStochasticUniformGridRenderer::numberOfSamplingPoints() const
     return static_cast<const Engine&>( engine() ).numberOfSamplingPoints();
 }
 
+void SSAOStochasticUniformGridRenderer::setEdgeFactor( const float edge_factor )
+{
+    static_cast<Engine&>( engine() ).setEdgeFactor( edge_factor );
+}
 /*===========================================================================*/
 /**
  *  @brief  Constructs a new Engine class.
@@ -166,7 +170,8 @@ size_t SSAOStochasticUniformGridRenderer::numberOfSamplingPoints() const
 SSAOStochasticUniformGridRenderer::Engine::Engine():
     m_random_index( 0 ),
     m_step( 0.5f ),
-    m_transfer_function_changed( true )
+    m_transfer_function_changed( true ),
+    m_edge_factor( 1.0 )
 {
     m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_uniform_grid_geom_pass.vert", "SSAO_SR_uniform_grid_geom_pass.frag" );
     m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_SR_uniform_grid_occl_pass.vert", "SSAO_SR_uniform_grid_occl_pass.frag" );
@@ -420,6 +425,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program( const kvs
     shader.setUniform( "transfer_function.min_value", min_value );
     shader.setUniform( "transfer_function.max_value", max_value );
     shader.setUniform( "sampling_step", m_step );
+    shader.setUniform( "edge_factor", m_edge_factor );
     shader.unbind();
 }
 

@@ -10,7 +10,7 @@
 #include <kvs/TargetChangeEvent>
 #include <kvs/KeyPressEventListener>
 #include <kvs/StochasticUniformGridRenderer>
-#include <AmbientOcclusionRendering/Lib/SSAOStochasticUniformGridRenderer.h>
+#include "SSAOStochasticUniformGridRenderer.h"
 #include <kvs/StructuredVectorToScalar>
 
 
@@ -29,6 +29,7 @@ struct Model
     size_t repeats; ///< number of repetitions for stochasti rendering
     float radius; ///< radius of point sampling region for SSAO
     int points; ///< number of points used for SSAO
+    float edge;
     kvs::TransferFunction tfunc; ///< transfer function
 
     kvs::StructuredVolumeObject* import( const std::string& filename )
@@ -51,6 +52,7 @@ struct Model
             renderer->enableShading();
             renderer->setSamplingSphereRadius( radius );
             renderer->setNumberOfSamplingPoints( points );
+	    renderer->setEdgeFactor( edge );
             return renderer;
         }
         else
@@ -82,6 +84,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "SSAOStochasticUniformGridRenderer" );
+    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Parameters.
@@ -91,6 +94,7 @@ int main( int argc, char** argv )
     model.repeats = 1;
     model.radius = 0.5;
     model.points = 256;
+    model.edge = 1.0;
     model.tfunc = kvs::TransferFunction( kvs::ColorMap::BrewerSpectral( 256 ) );
 
     // Visualization pipeline.
@@ -201,6 +205,27 @@ int main( int argc, char** argv )
         }
     } );
 
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
+    edge_slider.setValue( model.edge );
+    edge_slider.setRange( 0.1, 5 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &points_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        const float v = int( edge_slider.value() * 10 ) * 0.1f;
+        model.edge = v;
+        edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+        if ( model.ssao )
+        {
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }
+    });
+
     kvs::TransferFunctionEditor editor( &screen );
     editor.setTransferFunction( model.tfunc );
     editor.setVolumeObject( kvs::StructuredVolumeObject::DownCast( screen.scene()->object() ) );
@@ -235,6 +260,7 @@ int main( int argc, char** argv )
             repeat_slider.setVisible( !visible );
             radius_slider.setVisible( !visible );
             points_slider.setVisible( !visible );
+	    edge_slider.setVisible( !visible );
             screen.redraw();
             break;
         }

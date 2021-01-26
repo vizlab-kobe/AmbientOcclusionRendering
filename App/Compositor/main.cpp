@@ -14,8 +14,11 @@
 #include "Streamline.h"
 #include "SSAOStochasticPolygonRenderer.h"
 #include "SSAOStochasticTubeRenderer.h"
-#include <kvs/StochasticRenderingCompositor>
 #include "StochasticRenderingCompositor.h"
+
+#include <kvs/StochasticPolygonRenderer>
+#include <kvs/StochastiTubeRenderer>
+#include <kvs/StochasticRenderingCompositor>
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
 
@@ -93,13 +96,14 @@ int main( int argc, char** argv )
 {
     // Shader path.
     kvs::ShaderSource::AddSearchPath("../../Lib");
-    //kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
+    kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
 
     // Application and screen.
     kvs::Application app( argc, argv );
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and Polygon");
+    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Import volume object.

@@ -119,7 +119,8 @@ Controller::Controller( local::Model& model, local::View& view ):
     m_edge_slider.anchorToBottom( &m_points_slider );
     m_edge_slider.sliderMoved( [&] ()
     {
-        m_model.setEdgeFactor( float( m_edge_slider.value() ) );
+        const float v = int( m_edge_slider.value() * 10 ) * 0.1f;
+        m_model.setEdgeFactor( v );
         m_edge_slider.setCaption( "Edge: " + kvs::String::From( m_model.edge() ) );
     } );
     m_edge_slider.sliderReleased( [&] ()

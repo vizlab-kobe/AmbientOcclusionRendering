@@ -41,6 +41,7 @@ uniform float to_ze2; // scaling parameter: (f-n)/(f*n)
 uniform sampler2D random_texture; // random texture to generate random number
 uniform float random_texture_size_inv; // reciprocal value of the random texture size
 uniform vec2 random_offset; // offset values for accessing to the random texture
+uniform float edge_factor;
 
 // Uniform variables (OpenGL variables).
 uniform mat4 ModelViewProjectionMatrixInverse; // inverse matrix of model-view projection matrix
@@ -190,7 +191,7 @@ void main()
 	if ( length( N ) > 0 )
 	{
 	    float cos_theta = dot( N, E );
-	    c.a = min( 1.0, c.a / pow( abs( cos_theta ), 2.0 ) );
+	    c.a = min( 1.0, c.a / pow( abs( cos_theta ), edge_factor ) );
 	}
 
         accum_alpha += ( 1.0 - accum_alpha ) * c.a;
