@@ -122,12 +122,12 @@ int main( int argc, char** argv )
     // Register objects and renderers
     screen.registerObject( polygon, polygon_renderer );
     screen.registerObject( streamline, tube_renderer );
-    
 
     // Declare StochasticRenderingCompositor.
     local::StochasticRenderingCompositor compositor( screen.scene() );
     compositor.setRepetitionLevel( 1 );
     compositor.enableLODControl();
+    compositor.setShader( kvs::Shader::BlinnPhong() );
     screen.setEvent( &compositor );
 
     // Widgets.

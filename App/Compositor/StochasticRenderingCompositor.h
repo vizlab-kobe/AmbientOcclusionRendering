@@ -62,7 +62,9 @@ public:
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
     kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
-
+    template <typename ShadingType>
+    void setShader( const ShadingType shader );
+    
 private:
     StochasticRenderingCompositor();
     void draw();
@@ -84,5 +86,12 @@ public:
     KVS_DEPRECATED( void enableShading() ) { /* not do anything */ }
     KVS_DEPRECATED( void disableShading() ) { /* not do anything */ }
 };
+
+template <typename ShadingType>
+inline void local::StochasticRenderingCompositor::setShader( const ShadingType shader )
+{
+    if ( m_shader ) { delete m_shader; }
+    m_shader = new ShadingType( shader );
+}
 
 } // end of namespace local

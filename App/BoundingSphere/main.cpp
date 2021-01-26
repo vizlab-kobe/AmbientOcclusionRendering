@@ -172,7 +172,7 @@ kvs::PolygonObject* createBoundingSphere()
     polygon->setName( "Polygon" );
 
     kvs::PolygonObject* sphere = new kvs::PolygonToPolygon( polygon );
-    sphere->setColor( kvs::RGBColor::Red() );
+    sphere->setColor( kvs::RGBColor( 128, 128, 128 ) );
     sphere->setName( "Polygon" );
     
     return sphere;
