@@ -12,6 +12,7 @@
 #include <kvs/StochasticUniformGridRenderer>
 #include "SSAOStochasticUniformGridRenderer.h"
 #include <kvs/StructuredVectorToScalar>
+#include <kvs/PaintEventListener>
 
 
 /*===========================================================================*/
@@ -275,5 +276,23 @@ int main( int argc, char** argv )
     kvs::TargetChangeEvent target_change_event;
     screen.addEvent( &target_change_event );
 
+    /*kvs::PaintEventListener time;
+    time.update( [&] ()
+    {
+        static size_t counter = 1;
+        static float time = 0.0f;
+
+        time += screen.scene()->renderer("Renderer")->timer().msec();
+        if ( counter++ == 50 )
+        {
+            std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
+            counter = 1;
+            time = 0.0f;
+        }
+
+        } );
+    
+	screen.addEvent( &time );*/
+    
     return app.run();
 }

@@ -7,6 +7,7 @@
 #include <kvs/KeyPressEventListener>
 #include <kvs/ScreenCaptureEvent>
 #include <kvs/TargetChangeEvent>
+#include <kvs/PaintEventListener>
 #include "Model.h"
 #include "View.h"
 
@@ -14,6 +15,23 @@
 namespace local
 {
 
+  class PaintEvent : public kvs::PaintEventListener
+  {
+    void update()
+    {
+      static size_t counter = 1;
+      static float time = 0.0f;
+
+      time += scene()->renderer("Renderer")->timer().msec();
+      if( counter++ == 50 )
+	{
+	  std::cout << "Rendering time " << time / counter << " [msec]" << std::endl;
+	  counter = 1;
+	  time = 0.0f;
+	}
+    }
+  };
+  
 class Controller
 {
 private:
@@ -31,6 +49,7 @@ private:
     kvs::KeyPressEventListener m_key_press_event;
     kvs::ScreenCaptureEvent m_capture_event;
     kvs::TargetChangeEvent m_target_change_event;
+    PaintEvent m_paint_event;
 
 public:
     Controller( local::Model& model, local::View& view );

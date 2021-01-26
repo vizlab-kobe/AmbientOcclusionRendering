@@ -173,6 +173,7 @@ Controller::Controller( local::Model& model, local::View& view ):
         default: break;
         }
     } );
+    m_view.screen().addEvent( &m_paint_event );
     m_view.screen().addEvent( &m_key_press_event );
     m_view.screen().addEvent( &m_capture_event );
     m_view.screen().addEvent( &m_target_change_event );

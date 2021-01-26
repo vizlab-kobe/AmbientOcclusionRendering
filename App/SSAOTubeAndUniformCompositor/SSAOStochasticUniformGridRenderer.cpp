@@ -138,6 +138,11 @@ float SSAOStochasticUniformGridRenderer::samplingStep() const
     return static_cast<const Engine&>( engine() ).samplingStep();
 }
 
+void SSAOStochasticUniformGridRenderer::setEdgeFactor( const float edge_factor )
+{
+    static_cast<Engine&>( engine() ).setEdgeFactor( edge_factor );
+}
+
 /*===========================================================================*/
 /**
  *  @brief  Constructs a new Engine class.
@@ -146,7 +151,8 @@ float SSAOStochasticUniformGridRenderer::samplingStep() const
 SSAOStochasticUniformGridRenderer::Engine::Engine():
     m_random_index( 0 ),
     m_step( 0.5f ),
-    m_transfer_function_changed( true )
+    m_transfer_function_changed( true ),
+    m_edge_factor( 1.0f )
 {
 }
 
@@ -404,6 +410,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create_geometry_shader_program( 
     shader.setUniform( "transfer_function.min_value", min_value );
     shader.setUniform( "transfer_function.max_value", max_value );
     shader.setUniform( "sampling_step", m_step );
+    shader.setUniform( "edge_factor", m_edge_factor );
     shader.unbind();
 }
 

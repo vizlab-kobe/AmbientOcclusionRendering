@@ -39,6 +39,7 @@ public:
     void setTransferFunction( const kvs::TransferFunction& transfer_function );
     const kvs::TransferFunction& transferFunction() const;
     float samplingStep() const;
+    void setEdgeFactor( const float edge_factor );
 };
 
 /*===========================================================================*/
@@ -60,6 +61,7 @@ private:
     kvs::FrameBufferObject m_entry_exit_framebuffer; ///< framebuffer object for entry/exit point texture
     kvs::VertexBufferObjectManager m_bounding_cube_buffer; ///< bounding cube (VBO)
     kvs::ProgramObject m_bounding_cube_shader; ///< bounding cube shader
+    float m_edge_factor;
 
     kvs::ProgramObject m_geom_pass_shader;
 
@@ -80,6 +82,7 @@ public:
 
     float samplingStep() const { return m_step; }
     const kvs::TransferFunction& transferFunction() const { return m_transfer_function; }
+    void setEdgeFactor( const float edge_factor ) { m_edge_factor = edge_factor; }
 
 private:
     void create_geometry_shader_program( const kvs::StructuredVolumeObject* volume );

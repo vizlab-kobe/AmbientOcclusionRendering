@@ -418,7 +418,7 @@ int main( int argc, char** argv )
     } );
     edge_slider.sliderReleased( [&] ()
     {
-            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
     } );
 
     // Events.
@@ -456,23 +456,23 @@ int main( int argc, char** argv )
     screen.addEvent( &target_change_event );
 
     // Measure time. 10 times average.
-    /*kvs::PaintEventListener time;
+    kvs::PaintEventListener time;
     time.update( [&] ()
     {
         static size_t counter = 1;
         static float time = 0.0f;
 
         time += screen.scene()->renderer("Renderer")->timer().msec();
-        if ( counter++ == 10 )
+        if ( counter++ == 50 )
         {
             std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
             counter = 1;
             time = 0.0f;
         }
 
-        } );*/
+        } );
     
-    //screen.addEvent( &time );
+    screen.addEvent( &time );
 
     return app.run();
 }

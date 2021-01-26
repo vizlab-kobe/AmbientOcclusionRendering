@@ -17,7 +17,7 @@
 #include "StochasticRenderingCompositor.h"
 
 #include <kvs/StochasticPolygonRenderer>
-#include <kvs/StochastiTubeRenderer>
+#include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
 #include <kvs/StochasticRenderingCompositor>
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
@@ -34,7 +34,7 @@ kvs::PolygonObject* createIsosurface( std::string filename )
     double min_value = scalar_volume->minValue();
     double max_value = scalar_volume->maxValue();
     double isovalue = ( max_value + min_value ) * 0.1;  // Isolevel parameter.
-    double opacity = 1.0;
+    double opacity = 0.5;
     const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
     const bool d = false;
     const kvs::TransferFunction t( 256 );
@@ -103,7 +103,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and Polygon");
-    screen.setSize( 1024, 1024 );
+    //screen.setSize( 1024, 1024 );
     screen.show();
 
     // Import volume object.
@@ -116,11 +116,11 @@ int main( int argc, char** argv )
     
     // Declare SSAOStochasticPolygonRenderer
     local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
-    polygon_renderer->setName( "StochasticPolygonRenderer" );
+    polygon_renderer->setName( "PolygonRenderer" );
 
     // Declare SSAOStochasticTubeRenderer
     local::SSAOStochasticTubeRenderer* tube_renderer = new local::SSAOStochasticTubeRenderer();
-    tube_renderer->setName( "StochasticTubeRenderer" );
+    tube_renderer->setName( "TubeRenderer" );
     tube_renderer->setTransferFunction( kvs::DivergingColorMap::CoolWarm( 256 ) );
     
     // Register objects and renderers
@@ -129,7 +129,7 @@ int main( int argc, char** argv )
 
     // Declare StochasticRenderingCompositor.
     local::StochasticRenderingCompositor compositor( screen.scene() );
-    compositor.setRepetitionLevel( 1 );
+    compositor.setRepetitionLevel( 20 );
     compositor.enableLODControl();
     compositor.setShader( kvs::Shader::BlinnPhong() );
     screen.setEvent( &compositor );
@@ -159,7 +159,7 @@ int main( int argc, char** argv )
     checkbox.show();
 
     kvs::Slider opacity( &screen );
-    opacity.setCaption( "Opacity" );
+    opacity.setCaption( "Opacity: " + kvs::String::ToString( 0.5 ) );
     opacity.setWidth( 150 );
     opacity.setMargin( 10 );
     opacity.setValue( 0.5 );
@@ -167,6 +167,7 @@ int main( int argc, char** argv )
     opacity.anchorToBottom( &checkbox );
     opacity.valueChanged(
         [&]() {
+	  opacity.setCaption( "Opacity: " + kvs::String::ToString( opacity.value() ) );
             auto* scene = screen.scene();
             auto* object1 = kvs::PolygonObject::DownCast( scene->object( "Polygon" ) );
             auto* object2 = new kvs::PolygonObject();           
@@ -211,6 +212,28 @@ int main( int argc, char** argv )
     {
         compositor.setSamplingSphereRadius( radius );
         screen.redraw();
+    } );
+
+    float edge = 1.0;
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::ToString( edge ) );
+    edge_slider.setValue( edge );
+    edge_slider.setRange( 0.1, 5.0 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &radius_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        edge = int( edge_slider.value() * 10 ) * 0.1f;
+        edge_slider.setCaption( "Edge: " + kvs::String::From( edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+      auto* scene = screen.scene();
+      auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
+      renderer->setEdgeFactor( edge );
+      renderer->setName( "PolygonRenderer" );
+        screen.scene()->replaceRenderer( "PolygonRenderer", renderer );
     } );
 
     kvs::KeyPressEventListener h_key;

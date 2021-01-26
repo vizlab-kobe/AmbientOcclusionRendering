@@ -220,6 +220,7 @@ int main( int argc, char** argv )
     local::StochasticRenderingCompositor ssao_compositor( screen.scene() );
     ssao_compositor.setRepetitionLevel( 1 );
     ssao_compositor.enableLODControl();
+    ssao_compositor.setShader( kvs::Shader::BlinnPhong() );
     screen.setEvent( &ssao_compositor );
 
     kvs::StochasticRenderingCompositor compositor( screen.scene() );

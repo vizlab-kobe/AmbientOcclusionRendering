@@ -76,10 +76,16 @@ kvs::Real32 SSAOStochasticTubeRenderer::haloSize() const
     return static_cast<const Engine&>( engine() ).haloSize();
 }
 
+void SSAOStochasticTubeRenderer::setEdgeFactor( const float edge_factor )
+{
+    static_cast<Engine&>( engine() ).setEdgeFactor( edge_factor );
+}
+  
 SSAOStochasticTubeRenderer::Engine::Engine():
     m_radius_size( 0.05f ),
     m_halo_size( 0.0f ),
-    m_tfunc_changed( true )
+    m_tfunc_changed( true ),
+    m_edge_factor( 1.0f )
 {
 }
 
@@ -156,6 +162,7 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
     shader.setUniform( "diffuse_texture", 1 );
     shader.setUniform( "random_texture", 2 );
     shader.setUniform( "transfer_function_texture", 3 );
+    shader.setUniform( "edge_factor", m_edge_factor );
     shader.unbind();
 }
 
