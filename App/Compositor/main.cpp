@@ -248,12 +248,16 @@ int main( int argc, char** argv )
                 checkbox.hide();
                 opacity.hide();
                 repetition.hide();
+                radius_slider.hide();
+                edge_slider.hide();
             }
             else
             {
                 checkbox.show();
                 opacity.show();
                 repetition.show();
+                radius_slider.show();
+                edge_slider.show();
             }
         }
         default: break;
