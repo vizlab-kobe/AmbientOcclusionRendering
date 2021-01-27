@@ -1,33 +1,39 @@
+/*****************************************************************************/
+/**
+ *  @file   StochasticPolygonRenderer.h
+ *  @author Naohisa Sakamoto
+ */
+/*****************************************************************************/
 #pragma once
 #include <kvs/Module>
-#include <kvs/PolygonObject>
 #include <kvs/ProgramObject>
-#include <kvs/VertexBufferObjectManager>
 #include <kvs/PolygonRenderer>
-#include <kvs/Texture2D>
-#include "StochasticRenderingEngine.h"
-#include "StochasticRendererBase.h"
+#include <kvs/StochasticRenderingEngine>
+#include <kvs/StochasticRendererBase>
 
 
 namespace local
 {
+
+class PolygonObject;
 
 /*===========================================================================*/
 /**
  *  @brief  Stochastic polygon renderer class.
  */
 /*===========================================================================*/
-class SSAOStochasticPolygonRenderer : public local::StochasticRendererBase
+class StochasticPolygonRenderer : public kvs::StochasticRendererBase
 {
-    kvsModule( local::SSAOStochasticPolygonRenderer, Renderer );
-    kvsModuleBaseClass( local::StochasticRendererBase );
+    kvsModule( local::StochasticPolygonRenderer, Renderer );
+    kvsModuleBaseClass( kvs::StochasticRendererBase );
 
 public:
     class Engine;
 
 public:
-    SSAOStochasticPolygonRenderer();
+    StochasticPolygonRenderer();
     void setPolygonOffset( const float polygon_offset );
+    void setEdgeFactor( const float edge_factor );
 };
 
 /*===========================================================================*/
@@ -35,14 +41,15 @@ public:
  *  @brief  Engine class for stochastic polygon renderer.
  */
 /*===========================================================================*/
-class SSAOStochasticPolygonRenderer::Engine : public local::StochasticRenderingEngine
+class StochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEngine
 {
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
 
 private:
     float m_polygon_offset; ///< polygon offset
+    kvs::ProgramObject m_shader_program; ///< shader program
     BufferObject m_buffer_object;
-    kvs::ProgramObject m_geom_pass_shader;
+    float m_edge_factor;
 
 public:
     Engine();
@@ -51,13 +58,12 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    
     void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
-    
+    void setEdgeFactor( const float edge_factor ) { m_edge_factor = edge_factor; }
+
 private:
-    void create_geometry_shader_program();
+    void create_shader_program();
     void create_buffer_object( const kvs::PolygonObject* polygon );
-    void draw_buffer_object( const kvs::PolygonObject* polygon );
 };
 
-} // end of namespace local
+} // end of namespace kvs

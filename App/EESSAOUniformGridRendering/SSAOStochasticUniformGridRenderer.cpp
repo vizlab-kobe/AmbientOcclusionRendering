@@ -173,7 +173,7 @@ SSAOStochasticUniformGridRenderer::Engine::Engine():
     m_transfer_function_changed( true ),
     m_edge_factor( 1.0 )
 {
-    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_uniform_grid_geom_pass.vert", "SSAO_SR_uniform_grid_geom_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles( "EE_SSAO_SR_uniform_grid_geom_pass.vert", "EE_SSAO_SR_uniform_grid_geom_pass.frag" );
     m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_SR_uniform_grid_occl_pass.vert", "SSAO_SR_uniform_grid_occl_pass.frag" );
 }
 
