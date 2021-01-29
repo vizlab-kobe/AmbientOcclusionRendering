@@ -70,8 +70,7 @@ private:
         const Engine* m_engine;
         std::string m_geom_pass_shader_geom_file;
     public:
-//        Drawable( const Engine* engine ) : AmbientOcclusionBuffer(), m_engine( engine ) {}
-        AmbientOcclusionBuffer( const Engine* engine ) : AmbientOcclusionRendering::AmbientOcclusionBuffer(), m_engine( engine ) {}
+        AmbientOcclusionBuffer( const Engine* engine ) : BaseClass(), m_engine( engine ) {}
         const std::string& geometryPassGeometryShaderFile() const { return m_geom_pass_shader_geom_file; }
         void setGeometryPassShaderFiles( const std::string& vert_file, const std::string& geom_file, const std::string& frag_file );
         void createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
@@ -81,6 +80,8 @@ private:
 
 private:
     float m_edge_factor; ///< edge enhancement factor
+
+    // Transfer function
     bool m_transfer_function_changed; ///< flag for changin transfer function
     kvs::TransferFunction m_transfer_function; ///< transfer function
     kvs::Texture2D m_preintegration_texture; ///< pre-integration texture
@@ -88,11 +89,13 @@ private:
     kvs::Texture1D m_transfer_function_texture; ///< transfer function texture
     kvs::Texture1D m_T_texture; ///< T function for pre-integration
     kvs::Texture1D m_inv_T_texture; ///< inverse function of T for pre-integration
+
+    // Buffer object
     kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
+
     float m_sampling_step; ///< sampling step
     float m_maxT; ///< maximum value of T
-//    Drawable m_ao_buffer; ///< drawable for SSAO
-    AmbientOcclusionBuffer m_ao_buffer;
+    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
     Engine();
@@ -121,6 +124,7 @@ public:
 private:
     void create_preintegration_texture();
     void create_decomposition_texture();
+
     void create_buffer_object( const kvs::UnstructuredVolumeObject* volume );
     void update_buffer_object( const kvs::UnstructuredVolumeObject* volume );
     void draw_buffer_object( const kvs::UnstructuredVolumeObject* volume );

@@ -186,7 +186,7 @@ kvs::ValueArray<kvs::Real32> VertexNormals( const kvs::UnstructuredVolumeObject*
     return kvs::ValueArray<kvs::Real32>();
 }
 
-}
+} // end of namespace
 
 
 namespace AmbientOcclusionRendering
@@ -202,6 +202,12 @@ SSAOStochasticTetrahedraRenderer::SSAOStochasticTetrahedraRenderer():
 {
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Sets edge factor.
+ *  @param  factor [in] edge factor
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::setEdgeFactor( const float factor )
 {
     static_cast<Engine&>( engine() ).setEdgeFactor( factor );
@@ -213,7 +219,8 @@ void SSAOStochasticTetrahedraRenderer::setEdgeFactor( const float factor )
  *  @param  transfer_function [in] transfer function
  */
 /*===========================================================================*/
-void SSAOStochasticTetrahedraRenderer::setTransferFunction( const kvs::TransferFunction& transfer_function )
+void SSAOStochasticTetrahedraRenderer::setTransferFunction(
+    const kvs::TransferFunction& transfer_function )
 {
     static_cast<Engine&>( engine() ).setTransferFunction( transfer_function );
 }
@@ -229,31 +236,65 @@ void SSAOStochasticTetrahedraRenderer::setSamplingStep( const float sampling_ste
     static_cast<Engine&>( engine() ).setSamplingStep( sampling_step );
 }
 
-const kvs::TransferFunction& SSAOStochasticTetrahedraRenderer::transferFunction() const
-{
-    return static_cast<const Engine&>( engine() ).transferFunction();
-}
-
-float SSAOStochasticTetrahedraRenderer::samplingStep() const
-{
-    return static_cast<const Engine&>( engine() ).samplingStep();
-}
-
+/*===========================================================================*/
+/**
+ *  @brief  Sets radius of sampling sphere.
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::setSamplingSphereRadius( const float radius )
 {
     static_cast<Engine&>( engine() ).setSamplingSphereRadius( radius );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Sets number of sampling points
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::setNumberOfSamplingPoints( const size_t nsamples )
 {
     static_cast<Engine&>( engine() ).setNumberOfSamplingPoints( nsamples );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Returns transfer function.
+ *  @return transfer function
+ */
+/*===========================================================================*/
+const kvs::TransferFunction& SSAOStochasticTetrahedraRenderer::transferFunction() const
+{
+    return static_cast<const Engine&>( engine() ).transferFunction();
+}
+
+/*===========================================================================*/
+/**
+ *  @brief  Returns sampling step.
+ *  @return sampling step
+ */
+/*===========================================================================*/
+float SSAOStochasticTetrahedraRenderer::samplingStep() const
+{
+    return static_cast<const Engine&>( engine() ).samplingStep();
+}
+
+/*===========================================================================*/
+/**
+ *  @brief  Returns radius of sampling sphere.
+ *  @return radius of sampling sphere
+ */
+/*===========================================================================*/
 kvs::Real32 SSAOStochasticTetrahedraRenderer::samplingSphereRadius() const
 {
     return static_cast<const Engine&>( engine() ).samplingSphereRadius();
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Returns number of sampling points.
+ *  @return number of sampling points
+ */
+/*===========================================================================*/
 size_t SSAOStochasticTetrahedraRenderer::numberOfSamplingPoints() const
 {
     return static_cast<const Engine&>( engine() ).numberOfSamplingPoints();
@@ -275,6 +316,7 @@ SSAOStochasticTetrahedraRenderer::Engine::Engine():
         "SSAO_SR_tetrahedra_geom_pass.vert",
         "SSAO_SR_tetrahedra_geom_pass.geom",
         "SSAO_SR_tetrahedra_geom_pass.frag" );
+
     m_ao_buffer.setOcclusionPassShaderFiles(
         "SSAO_occl_pass.vert",
         "SSAO_occl_pass.frag" );
@@ -392,18 +434,15 @@ void SSAOStochasticTetrahedraRenderer::Engine::setup(
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
     const kvs::Mat4 PM_inverse = PM.inverted();
-//    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-    auto& shader = m_ao_buffer.geometryPassShader();
-    shader.bind();
-//    shader.setUniform( "ModelViewMatrix", M );
-//    shader.setUniform( "ModelViewProjectionMatrix", PM );
-    shader.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
-//    shader.setUniform( "NormalMatrix", N );
-    shader.setUniform( "maxT", m_maxT );
-    shader.setUniform( "sampling_step_inv", 1.0f / m_sampling_step );
-    shader.setUniform( "delta", 0.5f / m_transfer_function.resolution() );
-    shader.setUniform( "edge_factor", m_edge_factor );
-    shader.unbind();
+
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    geom_pass.bind();
+    geom_pass.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
+    geom_pass.setUniform( "maxT", m_maxT );
+    geom_pass.setUniform( "sampling_step_inv", 1.0f / m_sampling_step );
+    geom_pass.setUniform( "delta", 0.5f / m_transfer_function.resolution() );
+    geom_pass.setUniform( "edge_factor", m_edge_factor );
+    geom_pass.unbind();
 }
 
 /*===========================================================================*/
@@ -502,11 +541,12 @@ void SSAOStochasticTetrahedraRenderer::Engine::create_decomposition_texture()
 
 /*===========================================================================*/
 /**
- *  @brief  Create buffer objects.
+ *  @brief  Creates buffer object.
  *  @param  volume [in] pointer to the volume object
  */
 /*===========================================================================*/
-void SSAOStochasticTetrahedraRenderer::Engine::create_buffer_object( const kvs::UnstructuredVolumeObject* volume )
+void SSAOStochasticTetrahedraRenderer::Engine::create_buffer_object(
+    const kvs::UnstructuredVolumeObject* volume )
 {
     if ( volume->cellType() != kvs::UnstructuredVolumeObject::Tetrahedra )
     {
@@ -520,69 +560,105 @@ void SSAOStochasticTetrahedraRenderer::Engine::create_buffer_object( const kvs::
         return;
     }
 
-    const kvs::ValueArray<kvs::UInt16> indices = ::RandomIndices( volume, randomTextureSize() );
-    const kvs::ValueArray<kvs::Real32> values = ::NormalizedValues( volume );
-    const kvs::ValueArray<kvs::Real32> coords = volume->coords();
-    const kvs::ValueArray<kvs::Real32> normals = ::VertexNormals( volume );
-    m_vbo_manager.setVertexAttribArray( indices, m_ao_buffer.geometryPassShader().attributeLocation( "random_index" ), 2 );
-    m_vbo_manager.setVertexAttribArray( values, m_ao_buffer.geometryPassShader().attributeLocation( "value" ), 1 );
+    const auto indices = ::RandomIndices( volume, randomTextureSize() );
+    const auto values = ::NormalizedValues( volume );
+    const auto coords = volume->coords();
+    const auto normals = ::VertexNormals( volume );
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    m_vbo_manager.setVertexAttribArray( indices, geom_pass.attributeLocation( "random_index" ), 2 );
+    m_vbo_manager.setVertexAttribArray( values, geom_pass.attributeLocation( "value" ), 1 );
     m_vbo_manager.setVertexArray( coords, 3 );
     m_vbo_manager.setNormalArray( normals );
     m_vbo_manager.setIndexArray( volume->connections() );
     m_vbo_manager.create();
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Updates buffer object.
+ *  @param  volume [in] pointer to the unstructured volume object
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::Engine::update_buffer_object( const kvs::UnstructuredVolumeObject* volume )
 {
-//    m_buffer_object.release();
     m_vbo_manager.release();
     this->create_buffer_object( volume );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Draws buffer object.
+ *  @param  volume [in] pointer to the unstructured volume object
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::Engine::draw_buffer_object(
     const kvs::UnstructuredVolumeObject* volume )
 {
-    kvs::VertexBufferObjectManager::Binder bind1( m_vbo_manager );
-    kvs::Texture::Binder bind3( randomTexture(), 0 );
-    kvs::Texture::Binder bind4( m_preintegration_texture, 1 );
-    kvs::Texture::Binder bind5( m_decomposition_texture, 2 );
-    kvs::Texture::Binder bind6( m_transfer_function_texture, 3 );
-    kvs::Texture::Binder bind7( m_T_texture, 4 );
-    kvs::Texture::Binder bind8( m_inv_T_texture, 5 );
-    {
-        kvs::OpenGL::WithEnabled d( GL_DEPTH_TEST );
+    kvs::OpenGL::WithEnabled d( GL_DEPTH_TEST );
 
-        const size_t size = randomTextureSize();
-        const int count = repetitionCount() * ::RandomNumber();
-        const float offset_x = static_cast<float>( ( count ) % size );
-        const float offset_y = static_cast<float>( ( count / size ) % size );
-        const kvs::Vec2 random_offset( offset_x, offset_y );
-        m_ao_buffer.geometryPassShader().setUniform( "random_offset", random_offset );
+    // Random factors
+    const size_t size = BaseClass::randomTextureSize();
+    const int count = BaseClass::repetitionCount() * ::RandomNumber();
+    const float offset_x = static_cast<float>( ( count ) % size );
+    const float offset_y = static_cast<float>( ( count / size ) % size );
+    const kvs::Vec2 random_offset( offset_x, offset_y );
 
-        const size_t ncells = volume->numberOfCells();
-        m_vbo_manager.drawElements( GL_LINES_ADJACENCY_EXT, 4 * ncells );
-    }
+    // Updates variables in geom pass shader
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    geom_pass.setUniform( "random_offset", random_offset );
+    geom_pass.setUniform( "random_texture", 0 );
+    geom_pass.setUniform( "preintegration_texture", 1 );
+    geom_pass.setUniform( "decomposition_texture", 2 );
+    geom_pass.setUniform( "transfer_function_texture", 3 );
+    geom_pass.setUniform( "T_texture", 4 );
+    geom_pass.setUniform( "invT_texture", 5 );
+
+    // Draw buffer object
+    kvs::Texture::Binder bind0( randomTexture(), 0 );
+    kvs::Texture::Binder bind1( m_preintegration_texture, 1 );
+    kvs::Texture::Binder bind2( m_decomposition_texture, 2 );
+    kvs::Texture::Binder bind3( m_transfer_function_texture, 3 );
+    kvs::Texture::Binder bind4( m_T_texture, 4 );
+    kvs::Texture::Binder bind5( m_inv_T_texture, 5 );
+
+    kvs::VertexBufferObjectManager::Binder bind( m_vbo_manager );
+    const size_t ncells = volume->numberOfCells();
+    m_vbo_manager.drawElements( GL_LINES_ADJACENCY_EXT, 4 * ncells );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Sets geometry pass shader files.
+ *  @param  vert_file [in] vertex shader file
+ *  @param  geom_file [in] geometry shader file
+ *  @param  frag_file [in] fragment shader file
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::setGeometryPassShaderFiles(
     const std::string& vert_file,
     const std::string& geom_file,
     const std::string& frag_file )
 {
-    using BaseClass = AmbientOcclusionRendering::AmbientOcclusionBuffer;
     BaseClass::setGeometryPassShaderFiles( vert_file, frag_file );
     m_geom_pass_shader_geom_file = geom_file;
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Creates shader program.
+ *  @param  shading_model [in] shading model
+ *  @param  shading_enabled [in] shading will be enabled if true
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::createShaderProgram(
     const kvs::Shader::ShadingModel& shading_model,
     const bool shading_enabled )
 {
     // Build SSAO shader for geometry-pass (1st pass).
     {
-        kvs::ShaderSource vert( geometryPassVertexShaderFile() );
-        kvs::ShaderSource geom( geometryPassGeometryShaderFile() );
-        kvs::ShaderSource frag( geometryPassFragmentShaderFile() );
+        kvs::ShaderSource vert( BaseClass::geometryPassVertexShaderFile() );
+        kvs::ShaderSource geom( this->geometryPassGeometryShaderFile() );
+        kvs::ShaderSource frag( BaseClass::geometryPassFragmentShaderFile() );
 
         if ( m_engine->depthTexture().isCreated() )
         {
@@ -591,32 +667,18 @@ void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::createSha
             frag.define("ENABLE_EXACT_DEPTH_TESTING");
         }
 
-        // Parameters for geometry shader.
-        auto& shader = geometryPassShader();
-        shader.setGeometryInputType( GL_LINES_ADJACENCY_EXT );
-        shader.setGeometryOutputType( GL_TRIANGLE_STRIP );
-        shader.setGeometryOutputVertices( 4 * 3 );
-
-        // Build shaders.
-        shader.build( vert, geom, frag );
-
-        /*
-        shader.bind();
-        shader.setUniform( "random_texture_size_inv", 1.0f / m_engine->randomTextureSize() );
-        shader.setUniform( "random_texture", 0 );
-        shader.setUniform( "preintegration_texture", 1 );
-        shader.setUniform( "decomposition_texture", 2 );
-        shader.setUniform( "transfer_function_texture", 3 );
-        shader.setUniform( "T_texture", 4 );
-        shader.setUniform( "invT_texture", 5 );
-        shader.unbind();
-        */
+        // Build
+        auto& geom_pass = BaseClass::geometryPassShader();
+        geom_pass.setGeometryInputType( GL_LINES_ADJACENCY_EXT );
+        geom_pass.setGeometryOutputType( GL_TRIANGLE_STRIP );
+        geom_pass.setGeometryOutputVertices( 4 * 3 );
+        geom_pass.build( vert, geom, frag );
     }
 
     // Build SSAO shader for occlusion-pass (2nd pass).
     {
-        kvs::ShaderSource vert( occlusionPassVertexShaderFile() );
-        kvs::ShaderSource frag( occlusionPassFragmentShaderFile() );
+        kvs::ShaderSource vert( BaseClass::occlusionPassVertexShaderFile() );
+        kvs::ShaderSource frag( BaseClass::occlusionPassFragmentShaderFile() );
         if ( shading_enabled )
         {
             switch ( shading_model.type() )
@@ -632,54 +694,58 @@ void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::createSha
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
 
-            const size_t nsamples = numberOfSamplingPoints();
+            const size_t nsamples = BaseClass::numberOfSamplingPoints();
             frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( nsamples ) );
         }
 
-        auto& shader = occlusionPassShader();
-        shader.build( vert, frag );
+        // Build
+        auto& occl_pass = BaseClass::occlusionPassShader();
+        occl_pass.build( vert, frag );
 
-        const size_t nsamples = numberOfSamplingPoints();
-        const float radius = samplingSphereRadius();
+        // Generate points in sampling sphere
+        const size_t nsamples = BaseClass::numberOfSamplingPoints();
+        const float radius = BaseClass::samplingSphereRadius();
         const size_t dim = 3;
-        const auto sampling_points = generatePoints( radius, nsamples );
-
-        shader.bind();
-//        shader.setUniform( "shading.Ka", shading_model.Ka );
-//        shader.setUniform( "shading.Kd", shading_model.Kd );
-//        shader.setUniform( "shading.Ks", shading_model.Ks );
-//        shader.setUniform( "shading.S",  shading_model.S );
-        shader.setUniform( "sampling_points", sampling_points, dim );
-        shader.unbind();
+        const auto sampling_points = BaseClass::generatePoints( radius, nsamples );
+        occl_pass.bind();
+        occl_pass.setUniform( "sampling_points", sampling_points, dim );
+        occl_pass.unbind();
     }
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Updates shader program.
+ *  @param  shading_model [in] shading model
+ *  @param  shading_enabled [in] shading will be enabled if true
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::updateShaderProgram(
     const kvs::Shader::ShadingModel& shading_model,
     const bool shading_enabled )
 {
-    geometryPassShader().release();
-    occlusionPassShader().release();
-    createShaderProgram( shading_model, shading_enabled );
+    BaseClass::geometryPassShader().release();
+    BaseClass::occlusionPassShader().release();
+    BaseClass::createShaderProgram( shading_model, shading_enabled );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Setups shader program.
+ *  @param  shading_model [in] shading model
+ *  @param  shading_enabled [in] shading will be enabled if true
+ */
+/*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::setupShaderProgram(
     const kvs::Shader::ShadingModel& shading_model )
 {
     BaseClass::setupShaderProgram( shading_model );
 
     // Geometry pass shader
-    {
-        auto& shader = geometryPassShader();
-        kvs::ProgramObject::Binder bind( shader );
-        shader.setUniform( "random_texture_size_inv", 1.0f / m_engine->randomTextureSize() );
-        shader.setUniform( "random_texture", 0 );
-        shader.setUniform( "preintegration_texture", 1 );
-        shader.setUniform( "decomposition_texture", 2 );
-        shader.setUniform( "transfer_function_texture", 3 );
-        shader.setUniform( "T_texture", 4 );
-        shader.setUniform( "invT_texture", 5 );
-    }
+    auto& geom_pass = geometryPassShader();
+    geom_pass.bind();
+    geom_pass.setUniform( "random_texture_size_inv", 1.0f / m_engine->randomTextureSize() );
+    geom_pass.unbind();
 }
 
 } // end of namespace AmbientOcclusionRendering

@@ -15,7 +15,7 @@ namespace AmbientOcclusionRendering
 
 /*===========================================================================*/
 /**
- *  @brief  Stochastic polygon renderer class.
+ *  @brief  SSAO Stochastic polygon renderer class.
  */
 /*===========================================================================*/
 class SSAOStochasticPolygonRenderer : public kvs::StochasticRendererBase
@@ -38,7 +38,7 @@ public:
 
 /*===========================================================================*/
 /**
- *  @brief  Engine class for stochastic polygon renderer.
+ *  @brief  Engine class for SSAO stochastic polygon renderer.
  */
 /*===========================================================================*/
 class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEngine
@@ -47,8 +47,8 @@ class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEng
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
 
 private:
-    float m_polygon_offset; ///< polygon offset
     float m_edge_factor; ///< edge enhancement factor
+    float m_polygon_offset; ///< polygon offset
     BufferObject m_buffer_object; ///< geometry buffer object
     AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 

@@ -69,8 +69,7 @@ private:
     kvs::FrameBufferObject m_entry_exit_framebuffer; ///< framebuffer object for entry/exit point texture
     kvs::VertexBufferObjectManager m_bounding_cube_buffer; ///< bounding cube (VBO)
     kvs::ProgramObject m_bounding_cube_shader; ///< bounding cube shader
-
-    AmbientOcclusionBuffer m_ao_buffer;
+    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
     Engine();

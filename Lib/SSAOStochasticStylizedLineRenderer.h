@@ -16,6 +16,11 @@
 namespace AmbientOcclusionRendering
 {
 
+/*===========================================================================*/
+/**
+ *  @brief  SSAO stochastic stylized line renderer class.
+ */
+/*===========================================================================*/
 class SSAOStochasticStylizedLineRenderer : public kvs::StochasticRendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer, Renderer );
@@ -39,6 +44,11 @@ public:
     size_t numberOfSamplingPoints();
 };
 
+/*===========================================================================*/
+/**
+ *  @brief  Engine class for SSAO stochastic stylized line renderer.
+ */
+/*===========================================================================*/
 class SSAOStochasticStylizedLineRenderer::Engine : public kvs::StochasticRenderingEngine
 {
     using BaseClass = kvs::StochasticRenderingEngine;

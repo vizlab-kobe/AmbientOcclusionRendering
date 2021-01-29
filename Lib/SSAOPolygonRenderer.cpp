@@ -7,6 +7,7 @@
 #include "SSAOPolygonRenderer.h"
 #include <kvs/OpenGL>
 #include <kvs/ProgramObject>
+#include <kvs/IgnoreUnusedVariable>
 
 
 namespace AmbientOcclusionRendering
@@ -19,8 +20,13 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 SSAOPolygonRenderer::SSAOPolygonRenderer()
 {
-    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_geom_pass.vert", "SSAO_geom_pass.frag" );
-    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles(
+        "SSAO_geom_pass.vert",
+        "SSAO_geom_pass.frag" );
+
+    m_ao_buffer.setOcclusionPassShaderFiles(
+        "SSAO_occl_pass.vert",
+        "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -33,6 +39,8 @@ SSAOPolygonRenderer::SSAOPolygonRenderer()
 /*===========================================================================*/
 void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
+    kvs::IgnoreUnusedVariable( light );
+
     BaseClass::startTimer();
     kvs::OpenGL::WithPushedAttrib p( GL_ALL_ATTRIB_BITS );
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
@@ -50,27 +58,26 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     if ( BaseClass::isWindowCreated() )
     {
         BaseClass::setWindowSize( width, height );
-        this->createShaderProgram();
-        this->createFramebuffer( framebuffer_width, framebuffer_height );
+        this->create_shader_program();
+        this->create_framebuffer( framebuffer_width, framebuffer_height );
         BaseClass::createBufferObject( object );
     }
 
     if ( this->isWindowResized( width, height ) )
     {
         BaseClass::setWindowSize( width, height );
-        this->updateFramebuffer( framebuffer_width, framebuffer_height );
+        this->update_framebuffer( framebuffer_width, framebuffer_height );
     }
 
     if ( BaseClass::isObjectChanged( object ) )
     {
-        this->updateShaderProgram();
-        this->updateFramebuffer( framebuffer_width, framebuffer_height );
+        this->update_shader_program();
+        this->update_framebuffer( framebuffer_width, framebuffer_height );
         BaseClass::updateBufferObject( object );
     }
 
-    this->setupShaderProgram();
+    this->setup_shader_program();
 
-    // Ambient occlusion.
     m_ao_buffer.bind();
     BaseClass::drawBufferObject( camera );
     m_ao_buffer.unbind();
@@ -79,27 +86,64 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     BaseClass::stopTimer();
 }
 
-void SSAOPolygonRenderer::createShaderProgram()
+/*===========================================================================*/
+/**
+ *  @brief  Creates AO shader program.
+ */
+/*===========================================================================*/
+void SSAOPolygonRenderer::create_shader_program()
 {
-    m_ao_buffer.createShaderProgram( BaseClass::shadingModel(), BaseClass::isEnabledShading() );
+    m_ao_buffer.createShaderProgram(
+        BaseClass::shadingModel(),
+        BaseClass::isEnabledShading() );
 }
 
-void SSAOPolygonRenderer::updateShaderProgram()
+/*===========================================================================*/
+/**
+ *  @brief  Updates AO shader program.
+ */
+/*===========================================================================*/
+void SSAOPolygonRenderer::update_shader_program()
 {
-    m_ao_buffer.updateShaderProgram( BaseClass::shadingModel(), BaseClass::isEnabledShading() );
+    m_ao_buffer.updateShaderProgram(
+        BaseClass::shadingModel(),
+        BaseClass::isEnabledShading() );
 }
 
-void SSAOPolygonRenderer::setupShaderProgram()
+/*===========================================================================*/
+/**
+ *  @brief  Setups AO shader program.
+ */
+/*===========================================================================*/
+void SSAOPolygonRenderer::setup_shader_program()
 {
     m_ao_buffer.setupShaderProgram( BaseClass::shadingModel() );
 }
 
-void SSAOPolygonRenderer::createFramebuffer( const size_t width, const size_t height )
+/*===========================================================================*/
+/**
+ *  @brief  Creates AO framebuffer object
+ *  @param  width [in] framebuffer width
+ *  @param  height [in] framebuffer height
+ */
+/*===========================================================================*/
+void SSAOPolygonRenderer::create_framebuffer(
+    const size_t width,
+    const size_t height )
 {
     m_ao_buffer.createFramebuffer( width, height );
 }
 
-void SSAOPolygonRenderer::updateFramebuffer( const size_t width, const size_t height )
+/*===========================================================================*/
+/**
+ *  @brief  Updates AO framebuffer object
+ *  @param  width [in] framebuffer width
+ *  @param  height [in] framebuffer height
+ */
+/*===========================================================================*/
+void SSAOPolygonRenderer::update_framebuffer(
+    const size_t width,
+    const size_t height )
 {
     m_ao_buffer.updateFramebuffer( width, height );
 }

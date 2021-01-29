@@ -15,13 +15,18 @@
 namespace AmbientOcclusionRendering
 {
 
+/*===========================================================================*/
+/**
+ *  @brief  SSAO stochastic polygon renderer class.
+ */
+/*===========================================================================*/
 class SSAOStylizedLineRenderer : public kvs::StylizedLineRenderer
 {
     kvsModule( AmbientOcclusionRendering::SSAOStylizedLineRenderer, Renderer );
     kvsModuleBaseClass( kvs::StylizedLineRenderer );
 
 private:
-    AmbientOcclusionBuffer m_ao_buffer;
+    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
     SSAOStylizedLineRenderer();
@@ -35,12 +40,12 @@ public:
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
-    void createShaderProgram();
-    void updateShaderProgram();
-    void setupShaderProgram();
+    void create_shader_program();
+    void update_shader_program();
+    void setup_shader_program();
 
-    void createFramebuffer( const size_t width, const size_t height );
-    void updateFramebuffer( const size_t width, const size_t height );
+    void create_framebuffer( const size_t width, const size_t height );
+    void update_framebuffer( const size_t width, const size_t height );
 };
 
 } // end of namespace AmbientOcclusionRendering

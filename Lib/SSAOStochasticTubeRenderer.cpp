@@ -110,6 +110,7 @@ SSAOStochasticTubeRenderer::Engine::Engine():
     m_ao_buffer.setGeometryPassShaderFiles(
         "SSAO_SR_tube_geom_pass.vert",
         "SSAO_SR_tube_geom_pass.frag" );
+
     m_ao_buffer.setOcclusionPassShaderFiles(
         "SSAO_occl_pass.vert",
         "SSAO_occl_pass.frag" );
@@ -203,22 +204,12 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
     // Setup shader program
     m_ao_buffer.setupShaderProgram( this->shader() );
 
-//    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
-    const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
-//    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-    auto& shader = m_ao_buffer.geometryPassShader();
-    kvs::ProgramObject::Binder bind( shader );
-//    shader.bind();
-//    shader.setUniform( "ModelViewMatrix", M );
-    shader.setUniform( "ProjectionMatrix", P );
-//    shader.setUniform( "NormalMatrix", N );
-//    shader.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-    shader.setUniform( "shape_texture", 0 );
-    shader.setUniform( "diffuse_texture", 1 );
-//    shader.setUniform( "random_texture", 2 );
-//    shader.setUniform( "transfer_function_texture", 3 );
-    shader.setUniform( "edge_factor", m_edge_factor );
-//    shader.unbind();
+    // Setup additional variables in geom pass shader
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    geom_pass.bind();
+    geom_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
+    geom_pass.setUniform( "edge_factor", m_edge_factor );
+    geom_pass.unbind();
 }
 
 void SSAOStochasticTubeRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
@@ -253,11 +244,12 @@ void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineOb
         indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
     }
 
-    auto indices_location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    const auto indices_location = geom_pass.attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, indices_location, 2 );
 
+    const auto values_location = geom_pass.attributeLocation( "value" );
     const auto values = ::QuadVertexValues( line );
-    auto values_location = m_ao_buffer.geometryPassShader().attributeLocation( "value" );
     m_buffer_object.manager().setVertexAttribArray( values, values_location, 1 );
     m_buffer_object.create( line, m_halo_size, m_radius_size );
 }
@@ -274,19 +266,22 @@ void SSAOStochasticTubeRenderer::Engine::draw_buffer_object( const kvs::LineObje
     kvs::OpenGL::Enable( GL_TEXTURE_2D );
 
     // Random factors
-    const size_t size = randomTextureSize();
-    const int count = repetitionCount() * ::RandomNumber();
+    const size_t size = BaseClass::randomTextureSize();
+    const int count = BaseClass::repetitionCount() * ::RandomNumber();
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
 
-//    kvs::ProgramObject::Binder bind2( m_ao_buffer.geometryPassShader() );
-    m_ao_buffer.geometryPassShader().setUniform( "random_offset", random_offset );
-    m_ao_buffer.geometryPassShader().setUniform( "random_texture_size_inv", 1.0f / size );
-    m_ao_buffer.geometryPassShader().setUniform( "random_texture", 2 );
-    m_ao_buffer.geometryPassShader().setUniform( "transfer_function_texture", 3 );
+    // Update variables in geom pass shader
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    geom_pass.setUniform( "shape_texture", 0 );
+    geom_pass.setUniform( "diffuse_texture", 1 );
+    geom_pass.setUniform( "random_texture", 2 );
+    geom_pass.setUniform( "transfer_function_texture", 3 );
+    geom_pass.setUniform( "random_offset", random_offset );
+    geom_pass.setUniform( "random_texture_size_inv", 1.0f / size );
 
-    kvs::Texture::Binder unit2( randomTexture(), 2 );
+    kvs::Texture::Binder unit2( BaseClass::randomTexture(), 2 );
     kvs::Texture::Binder unit3( m_tfunc_texture, 3 );
     m_buffer_object.draw( line );
 }

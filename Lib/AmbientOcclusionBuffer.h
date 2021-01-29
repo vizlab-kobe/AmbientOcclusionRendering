@@ -11,14 +11,12 @@ namespace AmbientOcclusionRendering
 
 /*===========================================================================*/
 /**
- *  @brief  Drawable class for SSAO
+ *  @brief  Ambient occlusion buffer class
  */
 /*===========================================================================*/
 class AmbientOcclusionBuffer
 {
 private:
-    GLuint m_id;
-
     // Geometry pass shader
     std::string m_geom_pass_shader_vert_file; ///< vertex shader file for geometry pass
     std::string m_geom_pass_shader_frag_file; ///< fragment shader file for geometry pass
@@ -29,12 +27,15 @@ private:
     std::string m_occl_pass_shader_frag_file; ///< fragment shader file for occlusion pass
     kvs::ProgramObject m_occl_pass_shader; ///< shader program for occlusion-pass (2nd pass)
 
-    // Framebuffer for SSAO
+    // Framebuffer for AO
+    GLuint m_bound_id; ///< Bound framebuffer ID
     kvs::FrameBufferObject m_framebuffer; ///< framebuffer object
     kvs::Texture2D m_color_texture; ///< color texture
     kvs::Texture2D m_position_texture; ///< texture for storing position information
     kvs::Texture2D m_normal_texture; ///< texture for storing normal vector
     kvs::Texture2D m_depth_texture; ///< depth texture
+
+    // Sampling point parameters
     kvs::Real32 m_sampling_sphere_radius; ///< radius of sphere used for point sampling
     size_t m_nsamples; ///< number of sampling points
 

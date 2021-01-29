@@ -35,58 +35,99 @@ inline void Draw()
 namespace AmbientOcclusionRendering
 {
 
+/*===========================================================================*/
+/**
+ *  @brief  Constructs an ambient occlusion buffer.
+ */
+/*===========================================================================*/
 AmbientOcclusionBuffer::AmbientOcclusionBuffer():
-    m_id( 0 ),
-    m_geom_pass_shader_vert_file("SSAO_geom_pass.vert"),
-    m_geom_pass_shader_frag_file("SSAO_geom_pass.frag"),
-    m_occl_pass_shader_vert_file("SSAO_occl_pass.vert"),
-    m_occl_pass_shader_frag_file("SSAO_occl_pass.frag"),
+    m_geom_pass_shader_vert_file( "SSAO_geom_pass.vert" ),
+    m_geom_pass_shader_frag_file( "SSAO_geom_pass.frag" ),
+    m_occl_pass_shader_vert_file( "SSAO_occl_pass.vert" ),
+    m_occl_pass_shader_frag_file( "SSAO_occl_pass.frag" ),
+    m_bound_id( 0 ),
     m_sampling_sphere_radius( 0.5f ),
     m_nsamples( 256 )
 {
 }
 
-void AmbientOcclusionBuffer::setGeometryPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
+/*===========================================================================*/
+/**
+ *  @brief  Sets geometry pass shader files.
+ *  @param  vert_file [in] vertex shader file
+ *  @param  frag_file [in] fragment shader file
+ */
+/*===========================================================================*/
+void AmbientOcclusionBuffer::setGeometryPassShaderFiles(
+    const std::string& vert_file,
+    const std::string& frag_file )
 {
     m_geom_pass_shader_vert_file = vert_file;
     m_geom_pass_shader_frag_file = frag_file;
 }
 
-void AmbientOcclusionBuffer::setOcclusionPassShaderFiles( const std::string& vert_file, const std::string& frag_file )
+/*===========================================================================*/
+/**
+ *  @brief  Sets occlusion pass shader files.
+ *  @param  vert_file [in] vertex shader file
+ *  @param  frag_file [in] fragment shader file
+ */
+/*===========================================================================*/
+void AmbientOcclusionBuffer::setOcclusionPassShaderFiles(
+    const std::string& vert_file,
+    const std::string& frag_file )
 {
     m_occl_pass_shader_vert_file = vert_file;
     m_occl_pass_shader_frag_file = frag_file;
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Binds AO buffer to draw the object with geom pass shader.
+ */
+/*===========================================================================*/
 void AmbientOcclusionBuffer::bind()
 {
-    // Gaurded bind.
-    m_id = kvs::OpenGL::Integer( GL_FRAMEBUFFER_BINDING );
-    if ( m_id != m_framebuffer.id() ) { m_framebuffer.bind(); }
+    // Gaurded bind the framebuffer
+    m_bound_id = kvs::OpenGL::Integer( GL_FRAMEBUFFER_BINDING );
+    if ( m_bound_id != m_framebuffer.id() ) { m_framebuffer.bind(); }
 
-    // Initialize FBO.
+    // Initialize the framebuffer
     kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-     // Enable MRT rendering.
+     // Enable MRT rendering
     const GLenum buffers[3] = {
         GL_COLOR_ATTACHMENT0_EXT,
         GL_COLOR_ATTACHMENT1_EXT,
         GL_COLOR_ATTACHMENT2_EXT };
     kvs::OpenGL::SetDrawBuffers( 3, buffers );
 
+    // Bind the geom pass shader
     m_geom_pass_shader.bind();
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Unbinds AO buffer.
+ */
+/*===========================================================================*/
 void AmbientOcclusionBuffer::unbind()
 {
+    // Unbind the geom pass shader
     m_geom_pass_shader.unbind();
 
-    if ( m_id != m_framebuffer.id() )
+    // Unbind the framebuffer
+    if ( m_bound_id != m_framebuffer.id() )
     {
-        KVS_GL_CALL( glBindFramebufferEXT( GL_FRAMEBUFFER, m_id ) );
+        KVS_GL_CALL( glBindFramebufferEXT( GL_FRAMEBUFFER, m_bound_id ) );
     }
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Draws AO buffer with the framebuffer.
+ */
+/*===========================================================================*/
 void AmbientOcclusionBuffer::draw()
 {
     kvs::ProgramObject::Binder bind1( m_occl_pass_shader );
@@ -98,17 +139,24 @@ void AmbientOcclusionBuffer::draw()
     m_occl_pass_shader.setUniform( "position_texture", 1 );
     m_occl_pass_shader.setUniform( "normal_texture", 2 );
     m_occl_pass_shader.setUniform( "depth_texture", 3 );
-//    m_occl_pass_shader.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
 
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
     kvs::OpenGL::Enable( GL_TEXTURE_2D );
     ::Draw();
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Releases AO buffer resources.
+ */
+/*===========================================================================*/
 void AmbientOcclusionBuffer::release()
 {
+    // Release geom/occl pass shader resources
     m_geom_pass_shader.release();
     m_occl_pass_shader.release();
+
+    // Release framebuffer resources
     m_framebuffer.release();
     m_color_texture.release();
     m_position_texture.release();
@@ -116,7 +164,16 @@ void AmbientOcclusionBuffer::release()
     m_depth_texture.release();
 }
 
-void AmbientOcclusionBuffer::createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
+/*===========================================================================*/
+/**
+ *  @brief  Creates shader program.
+ *  @param  shading_model [in] shading model
+ *  @param  shading_enabled [in] shading will be enabled if true
+ */
+/*===========================================================================*/
+void AmbientOcclusionBuffer::createShaderProgram(
+    const kvs::Shader::ShadingModel& shading_model,
+    const bool shading_enabled )
 {
     // Build SSAO shader for geometry-pass (1st pass).
     {
@@ -156,25 +213,35 @@ void AmbientOcclusionBuffer::createShaderProgram( const kvs::Shader::ShadingMode
     const auto sampling_points = this->generatePoints( radius, nsamples );
 
     m_occl_pass_shader.bind();
-    // move to 'setupShaderProgram'
-    // {
-//    m_occl_pass_shader.setUniform( "shading.Ka", shading_model.Ka );
-//    m_occl_pass_shader.setUniform( "shading.Kd", shading_model.Kd );
-//    m_occl_pass_shader.setUniform( "shading.Ks", shading_model.Ks );
-//    m_occl_pass_shader.setUniform( "shading.S",  shading_model.S );
-    // }
     m_occl_pass_shader.setUniform( "sampling_points", sampling_points, dim );
     m_occl_pass_shader.unbind();
 }
 
-void AmbientOcclusionBuffer::updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled )
+/*===========================================================================*/
+/**
+ *  @brief  Updates shader program.
+ *  @param  shading_model [in] shading model
+ *  @param  shading_enabled [in] shading will be enabled if true
+ */
+/*===========================================================================*/
+void AmbientOcclusionBuffer::updateShaderProgram(
+    const kvs::Shader::ShadingModel& shading_model,
+    const bool shading_enabled )
 {
     m_geom_pass_shader.release();
     m_occl_pass_shader.release();
     this->createShaderProgram( shading_model, shading_enabled );
 }
 
-void AmbientOcclusionBuffer::setupShaderProgram( const kvs::Shader::ShadingModel& shading_model )
+/*===========================================================================*/
+/**
+ *  @brief  Setups shader program.
+ *  @param  shading_model [in] shading model
+ *  @param  shading_enabled [in] shading will be enabled if true
+ */
+/*===========================================================================*/
+void AmbientOcclusionBuffer::setupShaderProgram(
+    const kvs::Shader::ShadingModel& shading_model )
 {
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
@@ -201,6 +268,13 @@ void AmbientOcclusionBuffer::setupShaderProgram( const kvs::Shader::ShadingModel
     }
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Creates framebuffer object.
+ *  @param  width [in] framebuffer width
+ *  @param  height [in] framebuffer height
+ */
+/*===========================================================================*/
 void AmbientOcclusionBuffer::createFramebuffer( const size_t width, const size_t height )
 {
     m_color_texture.setWrapS( GL_CLAMP_TO_EDGE );
@@ -238,27 +312,45 @@ void AmbientOcclusionBuffer::createFramebuffer( const size_t width, const size_t
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Updates framebuffer object.
+ *  @param  width [in] framebuffer width
+ *  @param  height [in] framebuffer height
+ */
+/*===========================================================================*/
 void AmbientOcclusionBuffer::updateFramebuffer( const size_t width, const size_t height )
 {
+    // Release
     m_color_texture.release();
-    m_color_texture.create( width, height );
-
     m_position_texture.release();
-    m_position_texture.create( width, height );
-
     m_normal_texture.release();
-    m_normal_texture.create( width, height );
-
     m_depth_texture.release();
+
+    // Create
+    m_color_texture.create( width, height );
+    m_position_texture.create( width, height );
+    m_normal_texture.create( width, height );
     m_depth_texture.create( width, height );
 
+    // Attach
     m_framebuffer.attachColorTexture( m_color_texture, 0 );
     m_framebuffer.attachColorTexture( m_position_texture, 1 );
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
 }
 
-kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float radius, const size_t nsamples )
+/*===========================================================================*/
+/**
+ *  @brief  Generates sampling points in a sphere.
+ *  @param  radius [in] radius of the sphere
+ *  @param  nsamples [in] number of sampling points
+ *  @return coordinate value array of sampling points
+ */
+/*===========================================================================*/
+kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
+    const float radius,
+    const size_t nsamples )
 {
     kvs::Xorshift128 rand;
     kvs::ValueArray<GLfloat> sampling_points( 3 * nsamples );
