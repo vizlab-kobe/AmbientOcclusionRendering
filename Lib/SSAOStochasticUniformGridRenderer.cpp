@@ -221,7 +221,6 @@ void SSAOStochasticUniformGridRenderer::Engine::create(
     kvs::Light* light )
 {
     auto* volume = kvs::StructuredVolumeObject::DownCast( object );
-
     BaseClass::attachObject( object );
     BaseClass::createRandomTexture();
 
@@ -269,6 +268,9 @@ void SSAOStochasticUniformGridRenderer::Engine::update(
     // Update buffer object
     this->update_volume_texture( volume );
     this->update_bounding_cube_buffer( volume );
+
+    // Update transfer function texture
+    this->update_transfer_function_texture();
 }
 
 /*===========================================================================*/
@@ -285,12 +287,7 @@ void SSAOStochasticUniformGridRenderer::Engine::setup(
     kvs::Light* light )
 {
     m_random_index = m_ao_buffer.geometryPassShader().attributeLocation("random_index");
-
-    if ( m_transfer_function_changed )
-    {
-        m_transfer_function_texture.release();
-        this->create_transfer_function_texture();
-    }
+    if ( m_transfer_function_changed ) { this->update_transfer_function_texture(); }
 
     // Setup shader program
     m_ao_buffer.setupShaderProgram( this->shader() );
@@ -474,8 +471,8 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program(
 void SSAOStochasticUniformGridRenderer::Engine::update_shader_program(
     const kvs::StructuredVolumeObject* volume )
 {
-    m_ao_buffer.updateShaderProgram( this->shader(), this->isEnabledShading() );
-
+    m_ao_buffer.geometryPassShader().release();
+    m_ao_buffer.occlusionPassShader().release();
     m_bounding_cube_shader.release();
     this->create_shader_program( volume );
 }
@@ -631,6 +628,12 @@ void SSAOStochasticUniformGridRenderer::Engine::create_transfer_function_texture
     m_transfer_function_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT  );
     m_transfer_function_texture.create( width, table.data() );
     m_transfer_function_changed = false;
+}
+
+void SSAOStochasticUniformGridRenderer::Engine::update_transfer_function_texture()
+{
+    m_transfer_function_texture.release();
+    this->create_transfer_function_texture();
 }
 
 /*===========================================================================*/

@@ -130,7 +130,6 @@ void SSAOStochasticTubeRenderer::Engine::create(
     kvs::Light* light )
 {
     auto* line = kvs::LineObject::DownCast( object );
-
     BaseClass::attachObject( line );
     BaseClass::createRandomTexture();
 
@@ -148,33 +147,6 @@ void SSAOStochasticTubeRenderer::Engine::create(
 
     // Create transfer function texture
     this->create_transfer_function_texture();
-
-    kvs::Real32 min_value = 0.0f;
-    kvs::Real32 max_value = 0.0f;
-    if ( m_tfunc.hasRange() )
-    {
-        min_value = m_tfunc.minValue();
-        max_value = m_tfunc.maxValue();
-    }
-    else
-    {
-        const kvs::LineObject* line = kvs::LineObject::DownCast( object );
-        const kvs::ValueArray<kvs::Real32>& values = line->sizes();
-        min_value = values[0];
-        max_value = values[1];
-        for ( size_t i = 0; i < values.size(); i++ )
-        {
-            min_value = kvs::Math::Min( min_value, values[i] );
-            max_value = kvs::Math::Max( max_value, values[i] );
-        }
-    }
-
-    // Set min/max value to the geometry pass shader
-    auto& shader = m_ao_buffer.geometryPassShader();
-    shader.bind();
-    shader.setUniform( "min_value", min_value );
-    shader.setUniform( "max_value", max_value );
-    shader.unbind();
 }
 
 void SSAOStochasticTubeRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
@@ -190,16 +162,15 @@ void SSAOStochasticTubeRenderer::Engine::update( kvs::ObjectBase* object, kvs::C
 
     // Update buffer object
     this->update_buffer_object( kvs::LineObject::DownCast( object ) );
+
+    // Update transfer function texture
+    this->update_transfer_function_texture();
 }
 
 void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
     // Setup transfer function texture
-    if ( m_tfunc_changed )
-    {
-        m_tfunc_texture.release();
-        this->create_transfer_function_texture();
-    }
+    if ( m_tfunc_changed ) { this->update_transfer_function_texture(); }
 
     // Setup shader program
     m_ao_buffer.setupShaderProgram( this->shader() );
@@ -223,13 +194,46 @@ void SSAOStochasticTubeRenderer::Engine::draw( kvs::ObjectBase* object, kvs::Cam
 void SSAOStochasticTubeRenderer::Engine::create_transfer_function_texture()
 {
     const size_t width = m_tfunc.resolution();
-    const kvs::ValueArray<kvs::Real32> table = m_tfunc.table();
+    const auto table = m_tfunc.table();
     m_tfunc_texture.setWrapS( GL_CLAMP_TO_EDGE );
     m_tfunc_texture.setMagFilter( GL_LINEAR );
     m_tfunc_texture.setMinFilter( GL_LINEAR );
     m_tfunc_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT  );
     m_tfunc_texture.create( width, table.data() );
     m_tfunc_changed = false;
+
+    kvs::Real32 min_value = 0.0f;
+    kvs::Real32 max_value = 0.0f;
+    if ( m_tfunc.hasRange() )
+    {
+        min_value = m_tfunc.minValue();
+        max_value = m_tfunc.maxValue();
+    }
+    else
+    {
+        const auto* line = kvs::LineObject::DownCast( BaseClass::object() );
+        const auto& values = line->sizes();
+        min_value = values[0];
+        max_value = values[1];
+        for ( size_t i = 0; i < values.size(); i++ )
+        {
+            min_value = kvs::Math::Min( min_value, values[i] );
+            max_value = kvs::Math::Max( max_value, values[i] );
+        }
+    }
+
+    // Set min/max value to the geometry pass shader
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    geom_pass.bind();
+    geom_pass.setUniform( "min_value", min_value );
+    geom_pass.setUniform( "max_value", max_value );
+    geom_pass.unbind();
+}
+
+void SSAOStochasticTubeRenderer::Engine::update_transfer_function_texture()
+{
+    m_tfunc_texture.release();
+    this->create_transfer_function_texture();
 }
 
 void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineObject* line )

@@ -78,6 +78,7 @@ public:
 
 private:
     void create_transfer_function_texture();
+    void update_transfer_function_texture();
 
     void create_buffer_object( const kvs::LineObject* line );
     void update_buffer_object( const kvs::LineObject* line );

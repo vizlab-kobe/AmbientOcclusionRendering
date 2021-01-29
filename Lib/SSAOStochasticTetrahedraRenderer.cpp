@@ -403,6 +403,12 @@ void SSAOStochasticTetrahedraRenderer::Engine::update(
 
     // Update buffer object
     this->update_buffer_object( kvs::UnstructuredVolumeObject::DownCast( object ) );
+
+    m_preintegration_texture.release();
+    m_transfer_function_texture.release();
+    m_T_texture.release();
+    m_inv_T_texture.release();
+    this->create_preintegration_texture();
 }
 
 /*===========================================================================*/
@@ -726,7 +732,7 @@ void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::updateSha
 {
     BaseClass::geometryPassShader().release();
     BaseClass::occlusionPassShader().release();
-    BaseClass::createShaderProgram( shading_model, shading_enabled );
+    this->createShaderProgram( shading_model, shading_enabled );
 }
 
 /*===========================================================================*/

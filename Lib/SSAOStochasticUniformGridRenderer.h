@@ -106,6 +106,7 @@ private:
     void update_bounding_cube_buffer( const kvs::StructuredVolumeObject* volume );
 
     void create_transfer_function_texture();
+    void update_transfer_function_texture();
 
     void create_framebuffer( const size_t width, const size_t height );
     void update_framebuffer( const size_t width, const size_t height );
