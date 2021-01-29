@@ -28,7 +28,8 @@
 /*===========================================================================*/
 struct Model
 {
-    using EESSAORenderer = local::SSAOStochasticPolygonRenderer;
+//    using EESSAORenderer = local::SSAOStochasticPolygonRenderer;
+    using EESSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using EERenderer = local::StochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;

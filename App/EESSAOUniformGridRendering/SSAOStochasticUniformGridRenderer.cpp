@@ -93,7 +93,8 @@ kvs::AnyValueArray SignedToUnsigned( const kvs::StructuredVolumeObject* volume )
 } // end of namespace
 
 
-namespace AmbientOcclusionRendering
+//namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -773,4 +774,5 @@ void SSAOStochasticUniformGridRenderer::Engine::draw_buffer_object(
     this->draw_quad();
 }
 
-} // end of namespace AmbientOcclusionRendering
+//} // end of namespace AmbientOcclusionRendering
+} // end of namespace local

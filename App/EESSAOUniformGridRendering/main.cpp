@@ -14,6 +14,7 @@
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/PaintEventListener>
 
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticUniformGridRenderer.h>
 
 /*===========================================================================*/
 /**
@@ -22,6 +23,7 @@
 /*===========================================================================*/
 struct Model
 {
+//    using SSAORenderer = local::SSAOStochasticUniformGridRenderer;
     using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticUniformGridRenderer;
     using Renderer = kvs::StochasticUniformGridRenderer;
 

@@ -18,7 +18,8 @@
 #include <AmbientOcclusionRendering/Lib/AmbientOcclusionBuffer.h>
 
 
-namespace AmbientOcclusionRendering
+//namespace AmbientOcclusionRendering
+namespace local
 {
 
 /*===========================================================================*/
@@ -28,7 +29,8 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 class SSAOStochasticUniformGridRenderer : public kvs::StochasticRendererBase
 {
-    kvsModule( AmbientOcclusionRendering::SSAOStochasticUniformGridRenderer, Renderer );
+//    kvsModule( AmbientOcclusionRendering::SSAOStochasticUniformGridRenderer, Renderer );
+    kvsModule( local::SSAOStochasticUniformGridRenderer, Renderer );
     kvsModuleBaseClass( kvs::StochasticRendererBase );
 
 public:
@@ -68,7 +70,8 @@ private:
     kvs::ProgramObject m_bounding_cube_shader; ///< bounding cube shader
     float m_edge_factor;
 
-    AmbientOcclusionBuffer m_ao_buffer;
+//    AmbientOcclusionBuffer m_ao_buffer;
+    AmbientOcclusionRendering::AmbientOcclusionBuffer m_ao_buffer;
 
 public:
     Engine();
@@ -106,4 +109,5 @@ private:
     void draw_buffer_object( const kvs::StructuredVolumeObject* volume );
 };
 
-} // end of namespace AmbientOcclusionRendering
+//} // end of namespace AmbientOcclusionRendering
+} // end of namespace local

@@ -232,8 +232,8 @@ int main( int argc, char** argv )
       auto* scene = screen.scene();
       auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
       renderer->setEdgeFactor( edge );
-      renderer->setName( "PolygonRenderer" );
-        screen.scene()->replaceRenderer( "PolygonRenderer", renderer );
+//      renderer->setName( "PolygonRenderer" );
+//        screen.scene()->replaceRenderer( "PolygonRenderer", renderer );
     } );
 
     kvs::KeyPressEventListener h_key;

@@ -8,6 +8,8 @@
 #include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
 #include "SSAOStochasticTubeRenderer.h"
 
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
+
 
 namespace local
 {
@@ -18,7 +20,8 @@ private:
     mutable kvs::StructuredVolumeObject* m_cached_volume;
 
 public:
-    using SSAORenderer = local::SSAOStochasticTubeRenderer;
+//    using SSAORenderer = local::SSAOStochasticTubeRenderer;
+    using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticTubeRenderer;
     using NoSSAORenderer = StochasticStreamline::StochasticTubeRenderer;
 
 public:
