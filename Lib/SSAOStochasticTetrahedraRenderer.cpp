@@ -202,6 +202,11 @@ SSAOStochasticTetrahedraRenderer::SSAOStochasticTetrahedraRenderer():
 {
 }
 
+void SSAOStochasticTetrahedraRenderer::setEdgeFactor( const float factor )
+{
+    static_cast<Engine&>( engine() ).setEdgeFactor( factor );
+}
+
 /*===========================================================================*/
 /**
  *  @brief  Sets a transfer function.
@@ -260,13 +265,19 @@ size_t SSAOStochasticTetrahedraRenderer::numberOfSamplingPoints() const
  */
 /*===========================================================================*/
 SSAOStochasticTetrahedraRenderer::Engine::Engine():
+    m_edge_factor( 0.0f ),
     m_transfer_function_changed( true ),
     m_sampling_step( 1.0f ),
     m_maxT( 0.0f ),
     m_ao_buffer( this )
 {
-    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_tetrahedra_geom_pass.vert", "SSAO_SR_tetrahedra_geom_pass.geom", "SSAO_SR_tetrahedra_geom_pass.frag" );
-    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles(
+        "SSAO_SR_tetrahedra_geom_pass.vert",
+        "SSAO_SR_tetrahedra_geom_pass.geom",
+        "SSAO_SR_tetrahedra_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles(
+        "SSAO_occl_pass.vert",
+        "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -276,13 +287,18 @@ SSAOStochasticTetrahedraRenderer::Engine::Engine():
 /*===========================================================================*/
 void SSAOStochasticTetrahedraRenderer::Engine::release()
 {
-    m_vbo_manager.release();
+    // Release transfer function resources
     m_preintegration_texture.release();
     m_decomposition_texture.release();
     m_transfer_function_texture.release();
     m_T_texture.release();
     m_inv_T_texture.release();
     m_transfer_function_changed = true;
+
+    // Release buffer object resources
+    m_vbo_manager.release();
+
+    // Release AO buffer resources
     m_ao_buffer.release();
 }
 
@@ -299,17 +315,24 @@ void SSAOStochasticTetrahedraRenderer::Engine::create(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    kvs::UnstructuredVolumeObject* volume = kvs::UnstructuredVolumeObject::DownCast( object );
+    auto* volume = kvs::UnstructuredVolumeObject::DownCast( object );
 
+    BaseClass::attachObject( object );
+    BaseClass::createRandomTexture();
+
+    // Create shader program
+    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
+
+    // Create framebuffer
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-
-    attachObject( object );
-    createRandomTexture();
-    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
     m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
+
+    // Create buffer object
     this->create_buffer_object( volume );
+
+    // Create transfer function textures
     this->create_preintegration_texture();
     this->create_decomposition_texture();
 }
@@ -327,10 +350,17 @@ void SSAOStochasticTetrahedraRenderer::Engine::update(
     kvs::Camera* camera,
     kvs::Light* light )
 {
+    // Update shader program
+    m_ao_buffer.updateShaderProgram( this->shader(), this->isEnabledShading() );
+
+    // Update framebuffer
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
     m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
+
+    // Update buffer object
+    this->update_buffer_object( kvs::UnstructuredVolumeObject::DownCast( object ) );
 }
 
 /*===========================================================================*/
@@ -346,6 +376,9 @@ void SSAOStochasticTetrahedraRenderer::Engine::setup(
     kvs::Camera* camera,
     kvs::Light* light )
 {
+    // Setup shader program
+    m_ao_buffer.setupShaderProgram( this->shader() );
+
     if ( m_transfer_function_changed )
     {
         // Re-create pre-integration table.
@@ -359,16 +392,17 @@ void SSAOStochasticTetrahedraRenderer::Engine::setup(
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
     const kvs::Mat4 PM_inverse = PM.inverted();
-    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+//    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
     auto& shader = m_ao_buffer.geometryPassShader();
     shader.bind();
-    shader.setUniform( "ModelViewMatrix", M );
-    shader.setUniform( "ModelViewProjectionMatrix", PM );
+//    shader.setUniform( "ModelViewMatrix", M );
+//    shader.setUniform( "ModelViewProjectionMatrix", PM );
     shader.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
-    shader.setUniform( "NormalMatrix", N );
+//    shader.setUniform( "NormalMatrix", N );
     shader.setUniform( "maxT", m_maxT );
     shader.setUniform( "sampling_step_inv", 1.0f / m_sampling_step );
     shader.setUniform( "delta", 0.5f / m_transfer_function.resolution() );
+    shader.setUniform( "edge_factor", m_edge_factor );
     shader.unbind();
 }
 
@@ -389,38 +423,6 @@ void SSAOStochasticTetrahedraRenderer::Engine::draw(
     this->draw_buffer_object( kvs::UnstructuredVolumeObject::DownCast( object ) );
     m_ao_buffer.unbind();
     m_ao_buffer.draw();
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Create buffer objects.
- *  @param  volume [in] pointer to the volume object
- */
-/*===========================================================================*/
-void SSAOStochasticTetrahedraRenderer::Engine::create_buffer_object( const kvs::UnstructuredVolumeObject* volume )
-{
-    if ( volume->cellType() != kvs::UnstructuredVolumeObject::Tetrahedra )
-    {
-        kvsMessageError("Not supported cell type.");
-        return;
-    }
-
-    if ( volume->veclen() != 1 )
-    {
-        kvsMessageError("Not scalar volume.");
-        return;
-    }
-
-    const kvs::ValueArray<kvs::UInt16> indices = ::RandomIndices( volume, randomTextureSize() );
-    const kvs::ValueArray<kvs::Real32> values = ::NormalizedValues( volume );
-    const kvs::ValueArray<kvs::Real32> coords = volume->coords();
-    const kvs::ValueArray<kvs::Real32> normals = ::VertexNormals( volume );
-    m_vbo_manager.setVertexAttribArray( indices, m_ao_buffer.geometryPassShader().attributeLocation( "random_index" ), 2 );
-    m_vbo_manager.setVertexAttribArray( values, m_ao_buffer.geometryPassShader().attributeLocation( "value" ), 1 );
-    m_vbo_manager.setVertexArray( coords, 3 );
-    m_vbo_manager.setNormalArray( normals );
-    m_vbo_manager.setIndexArray( volume->connections() );
-    m_vbo_manager.create();
 }
 
 /*===========================================================================*/
@@ -498,6 +500,45 @@ void SSAOStochasticTetrahedraRenderer::Engine::create_decomposition_texture()
     m_decomposition_texture.create( 81, 1, table.data() );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Create buffer objects.
+ *  @param  volume [in] pointer to the volume object
+ */
+/*===========================================================================*/
+void SSAOStochasticTetrahedraRenderer::Engine::create_buffer_object( const kvs::UnstructuredVolumeObject* volume )
+{
+    if ( volume->cellType() != kvs::UnstructuredVolumeObject::Tetrahedra )
+    {
+        kvsMessageError("Not supported cell type.");
+        return;
+    }
+
+    if ( volume->veclen() != 1 )
+    {
+        kvsMessageError("Not scalar volume.");
+        return;
+    }
+
+    const kvs::ValueArray<kvs::UInt16> indices = ::RandomIndices( volume, randomTextureSize() );
+    const kvs::ValueArray<kvs::Real32> values = ::NormalizedValues( volume );
+    const kvs::ValueArray<kvs::Real32> coords = volume->coords();
+    const kvs::ValueArray<kvs::Real32> normals = ::VertexNormals( volume );
+    m_vbo_manager.setVertexAttribArray( indices, m_ao_buffer.geometryPassShader().attributeLocation( "random_index" ), 2 );
+    m_vbo_manager.setVertexAttribArray( values, m_ao_buffer.geometryPassShader().attributeLocation( "value" ), 1 );
+    m_vbo_manager.setVertexArray( coords, 3 );
+    m_vbo_manager.setNormalArray( normals );
+    m_vbo_manager.setIndexArray( volume->connections() );
+    m_vbo_manager.create();
+}
+
+void SSAOStochasticTetrahedraRenderer::Engine::update_buffer_object( const kvs::UnstructuredVolumeObject* volume )
+{
+//    m_buffer_object.release();
+    m_vbo_manager.release();
+    this->create_buffer_object( volume );
+}
+
 void SSAOStochasticTetrahedraRenderer::Engine::draw_buffer_object(
     const kvs::UnstructuredVolumeObject* volume )
 {
@@ -559,6 +600,7 @@ void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::createSha
         // Build shaders.
         shader.build( vert, geom, frag );
 
+        /*
         shader.bind();
         shader.setUniform( "random_texture_size_inv", 1.0f / m_engine->randomTextureSize() );
         shader.setUniform( "random_texture", 0 );
@@ -568,6 +610,7 @@ void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::createSha
         shader.setUniform( "T_texture", 4 );
         shader.setUniform( "invT_texture", 5 );
         shader.unbind();
+        */
     }
 
     // Build SSAO shader for occlusion-pass (2nd pass).
@@ -602,10 +645,10 @@ void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::createSha
         const auto sampling_points = generatePoints( radius, nsamples );
 
         shader.bind();
-        shader.setUniform( "shading.Ka", shading_model.Ka );
-        shader.setUniform( "shading.Kd", shading_model.Kd );
-        shader.setUniform( "shading.Ks", shading_model.Ks );
-        shader.setUniform( "shading.S",  shading_model.S );
+//        shader.setUniform( "shading.Ka", shading_model.Ka );
+//        shader.setUniform( "shading.Kd", shading_model.Kd );
+//        shader.setUniform( "shading.Ks", shading_model.Ks );
+//        shader.setUniform( "shading.S",  shading_model.S );
         shader.setUniform( "sampling_points", sampling_points, dim );
         shader.unbind();
     }
@@ -618,6 +661,25 @@ void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::updateSha
     geometryPassShader().release();
     occlusionPassShader().release();
     createShaderProgram( shading_model, shading_enabled );
+}
+
+void SSAOStochasticTetrahedraRenderer::Engine::AmbientOcclusionBuffer::setupShaderProgram(
+    const kvs::Shader::ShadingModel& shading_model )
+{
+    BaseClass::setupShaderProgram( shading_model );
+
+    // Geometry pass shader
+    {
+        auto& shader = geometryPassShader();
+        kvs::ProgramObject::Binder bind( shader );
+        shader.setUniform( "random_texture_size_inv", 1.0f / m_engine->randomTextureSize() );
+        shader.setUniform( "random_texture", 0 );
+        shader.setUniform( "preintegration_texture", 1 );
+        shader.setUniform( "decomposition_texture", 2 );
+        shader.setUniform( "transfer_function_texture", 3 );
+        shader.setUniform( "T_texture", 4 );
+        shader.setUniform( "invT_texture", 5 );
+    }
 }
 
 } // end of namespace AmbientOcclusionRendering

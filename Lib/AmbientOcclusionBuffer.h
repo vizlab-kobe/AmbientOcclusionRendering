@@ -70,6 +70,7 @@ public:
 
     void createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
     void updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
+    void setupShaderProgram( const kvs::Shader::ShadingModel& shading_model );
     void createFramebuffer( const size_t width, const size_t height );
     void updateFramebuffer( const size_t width, const size_t height );
     void renderOcclusionPass() { this->draw(); }

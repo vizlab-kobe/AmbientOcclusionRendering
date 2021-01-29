@@ -26,6 +26,7 @@ public:
 
 public:
     SSAOStochasticStylizedLineRenderer();
+    void setEdgeFactor( const float factor );
     /*KVS_DEPRECATED*/ void setOpacity( const kvs::UInt8 opacity );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
@@ -40,17 +41,16 @@ public:
 
 class SSAOStochasticStylizedLineRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::StylizedLineRenderer::BufferObject;
 
 private:
+    float m_edge_factor; ///< edge enhancement factor
     kvs::UInt8 m_line_opacity; ///< line opacity
-
-    kvs::Real32 m_radius_size;
-    kvs::Real32 m_halo_size;
-    BufferObject m_buffer_object;
-
-    // SSAO
-    AmbientOcclusionBuffer m_ao_buffer;
+    kvs::Real32 m_radius_size; ///< radius size of tube
+    kvs::Real32 m_halo_size; ///< halo size of tube
+    BufferObject m_buffer_object; ///< geometry buffer object
+    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
     Engine();
@@ -60,7 +60,7 @@ public:
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
-public:
+    void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
     void setOpacity( const kvs::UInt8 opacity ){ m_line_opacity = opacity; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
     void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
@@ -74,6 +74,7 @@ public:
 
 private:
     void create_buffer_object( const kvs::LineObject* line );
+    void update_buffer_object( const kvs::LineObject* line );
     void draw_buffer_object( const kvs::LineObject* line );
 };
 

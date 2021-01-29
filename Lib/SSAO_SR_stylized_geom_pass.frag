@@ -39,6 +39,7 @@ uniform sampler2D random_texture; // random texture to generate random number
 uniform float random_texture_size_inv; // reciprocal value of the random texture size
 uniform vec2 random_offset; // offset values for accessing to the random texture
 uniform float opacity; // opacity value
+uniform float edge_factor; // edge enhancement factor
 
 
 /*===========================================================================*/
@@ -62,17 +63,28 @@ vec2 RandomIndex( in vec2 p )
 /*===========================================================================*/
 void main()
 {
-    if ( opacity == 0.0 ) { discard; return; }
-
-    // Stochastic color assignment.
-    float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
-    if ( R > opacity ) { discard; return; }
+    float alpha = opacity;
+    if ( alpha == 0.0 ) { discard; return; }
 
     vec2 tcd = coord.xy;
     tcd.x = ( coord.x / coord.z ) * 0.5 + 0.5;
 
     vec3 tex = LookupTexture2D( shape_texture, tcd.xy ).xyz;
     tex.x = tex.x * 2.0 - 1.0;
+
+    vec3 normal = side_vec * tex.x - tex.y * up_vec;
+
+    // Edge enhancement
+    if ( edge_factor > 0.0 )
+    {
+        vec3 N = normalize( normal );
+        vec3 E = normalize( -position );
+        alpha = min( 1.0, alpha / pow( abs( dot( N, E ) ), edge_factor ) );
+    }
+
+    // Stochastic color assignment.
+    float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
+    if ( R > alpha ) { discard; return; }
 
     vec4 color;
     if ( tcd.x < 0.0 || tcd.x > 1.0 )
@@ -83,8 +95,6 @@ void main()
     {
         color = diffuse * LookupTexture2D( diffuse_texture, tcd.xy );
     }
-
-    vec3 normal = side_vec * tex.x - tex.y * up_vec;
 
     gl_FragData[0] = color;
     gl_FragData[1] = vec4( position.xyz, 1.0 );

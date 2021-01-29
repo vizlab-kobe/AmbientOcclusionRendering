@@ -28,7 +28,8 @@ public:
 
 public:
     SSAOStochasticPolygonRenderer();
-    void setPolygonOffset( const float polygon_offset );
+    void setPolygonOffset( const float offset );
+    void setEdgeFactor( const float factor );
     void setSamplingSphereRadius( const float radius );
     void setNumberOfSamplingPoints( const size_t nsamples );
     kvs::Real32 samplingSphereRadius() const;
@@ -42,12 +43,14 @@ public:
 /*===========================================================================*/
 class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
 
 private:
     float m_polygon_offset; ///< polygon offset
-    BufferObject m_buffer_object;
-    AmbientOcclusionBuffer m_ao_buffer;
+    float m_edge_factor; ///< edge enhancement factor
+    BufferObject m_buffer_object; ///< geometry buffer object
+    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
     Engine();
@@ -57,6 +60,7 @@ public:
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
+    void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
 
     void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
@@ -64,8 +68,8 @@ public:
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
-    void create_shader_program();
     void create_buffer_object( const kvs::PolygonObject* polygon );
+    void update_buffer_object( const kvs::PolygonObject* polygon );
     void draw_buffer_object( const kvs::PolygonObject* polygon );
 };
 

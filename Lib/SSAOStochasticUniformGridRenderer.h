@@ -36,6 +36,7 @@ public:
 
 public:
     SSAOStochasticUniformGridRenderer();
+    void setEdgeFactor( const float factor );
     void setSamplingStep( const float step );
     void setTransferFunction( const kvs::TransferFunction& transfer_function );
     const kvs::TransferFunction& transferFunction() const;
@@ -53,7 +54,10 @@ public:
 /*===========================================================================*/
 class SSAOStochasticUniformGridRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BaseClass = kvs::StochasticRenderingEngine;
+
 private:
+    float m_edge_factor; ///< edge enhancement factor
     size_t m_random_index; ///< index used for refering the random texture
     float m_step; ///< sampling step
     bool m_transfer_function_changed; ///< flag for changin transfer function
@@ -76,6 +80,7 @@ public:
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
+    void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
     void setSamplingStep( const float step ) { m_step = step; }
     void setTransferFunction( const kvs::TransferFunction& transfer_function )
     {
@@ -93,11 +98,19 @@ public:
 
 private:
     void create_shader_program( const kvs::StructuredVolumeObject* volume );
+    void update_shader_program( const kvs::StructuredVolumeObject* volume );
+
     void create_volume_texture( const kvs::StructuredVolumeObject* volume );
-    void create_transfer_function_texture();
+    void update_volume_texture( const kvs::StructuredVolumeObject* volume );
+
     void create_bounding_cube_buffer( const kvs::StructuredVolumeObject* volume );
+    void update_bounding_cube_buffer( const kvs::StructuredVolumeObject* volume );
+
+    void create_transfer_function_texture();
+
     void create_framebuffer( const size_t width, const size_t height );
     void update_framebuffer( const size_t width, const size_t height );
+
     void draw_bounding_cube_buffer();
     void draw_quad();
     void draw_buffer_object( const kvs::StructuredVolumeObject* volume );

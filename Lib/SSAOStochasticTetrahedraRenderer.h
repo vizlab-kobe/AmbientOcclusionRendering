@@ -42,6 +42,7 @@ public:
 
 public:
     SSAOStochasticTetrahedraRenderer();
+    void setEdgeFactor( const float factor );
     void setTransferFunction( const kvs::TransferFunction& transfer_function );
     void setSamplingStep( const float sampling_step );
     const kvs::TransferFunction& transferFunction() const;
@@ -59,9 +60,12 @@ public:
 /*===========================================================================*/
 class SSAOStochasticTetrahedraRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BaseClass = kvs::StochasticRenderingEngine;
+
 private:
     class AmbientOcclusionBuffer : public AmbientOcclusionRendering::AmbientOcclusionBuffer
     {
+        using BaseClass = AmbientOcclusionRendering::AmbientOcclusionBuffer;
     private:
         const Engine* m_engine;
         std::string m_geom_pass_shader_geom_file;
@@ -72,9 +76,11 @@ private:
         void setGeometryPassShaderFiles( const std::string& vert_file, const std::string& geom_file, const std::string& frag_file );
         void createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
         void updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
+        void setupShaderProgram( const kvs::Shader::ShadingModel& shading_model );
     };
 
 private:
+    float m_edge_factor; ///< edge enhancement factor
     bool m_transfer_function_changed; ///< flag for changin transfer function
     kvs::TransferFunction m_transfer_function; ///< transfer function
     kvs::Texture2D m_preintegration_texture; ///< pre-integration texture
@@ -96,6 +102,7 @@ public:
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
+    void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
     void setSamplingStep( const float sampling_step ) { m_sampling_step = sampling_step; }
     void setTransferFunction( const kvs::TransferFunction& transfer_function )
     {
@@ -112,9 +119,10 @@ public:
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
-    void create_buffer_object( const kvs::UnstructuredVolumeObject* volume );
     void create_preintegration_texture();
     void create_decomposition_texture();
+    void create_buffer_object( const kvs::UnstructuredVolumeObject* volume );
+    void update_buffer_object( const kvs::UnstructuredVolumeObject* volume );
     void draw_buffer_object( const kvs::UnstructuredVolumeObject* volume );
 };
 

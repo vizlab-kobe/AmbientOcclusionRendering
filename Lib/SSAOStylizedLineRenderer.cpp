@@ -17,17 +17,12 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 SSAOStylizedLineRenderer::SSAOStylizedLineRenderer()
 {
-    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_stylized_geom_pass.vert", "SSAO_stylized_geom_pass.frag" );
-    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_occl_pass.vert", "SSAO_occl_pass.frag" );
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Destroys the SSAOStylizedLineRenderer class.
- */
-/*===========================================================================*/
-SSAOStylizedLineRenderer::~SSAOStylizedLineRenderer()
-{
+    m_ao_buffer.setGeometryPassShaderFiles(
+        "SSAO_stylized_geom_pass.vert",
+        "SSAO_stylized_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles(
+        "SSAO_occl_pass.vert",
+        "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -53,9 +48,9 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     if ( BaseClass::isWindowCreated() )
     {
         BaseClass::setWindowSize( width, height );
-        BaseClass::createBufferObject( object );
         this->createShaderProgram();
         this->createFramebuffer( framebuffer_width, framebuffer_height );
+        BaseClass::createBufferObject( object );
     }
 
     if ( this->isWindowResized( width, height ) )
@@ -66,9 +61,9 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
 
     if ( BaseClass::isObjectChanged( object ) )
     {
-        BaseClass::updateBufferObject( object );
         this->updateShaderProgram();
         this->updateFramebuffer( framebuffer_width, framebuffer_height );
+        BaseClass::updateBufferObject( object );
     }
 
     this->setupShaderProgram();
@@ -94,13 +89,15 @@ void SSAOStylizedLineRenderer::updateShaderProgram()
 
 void SSAOStylizedLineRenderer::setupShaderProgram()
 {
-    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    m_ao_buffer.setupShaderProgram( BaseClass::shadingModel() );
+
+//    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
-    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+//    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
     m_ao_buffer.geometryPassShader().bind();
-    m_ao_buffer.geometryPassShader().setUniform( "ModelViewMatrix", M );
+//    m_ao_buffer.geometryPassShader().setUniform( "ModelViewMatrix", M );
     m_ao_buffer.geometryPassShader().setUniform( "ProjectionMatrix", P );
-    m_ao_buffer.geometryPassShader().setUniform( "NormalMatrix", N );
+//    m_ao_buffer.geometryPassShader().setUniform( "NormalMatrix", N );
     m_ao_buffer.geometryPassShader().setUniform( "shape_texture", 0 );
     m_ao_buffer.geometryPassShader().setUniform( "diffuse_texture", 1 );
     m_ao_buffer.geometryPassShader().unbind();

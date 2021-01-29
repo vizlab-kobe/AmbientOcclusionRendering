@@ -25,7 +25,7 @@ private:
 
 public:
     SSAOStylizedLineRenderer();
-    virtual ~SSAOStylizedLineRenderer();
+    virtual ~SSAOStylizedLineRenderer() {}
 
     void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 

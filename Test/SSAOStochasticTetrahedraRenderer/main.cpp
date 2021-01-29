@@ -29,6 +29,7 @@ struct Model
     float radius; ///< radius of point sampling region for SSAO
     int points; ///< number of points used for SSAO
     kvs::TransferFunction tfunc; ///< transfer function
+    float edge; ///< edge enhancement factor
 
     kvs::UnstructuredVolumeObject* import( const std::string& filename )
     {
@@ -49,6 +50,7 @@ struct Model
             renderer->enableShading();
             renderer->setSamplingSphereRadius( radius );
             renderer->setNumberOfSamplingPoints( points );
+            renderer->setEdgeFactor( edge );
             return renderer;
         }
         else
@@ -90,6 +92,7 @@ int main( int argc, char** argv )
     model.radius = 0.5;
     model.points = 256;
     model.tfunc = kvs::TransferFunction( kvs::ColorMap::BrewerSpectral( 256 ) );
+    model.edge = 0.0f;
 
     // Visualization pipeline.
     const std::string filename = argv[1];
@@ -197,6 +200,24 @@ int main( int argc, char** argv )
         {
             screen.scene()->replaceRenderer( "Renderer", model.renderer() );
         }
+    } );
+
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::ToString( model.edge ) );
+    edge_slider.setValue( model.edge );
+    edge_slider.setRange( 0.0, 5.0 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &points_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        float v = int( edge_slider.value() * 10 ) * 0.1f;
+        model.edge = v;
+        edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
     } );
 
     kvs::TransferFunctionEditor editor( &screen );

@@ -106,6 +106,11 @@ SSAOStochasticUniformGridRenderer::SSAOStochasticUniformGridRenderer():
 {
 }
 
+void SSAOStochasticUniformGridRenderer::setEdgeFactor( const float factor )
+{
+    static_cast<Engine&>( engine() ).setEdgeFactor( factor );
+}
+
 /*===========================================================================*/
 /**
  *  @brief  Sets a sampling step.
@@ -123,7 +128,8 @@ void SSAOStochasticUniformGridRenderer::setSamplingStep( const float step )
  *  @param  transfer_function [in] transfer function
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::setTransferFunction( const kvs::TransferFunction& transfer_function )
+void SSAOStochasticUniformGridRenderer::setTransferFunction(
+    const kvs::TransferFunction& transfer_function )
 {
     static_cast<Engine&>( engine() ).setTransferFunction( transfer_function );
 }
@@ -164,12 +170,17 @@ size_t SSAOStochasticUniformGridRenderer::numberOfSamplingPoints() const
  */
 /*===========================================================================*/
 SSAOStochasticUniformGridRenderer::Engine::Engine():
+    m_edge_factor( 0.0f ),
     m_random_index( 0 ),
     m_step( 0.5f ),
     m_transfer_function_changed( true )
 {
-    m_ao_buffer.setGeometryPassShaderFiles( "SSAO_SR_uniform_grid_geom_pass.vert", "SSAO_SR_uniform_grid_geom_pass.frag" );
-    m_ao_buffer.setOcclusionPassShaderFiles( "SSAO_SR_uniform_grid_occl_pass.vert", "SSAO_SR_uniform_grid_occl_pass.frag" );
+    m_ao_buffer.setGeometryPassShaderFiles(
+        "SSAO_SR_uniform_grid_geom_pass.vert",
+        "SSAO_SR_uniform_grid_geom_pass.frag" );
+    m_ao_buffer.setOcclusionPassShaderFiles(
+        "SSAO_SR_uniform_grid_occl_pass.vert",
+        "SSAO_SR_uniform_grid_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -179,14 +190,19 @@ SSAOStochasticUniformGridRenderer::Engine::Engine():
 /*===========================================================================*/
 void SSAOStochasticUniformGridRenderer::Engine::release()
 {
+    // Release transfer function resources
     m_transfer_function_texture.release();
+    m_transfer_function_changed = true;
+
+    // Release buffer object resources
+    m_volume_texture.release();
     m_entry_texture.release();
     m_exit_texture.release();
-    m_volume_texture.release();
     m_entry_exit_framebuffer.release();
     m_bounding_cube_buffer.release();
     m_bounding_cube_shader.release();
-    m_transfer_function_changed = true;
+
+    // Release AO buffer resources
     m_ao_buffer.release();
 }
 
@@ -203,18 +219,26 @@ void SSAOStochasticUniformGridRenderer::Engine::create(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    kvs::StructuredVolumeObject* volume = kvs::StructuredVolumeObject::DownCast( object );
+    auto* volume = kvs::StructuredVolumeObject::DownCast( object );
+
+    BaseClass::attachObject( object );
+    BaseClass::createRandomTexture();
+
+    // Create shader program
+    this->create_shader_program( volume );
+
+    // Create framebuffer
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-
-    attachObject( object );
-    createRandomTexture();
-    this->create_shader_program( volume );
-    this->create_volume_texture( volume );
-    this->create_transfer_function_texture();
-    this->create_bounding_cube_buffer( volume );
     this->create_framebuffer( framebuffer_width, framebuffer_height );
+
+    // Create buffer object
+    this->create_volume_texture( volume );
+    this->create_bounding_cube_buffer( volume );
+
+    // Create transfer function textures
+    this->create_transfer_function_texture();
 }
 
 /*===========================================================================*/
@@ -225,12 +249,25 @@ void SSAOStochasticUniformGridRenderer::Engine::create(
  *  @param  light [in] pointer to the light
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+void SSAOStochasticUniformGridRenderer::Engine::update(
+    kvs::ObjectBase* object,
+    kvs::Camera* camera,
+    kvs::Light* light )
 {
+    auto* volume = kvs::StructuredVolumeObject::DownCast( object );
+
+    // Update shader program
+    this->update_shader_program( volume );
+
+    // Update framebuffer
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
     const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
     this->update_framebuffer( framebuffer_width, framebuffer_height );
+
+    // Update buffer object
+    this->update_volume_texture( volume );
+    this->update_bounding_cube_buffer( volume );
 }
 
 /*===========================================================================*/
@@ -250,6 +287,9 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
         m_transfer_function_texture.release();
         this->create_transfer_function_texture();
     }
+
+    // Setup shader program
+    m_ao_buffer.setupShaderProgram( this->shader() );
 
     const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
     const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
@@ -276,6 +316,7 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
         shader.setUniform( "to_zw2", to_zw2 );
         shader.setUniform( "to_ze1", to_ze1 );
         shader.setUniform( "to_ze2", to_ze2 );
+        shader.setUniform( "edge_factor", m_edge_factor );
     }
 
     const kvs::Vec3 L = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( object ).position();
@@ -336,23 +377,24 @@ void SSAOStochasticUniformGridRenderer::Engine::draw(
  *  @param  volume [in] pointer to the structured volume object
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create_shader_program( const kvs::StructuredVolumeObject* volume )
+void SSAOStochasticUniformGridRenderer::Engine::create_shader_program(
+    const kvs::StructuredVolumeObject* volume )
 {
+    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
+
     // Build bounding cube shader.
     {
-        kvs::ShaderSource vert("RC_bounding_cube.vert");
-        kvs::ShaderSource frag("RC_bounding_cube.frag");
+        kvs::ShaderSource vert( "RC_bounding_cube.vert" );
+        kvs::ShaderSource frag( "RC_bounding_cube.frag" );
         m_bounding_cube_shader.build( vert, frag );
     }
 
-    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
-
     // Set uniform variables.
-    const kvs::Vector3ui r = volume->resolution();
+    const kvs::Vec3ui r = volume->resolution();
     const kvs::Real32 max_ngrids = static_cast<kvs::Real32>( kvs::Math::Max( r.x(), r.y(), r.z() ) );
-    const kvs::Vector3f resolution( static_cast<float>(r.x()), static_cast<float>(r.y()), static_cast<float>(r.z()) );
-    const kvs::Vector3f ratio( r.x() / max_ngrids, r.y() / max_ngrids, r.z() / max_ngrids );
-    const kvs::Vector3f reciprocal( 1.0f / r.x(), 1.0f / r.y(), 1.0f / r.z() );
+    const kvs::Vec3 resolution( static_cast<float>(r.x()), static_cast<float>(r.y()), static_cast<float>(r.z()) );
+    const kvs::Vec3 ratio( r.x() / max_ngrids, r.y() / max_ngrids, r.z() / max_ngrids );
+    const kvs::Vec3 reciprocal( 1.0f / r.x(), 1.0f / r.y(), 1.0f / r.z() );
     kvs::Real32 min_range = 0.0f;
     kvs::Real32 max_range = 0.0f;
     kvs::Real32 min_value = m_transfer_function.colorMap().minValue();
@@ -423,13 +465,23 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program( const kvs
     shader.unbind();
 }
 
+void SSAOStochasticUniformGridRenderer::Engine::update_shader_program(
+    const kvs::StructuredVolumeObject* volume )
+{
+    m_ao_buffer.updateShaderProgram( this->shader(), this->isEnabledShading() );
+
+    m_bounding_cube_shader.release();
+    this->create_shader_program( volume );
+}
+
 /*===========================================================================*/
 /**
  *  @brief  Create volume texture object.
  *  @param  volume [in] pointer to the structured volume object
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create_volume_texture( const kvs::StructuredVolumeObject* volume )
+void SSAOStochasticUniformGridRenderer::Engine::create_volume_texture(
+    const kvs::StructuredVolumeObject* volume )
 {
     if ( volume->gridType() != kvs::StructuredVolumeObject::Uniform )
     {
@@ -551,6 +603,13 @@ void SSAOStochasticUniformGridRenderer::Engine::create_volume_texture( const kvs
     m_volume_texture.create( width, height, depth, data_value.data() );
 }
 
+void SSAOStochasticUniformGridRenderer::Engine::update_volume_texture(
+    const kvs::StructuredVolumeObject* volume )
+{
+    m_volume_texture.release();
+    this->create_volume_texture( volume );
+}
+
 /*===========================================================================*/
 /**
  *  @brief  Creates trasfer function texture.
@@ -574,7 +633,8 @@ void SSAOStochasticUniformGridRenderer::Engine::create_transfer_function_texture
  *  @param  volume [in] pointer to the volume object
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create_bounding_cube_buffer( const kvs::StructuredVolumeObject* volume )
+void SSAOStochasticUniformGridRenderer::Engine::create_bounding_cube_buffer(
+    const kvs::StructuredVolumeObject* volume )
 {
     /* Index number of the bounding cube.
      *
@@ -641,6 +701,13 @@ void SSAOStochasticUniformGridRenderer::Engine::create_bounding_cube_buffer( con
     m_bounding_cube_buffer.create();
 }
 
+void SSAOStochasticUniformGridRenderer::Engine::update_bounding_cube_buffer(
+    const kvs::StructuredVolumeObject* volume )
+{
+    m_bounding_cube_buffer.release();
+    this->create_bounding_cube_buffer( volume );
+}
+
 /*===========================================================================*/
 /**
  *  @brief  Creates framebuffer.
@@ -648,7 +715,9 @@ void SSAOStochasticUniformGridRenderer::Engine::create_bounding_cube_buffer( con
  *  @param  height [in] window height
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create_framebuffer( const size_t width, const size_t height )
+void SSAOStochasticUniformGridRenderer::Engine::create_framebuffer(
+    const size_t width,
+    const size_t height )
 {
     m_entry_texture.setWrapS( GL_CLAMP_TO_BORDER );
     m_entry_texture.setWrapT( GL_CLAMP_TO_BORDER );
@@ -684,7 +753,9 @@ void SSAOStochasticUniformGridRenderer::Engine::create_framebuffer( const size_t
  *  @param  height [in] window height
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::update_framebuffer( const size_t width, const size_t height )
+void SSAOStochasticUniformGridRenderer::Engine::update_framebuffer(
+    const size_t width,
+    const size_t height )
 {
     m_entry_texture.release();
     m_entry_texture.create( width, height );

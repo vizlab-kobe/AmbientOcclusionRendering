@@ -98,7 +98,7 @@ void AmbientOcclusionBuffer::draw()
     m_occl_pass_shader.setUniform( "position_texture", 1 );
     m_occl_pass_shader.setUniform( "normal_texture", 2 );
     m_occl_pass_shader.setUniform( "depth_texture", 3 );
-    m_occl_pass_shader.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
+//    m_occl_pass_shader.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
 
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
     kvs::OpenGL::Enable( GL_TEXTURE_2D );
@@ -156,10 +156,13 @@ void AmbientOcclusionBuffer::createShaderProgram( const kvs::Shader::ShadingMode
     const auto sampling_points = this->generatePoints( radius, nsamples );
 
     m_occl_pass_shader.bind();
-    m_occl_pass_shader.setUniform( "shading.Ka", shading_model.Ka );
-    m_occl_pass_shader.setUniform( "shading.Kd", shading_model.Kd );
-    m_occl_pass_shader.setUniform( "shading.Ks", shading_model.Ks );
-    m_occl_pass_shader.setUniform( "shading.S",  shading_model.S );
+    // move to 'setupShaderProgram'
+    // {
+//    m_occl_pass_shader.setUniform( "shading.Ka", shading_model.Ka );
+//    m_occl_pass_shader.setUniform( "shading.Kd", shading_model.Kd );
+//    m_occl_pass_shader.setUniform( "shading.Ks", shading_model.Ks );
+//    m_occl_pass_shader.setUniform( "shading.S",  shading_model.S );
+    // }
     m_occl_pass_shader.setUniform( "sampling_points", sampling_points, dim );
     m_occl_pass_shader.unbind();
 }
@@ -169,6 +172,33 @@ void AmbientOcclusionBuffer::updateShaderProgram( const kvs::Shader::ShadingMode
     m_geom_pass_shader.release();
     m_occl_pass_shader.release();
     this->createShaderProgram( shading_model, shading_enabled );
+}
+
+void AmbientOcclusionBuffer::setupShaderProgram( const kvs::Shader::ShadingModel& shading_model )
+{
+    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
+    const kvs::Mat4 PM = P * M;
+    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+
+    // Geometry pass shader
+    {
+        kvs::ProgramObject::Binder bind( m_geom_pass_shader );
+        m_geom_pass_shader.setUniform( "ModelViewMatrix", M );
+        m_geom_pass_shader.setUniform( "ModelViewProjectionMatrix", PM );
+        m_geom_pass_shader.setUniform( "NormalMatrix", N );
+    }
+
+    // Occlusion pass shader
+    {
+        kvs::ProgramObject::Binder bind( m_occl_pass_shader );
+        m_occl_pass_shader.setUniform( "shading.Ka", shading_model.Ka );
+        m_occl_pass_shader.setUniform( "shading.Kd", shading_model.Kd );
+        m_occl_pass_shader.setUniform( "shading.Ks", shading_model.Ks );
+        m_occl_pass_shader.setUniform( "shading.S",  shading_model.S );
+        m_occl_pass_shader.setUniform( "ModelViewProjectionMatrix", PM );
+        m_occl_pass_shader.setUniform( "ProjectionMatrix", P );
+    }
 }
 
 void AmbientOcclusionBuffer::createFramebuffer( const size_t width, const size_t height )

@@ -31,6 +31,7 @@ struct Model
     float radius; ///< radius of point sampling region for SSAO
     int points; ///< number of points used for SSAO
     float opacity; ///< opacity of polygon object
+    float edge; ///< edge enhancement factor
 
     kvs::LineObject* import()
     {
@@ -77,6 +78,7 @@ struct Model
             renderer->setEnabledLODControl( lod );
             renderer->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
             renderer->setShader( kvs::Shader::BlinnPhong() );
+            renderer->setEdgeFactor( edge );
             renderer->enableShading();
             return renderer;
         }
@@ -120,6 +122,7 @@ int main( int argc, char** argv )
     model.radius = 0.5;
     model.points = 256;
     model.opacity = 0.5f;
+    model.edge = 0.0f;
 
     // Visualization pipeline.
     screen.registerObject( model.import(), model.renderer() );
@@ -253,6 +256,24 @@ int main( int argc, char** argv )
             auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setOpacity( kvs::Math::Round( model.opacity * 255 ) );
         }
+    } );
+
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::ToString( model.edge ) );
+    edge_slider.setValue( model.edge );
+    edge_slider.setRange( 0.0, 5.0 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &opacity_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        float v = int( edge_slider.value() * 10 ) * 0.1f;
+        model.edge = v;
+        edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
     } );
 
     // Events.

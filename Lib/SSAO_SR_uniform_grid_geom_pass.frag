@@ -41,6 +41,7 @@ uniform float to_ze2; // scaling parameter: (f-n)/(f*n)
 uniform sampler2D random_texture; // random texture to generate random number
 uniform float random_texture_size_inv; // reciprocal value of the random texture size
 uniform vec2 random_offset; // offset values for accessing to the random texture
+uniform float edge_factor; // edge enhacement factor
 
 // Uniform variables (OpenGL variables).
 uniform mat4 ModelViewProjectionMatrixInverse; // inverse matrix of model-view projection matrix
@@ -177,7 +178,24 @@ void main()
 #if defined( ENABLE_ALPHA_CORRECTION )
         c.a = 1.0 - pow( 1.0 - c.a, dT );
 #endif
+        // Edge enhancement
+        if ( edge_factor > 0.0 )
+        {
+            // Get the normal vector in object coordinate.
+            vec3 offset_index = vec3( volume.resolution_reciprocal );
+            vec3 normal = VolumeGradient( volume_data, volume_index, offset_index );
 
+            // Normal vector (N) in camera coordinate.
+            vec3 N = normalize( gl_NormalMatrix * normal );
+
+            if ( length(N) > 0.0 )
+            {
+                vec3 E = normalize( -direction );
+                c.a = min( 1.0, c.a / pow( abs( dot( N, E ) ), edge_factor ) );
+            }
+        }
+
+        // Stochastic color assignment
         accum_alpha += ( 1.0 - accum_alpha ) * c.a;
         if ( R <= accum_alpha )
         {

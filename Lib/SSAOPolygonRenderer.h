@@ -37,6 +37,7 @@ public:
 private:
     void createShaderProgram();
     void updateShaderProgram();
+    void setupShaderProgram();
 
     void createFramebuffer( const size_t width, const size_t height );
     void updateFramebuffer( const size_t width, const size_t height );

@@ -44,6 +44,7 @@ uniform float maxT;
 uniform float delta;
 uniform float delta2;
 uniform ShadingParameter shading; // shading parameters
+uniform float edge_factor; // edge enhacement factor
 
 // Uniform variables (OpenGL variables).
 uniform mat4 ModelViewProjectionMatrixInverse; // inverse matrix of model-view projection matrix
@@ -125,6 +126,17 @@ void main()
     // Transparency calculated with pre-integration.
     float dS = Sb - Sf;
     float trans = exp( -LookupTexture2D( preintegration_texture, vec2( ADJUST( Sf ), ADJUST( Sb ) ) ).r * a );
+    if ( trans == 1.0 ) { discard; return; }
+
+    // Edge enhancement
+    float alpha = 1.0 - trans;
+    if ( edge_factor > 0.0 )
+    {
+        vec3 N = normalize( normal );
+        vec3 E = normalize( -position );
+        alpha = min( 1.0, alpha / pow( abs( dot( N, E ) ), edge_factor ) );
+    }
+    trans = 1.0 - alpha;
 
     // Stochastic color assignment.
     float R = RandomNumber();

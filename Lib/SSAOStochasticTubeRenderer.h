@@ -27,6 +27,7 @@ public:
 
 public:
     SSAOStochasticTubeRenderer();
+    void setEdgeFactor( const float factor );
     void setTransferFunction( const kvs::TransferFunction& tfunc );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
@@ -41,9 +42,11 @@ public:
 
 class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::StylizedLineRenderer::BufferObject;
 
 private:
+    float m_edge_factor; ///< edge enhancement factor
     kvs::Real32 m_radius_size;
     kvs::Real32 m_halo_size;
     BufferObject m_buffer_object;
@@ -61,7 +64,7 @@ public:
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
-public:
+    void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
     void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
     void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
@@ -74,8 +77,9 @@ public:
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
-    void create_buffer_object( const kvs::LineObject* line );
     void create_transfer_function_texture();
+    void create_buffer_object( const kvs::LineObject* line );
+    void update_buffer_object( const kvs::LineObject* line );
     void draw_buffer_object( const kvs::LineObject* line );
 };
 

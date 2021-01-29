@@ -37,6 +37,10 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     kvs::OpenGL::WithPushedAttrib p( GL_ALL_ATTRIB_BITS );
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
 
+    auto* polygon = kvs::PolygonObject::DownCast( object );
+    const bool has_normal = polygon->normals().size() > 0;
+    BaseClass::setEnabledShading( has_normal );
+
     const size_t width = camera->windowWidth();
     const size_t height = camera->windowHeight();
     const float dpr = camera->devicePixelRatio();
@@ -46,9 +50,9 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     if ( BaseClass::isWindowCreated() )
     {
         BaseClass::setWindowSize( width, height );
-        BaseClass::createBufferObject( object );
         this->createShaderProgram();
         this->createFramebuffer( framebuffer_width, framebuffer_height );
+        BaseClass::createBufferObject( object );
     }
 
     if ( this->isWindowResized( width, height ) )
@@ -59,10 +63,12 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
 
     if ( BaseClass::isObjectChanged( object ) )
     {
-        BaseClass::updateBufferObject( object );
         this->updateShaderProgram();
         this->updateFramebuffer( framebuffer_width, framebuffer_height );
+        BaseClass::updateBufferObject( object );
     }
+
+    this->setupShaderProgram();
 
     // Ambient occlusion.
     m_ao_buffer.bind();
@@ -81,6 +87,11 @@ void SSAOPolygonRenderer::createShaderProgram()
 void SSAOPolygonRenderer::updateShaderProgram()
 {
     m_ao_buffer.updateShaderProgram( BaseClass::shadingModel(), BaseClass::isEnabledShading() );
+}
+
+void SSAOPolygonRenderer::setupShaderProgram()
+{
+    m_ao_buffer.setupShaderProgram( BaseClass::shadingModel() );
 }
 
 void SSAOPolygonRenderer::createFramebuffer( const size_t width, const size_t height )
