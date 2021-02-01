@@ -13,6 +13,7 @@
 #include <kvs/EnsembleAverageBuffer>
 #include "AmbientOcclusionBuffer.h"
 #include <kvs/Shader>
+#include <kvs/Timer>
 
 
 namespace local

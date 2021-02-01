@@ -211,7 +211,7 @@ int main( int argc, char** argv )
     kvs::Slider edge_slider( &screen );
     edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
     edge_slider.setValue( model.edge );
-    edge_slider.setRange( 0.1, 5 );
+    edge_slider.setRange( 0, 5 );
     edge_slider.setMargin( 10 );
     edge_slider.anchorToBottom( &points_slider );
     edge_slider.show();
@@ -278,14 +278,14 @@ int main( int argc, char** argv )
     kvs::TargetChangeEvent target_change_event;
     screen.addEvent( &target_change_event );
 
-    /*kvs::PaintEventListener time;
+    kvs::PaintEventListener time;
     time.update( [&] ()
     {
         static size_t counter = 1;
         static float time = 0.0f;
 
         time += screen.scene()->renderer("Renderer")->timer().msec();
-        if ( counter++ == 50 )
+        if ( counter++ == 10 )
         {
             std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
             counter = 1;
@@ -294,7 +294,7 @@ int main( int argc, char** argv )
 
         } );
     
-	screen.addEvent( &time );*/
+	screen.addEvent( &time );
     
     return app.run();
 }

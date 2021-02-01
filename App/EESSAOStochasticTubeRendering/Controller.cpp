@@ -82,7 +82,7 @@ Controller::Controller( local::Model& model, local::View& view ):
     {
         const float min_value = m_radius_slider.minValue();
         const float max_value = m_radius_slider.maxValue();
-        const float v = int( m_radius_slider.value() * 2 ) * 0.5f;
+        const float v = int( m_radius_slider.value() * 10 ) * 0.1f;
         m_model.setRadius( kvs::Math::Clamp( v, min_value, max_value ) );
         m_radius_slider.setCaption( "Radius: " + kvs::String::From( m_model.radius() ) );
     } );
@@ -114,7 +114,7 @@ Controller::Controller( local::Model& model, local::View& view ):
 
     m_edge_slider.setCaption( "Edge: " + kvs::String::From( m_model.edge() ) );
     m_edge_slider.setValue( m_model.edge() );
-    m_edge_slider.setRange( 0.1, 5 );
+    m_edge_slider.setRange( 0, 5 );
     m_edge_slider.setMargin( 10 );
     m_edge_slider.anchorToBottom( &m_points_slider );
     m_edge_slider.sliderMoved( [&] ()

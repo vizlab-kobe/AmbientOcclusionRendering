@@ -32,6 +32,7 @@ public:
     const kvs::TransferFunction& transferFunction() const;
     kvs::Real32 radiusSize() const;
     kvs::Real32 haloSize() const;
+    void setEdgeFactor( const float edge_factor );
 };
 
 class SSAOStochasticTubeRenderer::Engine : public local::StochasticRenderingEngine
@@ -47,6 +48,7 @@ private:
     kvs::TransferFunction m_tfunc; ///< transfer function
     kvs::Texture1D m_tfunc_texture; ///< transfer function texture
     kvs::ProgramObject m_geom_pass_shader;
+    float m_edge_factor;
 
 public:
     Engine();
@@ -63,6 +65,7 @@ public:
     const kvs::TransferFunction& transferFunction() const { return m_tfunc; }
     kvs::Real32 radiusSize() const { return m_radius_size; }
     kvs::Real32 haloSize() const { return m_halo_size; }
+    void setEdgeFactor( const float edge_factor ) { m_edge_factor = edge_factor; }
 
 private:
     void create_buffer_object( const kvs::LineObject* line );

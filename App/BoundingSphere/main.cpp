@@ -22,7 +22,7 @@
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
 #include <kvs/PolygonToPolygon>
-
+#include <kvs/PaintEventListener>
 #include <iostream>
 #include <cmath>
 
@@ -172,30 +172,10 @@ kvs::PolygonObject* createBoundingSphere()
     polygon->setName( "Polygon" );
 
     kvs::PolygonObject* sphere = new kvs::PolygonToPolygon( polygon );
-    //sphere->setColor( kvs::RGBColor( 128, 128, 128 ) );
     sphere->setColor( kvs::RGBColor::White() );
     sphere->setName( "Polygon" );
     
     return sphere;
-}
-
-kvs::PolygonObject* createIsosurface( std::string filename )
-{
-    kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( filename );
-    kvs::StructuredVolumeObject* scalar_volume = new kvs::StructuredVectorToScalar( volume );
-
-    double min_value = scalar_volume->minValue();
-    double max_value = scalar_volume->maxValue();
-    double isovalue = ( max_value + min_value ) * 0.1;  // Isolevel parameter.
-    double opacity = 0.5;
-    const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
-    const bool d = false;
-    const kvs::TransferFunction t( 256 );
-    auto* polygon = new kvs::Isosurface( scalar_volume, isovalue, n, d, t );
-    delete scalar_volume;
-    polygon->setName( "Polygon" );
-    polygon->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
-    return polygon;
 }
 
 kvs::PointObject* generateSeedPoints( kvs::StructuredVolumeObject* volume, kvs::Vec3i stride )
@@ -260,17 +240,15 @@ int main( int argc, char** argv )
     screen.show();
 
     // Import volume object.
-    std::string magnetic_file = argv[1];
     std::string velocity_file = argv[2];
 
     kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( velocity_file );
-    //kvs::PolygonObject* polygon = createIsosurface( magnetic_file );
     kvs::LineObject* streamline = createStreamline( velocity_file );
     kvs::PolygonObject* polygon = createBoundingSphere();
     
     // Declare SSAOStochasticPolygonRenderer
     local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
-    polygon_renderer->setName( "StochasticPolygonRenderer" );
+    polygon_renderer->setName( "PolygonRenderer" );
 
     // Declare SSAOStochasticTubeRenderer
     local::SSAOStochasticTubeRenderer* tube_renderer = new local::SSAOStochasticTubeRenderer();
@@ -312,6 +290,7 @@ int main( int argc, char** argv )
         } );
     checkbox.show();
 
+    float opa = 0.5;
     kvs::Slider opacity( &screen );
     opacity.setCaption( "Opacity" );
     opacity.setWidth( 150 );
@@ -319,6 +298,11 @@ int main( int argc, char** argv )
     opacity.setValue( 0.5 );
     opacity.setRange( 0, 1 );
     opacity.anchorToBottom( &checkbox );
+    opacity.sliderMoved( [&] ()
+    {
+        opa = opacity.value();
+        opacity.setCaption( "Opacity: " + kvs::String::ToString( opa ) );
+    } );
     opacity.valueChanged(
         [&]() {
             auto* scene = screen.scene();
@@ -367,6 +351,26 @@ int main( int argc, char** argv )
         screen.redraw();
     } );
 
+    float edge = 1.0;
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::ToString( edge ) );
+    edge_slider.setValue( edge );
+    edge_slider.setRange( 0.0, 5.0 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &radius_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        edge = int( edge_slider.value() * 10 ) * 0.1f;
+        edge_slider.setCaption( "Edge: " + kvs::String::From( edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+      auto* scene = screen.scene();
+      auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
+      renderer->setEdgeFactor( edge );
+    } );
+
     kvs::KeyPressEventListener h_key;
     h_key.update( [&] ( kvs::KeyEvent* event )
     {
@@ -400,6 +404,24 @@ int main( int argc, char** argv )
     orientation_axis.setBoxType( kvs::OrientationAxis::SolidBox );
     orientation_axis.anchorToBottomLeft();
     orientation_axis.show();
+
+    kvs::PaintEventListener time;
+    time.update( [&] ()
+    {
+        static size_t counter = 1;
+        static float time = 0.0f;
+
+        time += compositor.timer().msec();
+        if ( counter++ == 10 )
+        {
+            std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
+            counter = 1;
+            time = 0.0f;
+        }
+
+        } );
+    
+    screen.addEvent( &time );
                 
     return app.run();
 }

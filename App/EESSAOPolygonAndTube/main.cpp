@@ -15,12 +15,9 @@
 #include "SSAOStochasticPolygonRenderer.h"
 #include "SSAOStochasticTubeRenderer.h"
 #include "StochasticRenderingCompositor.h"
-
-#include <kvs/StochasticPolygonRenderer>
-#include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
-#include <kvs/StochasticRenderingCompositor>
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
+#include <kvs/PaintEventListener>
 
 
 kvs::Vec3i min_coord( 0, 0, 0 );
@@ -33,7 +30,7 @@ kvs::PolygonObject* createIsosurface( std::string filename )
 
     double min_value = scalar_volume->minValue();
     double max_value = scalar_volume->maxValue();
-    double isovalue = ( max_value + min_value ) * 0.1;  // Isolevel parameter.
+    double isovalue = ( max_value + min_value ) * 0.05;  // Isolevel parameter.
     double opacity = 0.5;
     const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
     const bool d = false;
@@ -103,7 +100,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and Polygon");
-    //screen.setSize( 1024, 1024 );
+    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Import volume object.
@@ -117,17 +114,19 @@ int main( int argc, char** argv )
     // Declare SSAOStochasticPolygonRenderer
     local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
     polygon_renderer->setName( "PolygonRenderer" );
+    polygon_renderer->setShader( kvs::Shader::BlinnPhong() );
 
     // Declare SSAOStochasticTubeRenderer
     local::SSAOStochasticTubeRenderer* tube_renderer = new local::SSAOStochasticTubeRenderer();
     tube_renderer->setName( "TubeRenderer" );
     tube_renderer->setTransferFunction( kvs::DivergingColorMap::CoolWarm( 256 ) );
+    tube_renderer->setShader( kvs::Shader::BlinnPhong() );
     
     // Register objects and renderers
     screen.registerObject( polygon, polygon_renderer );
     screen.registerObject( streamline, tube_renderer );
 
-    // Declare StochasticRenderingCompositor.
+    // Declare SSAOStochasticRenderingCompositor.
     local::StochasticRenderingCompositor compositor( screen.scene() );
     compositor.setRepetitionLevel( 20 );
     compositor.enableLODControl();
@@ -214,13 +213,35 @@ int main( int argc, char** argv )
         screen.redraw();
     } );
 
+    int nsamples = 256;
+    kvs::Slider nsample_slider( &screen );
+    nsample_slider.setCaption( "Nsample: " + kvs::String::ToString( nsamples ) );
+    nsample_slider.setValue( nsamples );
+    nsample_slider.setRange( 1, 256 );
+    nsample_slider.setMargin( 10 );
+    nsample_slider.anchorToBottom( &radius_slider );
+    nsample_slider.show();
+    nsample_slider.sliderMoved( [&] ()
+    {
+        const int min_value = nsample_slider.minValue();
+        const int max_value = nsample_slider.maxValue();
+        const int v = int( nsample_slider.value() );
+        nsamples = kvs::Math::Clamp( v, min_value, max_value );
+        nsample_slider.setCaption( "Nsample: " + kvs::String::From( nsamples ) );
+    } );
+    nsample_slider.sliderReleased( [&] ()
+    {
+        compositor.setNumberOfSamplingPoints( nsamples );
+        screen.redraw();
+    } );
+
     float edge = 1.0;
     kvs::Slider edge_slider( &screen );
     edge_slider.setCaption( "Edge: " + kvs::String::ToString( edge ) );
     edge_slider.setValue( edge );
-    edge_slider.setRange( 0.1, 5.0 );
+    edge_slider.setRange( 0.0, 5.0 );
     edge_slider.setMargin( 10 );
-    edge_slider.anchorToBottom( &radius_slider );
+    edge_slider.anchorToBottom( &nsample_slider );
     edge_slider.show();
     edge_slider.sliderMoved( [&] ()
     {
@@ -232,8 +253,6 @@ int main( int argc, char** argv )
       auto* scene = screen.scene();
       auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
       renderer->setEdgeFactor( edge );
-//      renderer->setName( "PolygonRenderer" );
-//        screen.scene()->replaceRenderer( "PolygonRenderer", renderer );
     } );
 
     kvs::KeyPressEventListener h_key;
@@ -249,6 +268,7 @@ int main( int argc, char** argv )
                 opacity.hide();
                 repetition.hide();
                 radius_slider.hide();
+                nsample_slider.hide();
                 edge_slider.hide();
             }
             else
@@ -257,6 +277,7 @@ int main( int argc, char** argv )
                 opacity.show();
                 repetition.show();
                 radius_slider.show();
+                nsample_slider.show();
                 edge_slider.show();
             }
         }
@@ -268,6 +289,24 @@ int main( int argc, char** argv )
     
     screen.addEvent( &h_key );
     screen.addEvent( &capture_event );
+
+    kvs::PaintEventListener time;
+    time.update( [&] ()
+    {
+        static size_t counter = 1;
+        static float time = 0.0f;
+
+        time += compositor.timer().msec();
+        if ( counter++ == 10 )
+        {
+            std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
+            counter = 1;
+            time = 0.0f;
+        }
+
+        } );
+    
+    screen.addEvent( &time );
                 
     return app.run();
 }

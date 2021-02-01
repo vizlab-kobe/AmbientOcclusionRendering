@@ -24,6 +24,7 @@
 #include <kvs/ObjectManager>
 #include <kvs/RendererManager>
 #include <kvs/IDManager>
+#include <kvs/PaintEventListener>
 
 
 /*===========================================================================*/
@@ -191,6 +192,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and UniformGrid");
+    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Parameters.
@@ -222,11 +224,6 @@ int main( int argc, char** argv )
     ssao_compositor.enableLODControl();
     ssao_compositor.setShader( kvs::Shader::BlinnPhong() );
     screen.setEvent( &ssao_compositor );
-
-    kvs::StochasticRenderingCompositor compositor( screen.scene() );
-    compositor.setRepetitionLevel( 1 );
-    compositor.enableLODControl();
-    //screen.setEvent( &compositor );
 
     // Widgets.
     kvs::TransferFunctionEditor editor1( &screen );
@@ -274,33 +271,11 @@ int main( int argc, char** argv )
         screen.redraw();
     } );
 
-    kvs::CheckBox ssao_check_box( &screen );
-    ssao_check_box.setCaption( "SSAO" );
-    ssao_check_box.setState( uniform_model.ssao );
-    ssao_check_box.setMargin( 10 );
-    ssao_check_box.anchorToTopLeft();
-    ssao_check_box.show();
-    ssao_check_box.stateChanged( [&] ()
-    {
-        uniform_model.ssao = ssao_check_box.state();
-	tube_model.ssao = ssao_check_box.state();
-        screen.scene()->replaceRenderer( "UniformRenderer", uniform_model.renderer() );
-	screen.scene()->replaceRenderer( "TubeRenderer", tube_model.renderer() );
-        if ( tube_model.ssao )
-        {
-            screen.setEvent( &ssao_compositor );
-        }
-        else
-        {
-            screen.setEvent( &compositor );
-        }
-    } );
-
     kvs::CheckBox checkbox( &screen );
     checkbox.setCaption( "LOD" );
     checkbox.setMargin( 10 );
     checkbox.setState( true );
-    checkbox.anchorToBottom( &ssao_check_box );
+    checkbox.anchorToTopLeft();
     checkbox.stateChanged(
         [&]() {
             ssao_compositor.setEnabledLODControl( checkbox.state() );
@@ -343,6 +318,48 @@ int main( int argc, char** argv )
         screen.redraw();
     } );
 
+    int nsamples = 256;
+    kvs::Slider nsample_slider( &screen );
+    nsample_slider.setCaption( "Nsample: " + kvs::String::ToString( nsamples ) );
+    nsample_slider.setValue( nsamples );
+    nsample_slider.setRange( 1, 256 );
+    nsample_slider.setMargin( 10 );
+    nsample_slider.anchorToBottom( &radius_slider );
+    nsample_slider.show();
+    nsample_slider.sliderMoved( [&] ()
+    {
+        const int min_value = nsample_slider.minValue();
+        const int max_value = nsample_slider.maxValue();
+        const int v = int( nsample_slider.value() );
+        nsamples = kvs::Math::Clamp( v, min_value, max_value );
+        nsample_slider.setCaption( "Nsample: " + kvs::String::From( nsamples ) );
+    } );
+    nsample_slider.sliderReleased( [&] ()
+    {
+        ssao_compositor.setNumberOfSamplingPoints( nsamples );
+        screen.redraw();
+    } );
+
+    float edge = 1.0;
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::ToString( edge ) );
+    edge_slider.setValue( edge );
+    edge_slider.setRange( 0.0, 5.0 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &nsample_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        edge = int( edge_slider.value() * 10 ) * 0.1f;
+        edge_slider.setCaption( "Edge: " + kvs::String::From( edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+      auto* scene = screen.scene();
+      auto* renderer = local::SSAOStochasticUniformGridRenderer::DownCast( scene->renderer( "UniformRenderer" ) );
+      renderer->setEdgeFactor( edge );
+    } );
+
     kvs::KeyPressEventListener h_key;
     h_key.update( [&] ( kvs::KeyEvent* event )
     {
@@ -352,13 +369,11 @@ int main( int argc, char** argv )
         {
             if ( checkbox.isVisible() )
             {
-	        ssao_check_box.hide();
                 checkbox.hide();
                 repetition.hide();
             }
             else
             {
-	        ssao_check_box.show();
                 checkbox.show();
                 repetition.show();
             }
@@ -371,6 +386,24 @@ int main( int argc, char** argv )
     
     screen.addEvent( &h_key );
     screen.addEvent( &capture_event );
+
+    kvs::PaintEventListener time;
+    time.update( [&] ()
+    {
+        static size_t counter = 1;
+        static float time = 0.0f;
+
+        time += ssao_compositor.timer().msec();
+        if ( counter++ == 10 )
+        {
+            std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
+            counter = 1;
+            time = 0.0f;
+        }
+
+        } );
+    
+    screen.addEvent( &time );
                 
     return app.run();
 }

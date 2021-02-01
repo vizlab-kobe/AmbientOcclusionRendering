@@ -28,7 +28,6 @@
 /*===========================================================================*/
 struct Model
 {
-//    using EESSAORenderer = local::SSAOStochasticPolygonRenderer;
     using EESSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using EERenderer = local::StochasticPolygonRenderer;
@@ -60,10 +59,12 @@ struct Model
 
         minValue = scalar->minValue();
         maxValue = scalar->maxValue();
-        isovalue = ( maxValue + minValue ) * 0.5;
+        isovalue = ( maxValue + minValue ) * 0.05;
         const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
         const kvs::TransferFunction t( 256 );
+        auto* isosurface = new kvs::Isosurface();
+        isosurface->setColorMap( kvs::ColorMap::Plasma( 256 ) );
         auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
         
         delete scalar;
@@ -156,7 +157,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "MagneticField" );
-    //screen.setSize( 1024, 1024 );
+    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Parameters.
@@ -407,7 +408,7 @@ int main( int argc, char** argv )
     kvs::Slider edge_slider( &screen );
     edge_slider.setCaption( "Edge: " + kvs::String::ToString( model.edge ) );
     edge_slider.setValue( model.edge );
-    edge_slider.setRange( 0.1, 5.0 );
+    edge_slider.setRange( 0.0, 5.0 );
     edge_slider.setMargin( 10 );
     edge_slider.anchorToBottom( &opacity_slider );
     edge_slider.show();

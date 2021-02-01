@@ -23,7 +23,7 @@ namespace local
       static float time = 0.0f;
 
       time += scene()->renderer("Renderer")->timer().msec();
-      if( counter++ == 50 )
+      if( counter++ == 10 )
 	{
 	  std::cout << "Rendering time " << time / counter << " [msec]" << std::endl;
 	  counter = 1;
