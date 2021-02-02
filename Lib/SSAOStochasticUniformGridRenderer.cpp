@@ -171,7 +171,6 @@ size_t SSAOStochasticUniformGridRenderer::numberOfSamplingPoints() const
 /*===========================================================================*/
 SSAOStochasticUniformGridRenderer::Engine::Engine():
     m_edge_factor( 0.0f ),
-    m_random_index( 0 ),
     m_step( 0.5f ),
     m_transfer_function_changed( true )
 {
@@ -196,12 +195,12 @@ void SSAOStochasticUniformGridRenderer::Engine::release()
     m_transfer_function_changed = true;
 
     // Release buffer object resources
-    m_volume_texture.release();
     m_entry_texture.release();
     m_exit_texture.release();
     m_entry_exit_framebuffer.release();
+
+    m_volume_buffer.release();
     m_bounding_cube_buffer.release();
-    m_bounding_cube_shader.release();
 
     // Release AO buffer resources
     m_ao_buffer.release();
@@ -234,11 +233,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create(
     this->create_framebuffer( framebuffer_width, framebuffer_height );
 
     // Create buffer object
-    this->create_volume_texture( volume );
-    this->create_bounding_cube_buffer( volume );
-
-    // Create transfer function textures
-    this->create_transfer_function_texture();
+    this->create_buffer_object( volume );
 }
 
 /*===========================================================================*/
@@ -266,11 +261,7 @@ void SSAOStochasticUniformGridRenderer::Engine::update(
     this->update_framebuffer( framebuffer_width, framebuffer_height );
 
     // Update buffer object
-    this->update_volume_texture( volume );
-    this->update_bounding_cube_buffer( volume );
-
-    // Update transfer function texture
-    this->update_transfer_function_texture();
+    this->update_buffer_object( volume );
 }
 
 /*===========================================================================*/
@@ -286,73 +277,20 @@ void SSAOStochasticUniformGridRenderer::Engine::setup(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    m_random_index = m_ao_buffer.geometryPassShader().attributeLocation("random_index");
-    if ( m_transfer_function_changed ) { this->update_transfer_function_texture(); }
-
-    // Setup shader program
-    m_ao_buffer.setupShaderProgram( this->shader() );
-
-    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
-    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
-    const kvs::Mat4 PM_inverse = PM.inverted();
+    if ( m_transfer_function_changed )
     {
-        const float f = camera->back();
-        const float n = camera->front();
-        const float to_zw1 = ( f * n ) / ( f - n );
-        const float to_zw2 = 0.5f * ( ( f + n ) / ( f - n ) ) + 0.5f;
-        const float to_ze1 = 0.5f + 0.5f * ( ( f + n ) / ( f - n ) );
-        const float to_ze2 = ( f - n ) / ( f * n );
-
-        auto& geom_pass = m_ao_buffer.geometryPassShader();
-        geom_pass.bind();
-        geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
-        geom_pass.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
-        geom_pass.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-        geom_pass.setUniform( "volume_data", 0 );
-        geom_pass.setUniform( "exit_points", 1 );
-        geom_pass.setUniform( "entry_points", 2 );
-        geom_pass.setUniform( "transfer_function_data", 3 );
-        geom_pass.setUniform( "random_texture", 4 );
-        geom_pass.setUniform( "to_zw1", to_zw1 );
-        geom_pass.setUniform( "to_zw2", to_zw2 );
-        geom_pass.setUniform( "to_ze1", to_ze1 );
-        geom_pass.setUniform( "to_ze2", to_ze2 );
-        geom_pass.setUniform( "edge_factor", m_edge_factor );
-        geom_pass.unbind();
+        const size_t width = m_transfer_function.resolution();
+        const kvs::ValueArray<kvs::Real32> table = m_transfer_function.table();
+        m_transfer_function_texture.release();
+        m_transfer_function_texture.setWrapS( GL_CLAMP_TO_EDGE );
+        m_transfer_function_texture.setMagFilter( GL_LINEAR );
+        m_transfer_function_texture.setMinFilter( GL_LINEAR );
+        m_transfer_function_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT  );
+        m_transfer_function_texture.create( width, table.data() );
+        m_transfer_function_changed = false;
     }
 
-    const kvs::Vec3 L = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( object ).position();
-    const kvs::Vec3 C = kvs::WorldCoordinate( camera->position() ).toObjectCoordinate( object ).position();
-    {
-        auto& occl_pass = m_ao_buffer.occlusionPassShader();
-        occl_pass.bind();
-        occl_pass.setUniform( "light_position", L );
-        occl_pass.setUniform( "camera_position", C );
-        occl_pass.setUniform( "ModelViewMatrix", M );
-        occl_pass.unbind();
-    }
-
-    kvs::ProgramObject::Binder unit0( m_bounding_cube_shader );
-    kvs::FrameBufferObject::Binder unit1( m_entry_exit_framebuffer );
-    m_bounding_cube_shader.setUniform( "ModelViewProjectionMatrix", PM );
-
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
-    kvs::OpenGL::Enable( GL_CULL_FACE );
-    kvs::OpenGL::Disable( GL_LIGHTING );
-
-    // Draw the back face of the bounding cube for the entry points.
-    kvs::OpenGL::SetDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
-    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    kvs::OpenGL::SetCullFace( GL_FRONT );
-    this->draw_bounding_cube_buffer();
-
-    // Draw the front face of the bounding cube for the entry points.
-    kvs::OpenGL::SetDrawBuffer( GL_COLOR_ATTACHMENT1_EXT );
-    kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    kvs::OpenGL::SetCullFace( GL_BACK );
-    this->draw_bounding_cube_buffer();
-
-    kvs::OpenGL::Disable( GL_CULL_FACE );
+    this->setup_shader_program( this->shader(), object, camera, light );
 }
 
 /*===========================================================================*/
@@ -385,87 +323,15 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program(
 {
     m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
 
-    // Build bounding cube shader.
-    {
-        kvs::ShaderSource vert( "RC_bounding_cube.vert" );
-        kvs::ShaderSource frag( "RC_bounding_cube.frag" );
-        m_bounding_cube_shader.build( vert, frag );
-    }
-
-    // Set uniform variables.
-    const kvs::Vec3ui r = volume->resolution();
-    const kvs::Real32 max_ngrids = static_cast<kvs::Real32>( kvs::Math::Max( r.x(), r.y(), r.z() ) );
-    const kvs::Vec3 resolution( static_cast<float>(r.x()), static_cast<float>(r.y()), static_cast<float>(r.z()) );
-    const kvs::Vec3 ratio( r.x() / max_ngrids, r.y() / max_ngrids, r.z() / max_ngrids );
-    const kvs::Vec3 reciprocal( 1.0f / r.x(), 1.0f / r.y(), 1.0f / r.z() );
-    kvs::Real32 min_range = 0.0f;
-    kvs::Real32 max_range = 0.0f;
-    kvs::Real32 min_value = m_transfer_function.colorMap().minValue();
-    kvs::Real32 max_value = m_transfer_function.colorMap().maxValue();
-    const std::type_info& type = volume->values().typeInfo()->type();
-    if ( type == typeid( kvs::UInt8 ) )
-    {
-        min_range = 0.0f;
-        max_range = 255.0f;
-        if ( !m_transfer_function.hasRange() )
-        {
-            min_value = 0.0f;
-            max_value = 255.0f;
-        }
-    }
-    else if ( type == typeid( kvs::Int8 ) )
-    {
-        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt8>::Min() );
-        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt8>::Max() );
-        if ( !m_transfer_function.hasRange() )
-        {
-            min_value = -128.0f;
-            max_value = 127.0f;
-        }
-    }
-    else if ( type == typeid( kvs::UInt16 ) )
-    {
-        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt16>::Min() );
-        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt16>::Max() );
-        if ( !m_transfer_function.hasRange() )
-        {
-            min_value = static_cast<kvs::Real32>( volume->minValue() );
-            max_value = static_cast<kvs::Real32>( volume->maxValue() );
-        }
-    }
-    else if ( type == typeid( kvs::Int16 ) )
-    {
-        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::Int16>::Min() );
-        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::Int16>::Max() );
-        if ( !m_transfer_function.hasRange() )
-        {
-            min_value = static_cast<kvs::Real32>( volume->minValue() );
-            max_value = static_cast<kvs::Real32>( volume->maxValue() );
-        }
-    }
-    else if ( type == typeid( kvs::UInt32 ) || type == typeid( kvs::Int32  ) || type == typeid( kvs::Real32 ) )
-    {
-        min_range = 0.0f;
-        max_range = 1.0f;
-        min_value = 0.0f;
-        max_value = 1.0f;
-    }
-    else
-    {
-        kvsMessageError( "Not supported data type '%s'.", volume->values().typeInfo()->typeName() );
-    }
-
-    auto& shader = m_ao_buffer.geometryPassShader();
-    shader.bind();
-    shader.setUniform( "volume.resolution", resolution );
-    shader.setUniform( "volume.resolution_ratio", ratio );
-    shader.setUniform( "volume.resolution_reciprocal", reciprocal );
-    shader.setUniform( "volume.min_range", min_range );
-    shader.setUniform( "volume.max_range", max_range );
-    shader.setUniform( "transfer_function.min_value", min_value );
-    shader.setUniform( "transfer_function.max_value", max_value );
-    shader.setUniform( "sampling_step", m_step );
-    shader.unbind();
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    geom_pass.bind();
+    geom_pass.setUniform( "sampling_step", m_step );
+    geom_pass.setUniform( "volume_data", 0 );
+    geom_pass.setUniform( "exit_points", 1 );
+    geom_pass.setUniform( "entry_points", 2 );
+    geom_pass.setUniform( "transfer_function_data", 3 );
+    geom_pass.setUniform( "random_texture", 4 );
+    geom_pass.unbind();
 }
 
 void SSAOStochasticUniformGridRenderer::Engine::update_shader_program(
@@ -473,248 +339,65 @@ void SSAOStochasticUniformGridRenderer::Engine::update_shader_program(
 {
     m_ao_buffer.geometryPassShader().release();
     m_ao_buffer.occlusionPassShader().release();
-    m_bounding_cube_shader.release();
     this->create_shader_program( volume );
 }
 
-/*===========================================================================*/
-/**
- *  @brief  Create volume texture object.
- *  @param  volume [in] pointer to the structured volume object
- */
-/*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create_volume_texture(
-    const kvs::StructuredVolumeObject* volume )
+void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
+    const kvs::Shader::ShadingModel& shading_model,
+    const kvs::ObjectBase* object,
+    const kvs::Camera* camera,
+    const kvs::Light* light )
 {
-    if ( volume->gridType() != kvs::StructuredVolumeObject::Uniform )
+    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
+    const kvs::Mat4 PM_inverse = PM.inverted();
+
+    // Setup entry/exit textures by drawing bounding cube to FBO
     {
-        kvsMessageError("Not supported grid type.");
-        return;
+        // Change renderig target to the entry/exit FBO.
+        kvs::FrameBufferObject::GuardedBinder binder( m_entry_exit_framebuffer );
+        m_bounding_cube_buffer.draw( PM );
     }
 
-    if ( volume->veclen() != 1 )
+    // Setup shader program
+    m_ao_buffer.setupShaderProgram( shading_model );
+    auto& geom_pass = m_ao_buffer.geometryPassShader();
     {
-        kvsMessageError("Not scalar volume.");
-        return;
+        kvs::ProgramObject::Binder bind( geom_pass );
+        geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
+        geom_pass.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
+        geom_pass.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
+
+        const float f = camera->back();
+        const float n = camera->front();
+        const float to_zw1 = ( f * n ) / ( f - n );
+        const float to_zw2 = 0.5f * ( ( f + n ) / ( f - n ) ) + 0.5f;
+        const float to_ze1 = 0.5f + 0.5f * ( ( f + n ) / ( f - n ) );
+        const float to_ze2 = ( f - n ) / ( f * n );
+        geom_pass.setUniform( "to_zw1", to_zw1 );
+        geom_pass.setUniform( "to_zw2", to_zw2 );
+        geom_pass.setUniform( "to_ze1", to_ze1 );
+        geom_pass.setUniform( "to_ze2", to_ze2 );
+
+        geom_pass.setUniform( "edge_factor", m_edge_factor );
     }
 
-    GLenum data_format = 0;
-    GLenum data_type = 0;
-    kvs::AnyValueArray data_value;
-    switch ( volume->values().typeID() )
+    auto& occl_pass = m_ao_buffer.occlusionPassShader();
     {
-    case kvs::Type::TypeUInt8:
-    {
-        data_format = GL_ALPHA8;
-        data_type = GL_UNSIGNED_BYTE;
-        data_value = volume->values();
-        break;
-    }
-    case kvs::Type::TypeUInt16:
-    {
-        data_format = GL_ALPHA16;
-        data_type = GL_UNSIGNED_SHORT;
-        data_value = volume->values();
-        break;
-    }
-    case kvs::Type::TypeInt8:
-    {
-        data_format = GL_ALPHA8;
-        data_type = GL_UNSIGNED_BYTE;
-        data_value = ::SignedToUnsigned<kvs::UInt8,kvs::Int8>( volume );
-        break;
-    }
-    case kvs::Type::TypeInt16:
-    {
-        data_format = GL_ALPHA16;
-        data_type = GL_UNSIGNED_SHORT;
-        data_value = ::SignedToUnsigned<kvs::UInt16,kvs::Int16>( volume );
-        break;
-    }
-    case kvs::Type::TypeUInt32:
-    {
-        data_format = GL_ALPHA;
-        data_type = GL_FLOAT;
-        kvs::Real32 min_value = static_cast<kvs::Real32>( volume->minValue() );
-        kvs::Real32 max_value = static_cast<kvs::Real32>( volume->maxValue() );
-        if ( m_transfer_function.hasRange() )
-        {
-            min_value = m_transfer_function.colorMap().minValue();
-            max_value = m_transfer_function.colorMap().maxValue();
-        }
-        data_value = ::NormalizeValues<kvs::UInt32>( volume, min_value, max_value );
-        break;
-    }
-    case kvs::Type::TypeInt32:
-    {
-        data_format = GL_ALPHA;
-        data_type = GL_FLOAT;
-        kvs::Real32 min_value = static_cast<kvs::Real32>( volume->minValue() );
-        kvs::Real32 max_value = static_cast<kvs::Real32>( volume->maxValue() );
-        if ( m_transfer_function.hasRange() )
-        {
-            min_value = m_transfer_function.colorMap().minValue();
-            max_value = m_transfer_function.colorMap().maxValue();
-        }
-        data_value = ::NormalizeValues<kvs::Int32>( volume, min_value, max_value );
-        break;
-    }
-    case kvs::Type::TypeReal32:
-    {
-        data_format = GL_ALPHA;
-        data_type = GL_FLOAT;
-        kvs::Real32 min_value = static_cast<kvs::Real32>( volume->minValue() );
-        kvs::Real32 max_value = static_cast<kvs::Real32>( volume->maxValue() );
-        if ( m_transfer_function.hasRange() )
-        {
-            min_value = m_transfer_function.colorMap().minValue();
-            max_value = m_transfer_function.colorMap().maxValue();
-        }
-        data_value = ::NormalizeValues<kvs::Real32>( volume, min_value, max_value );
-        break;
-    }
-    case kvs::Type::TypeReal64:
-    {
-        data_format = GL_ALPHA;
-        data_type = GL_FLOAT;
-        kvs::Real32 min_value = static_cast<kvs::Real32>( volume->minValue() );
-        kvs::Real32 max_value = static_cast<kvs::Real32>( volume->maxValue() );
-        if ( m_transfer_function.hasRange() )
-        {
-            min_value = m_transfer_function.colorMap().minValue();
-            max_value = m_transfer_function.colorMap().maxValue();
-        }
-        data_value = ::NormalizeValues<kvs::Real64>( volume, min_value, max_value );
-        break;
-    }
-    default:
-    {
-        kvsMessageError("Not supported data type.");
-        break;
-    }
+        kvs::ProgramObject::Binder bind( occl_pass );
+        const kvs::Vec3 L = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( object ).position();
+        const kvs::Vec3 C = kvs::WorldCoordinate( camera->position() ).toObjectCoordinate( object ).position();
+        occl_pass.setUniform( "light_position", L );
+        occl_pass.setUniform( "camera_position", C );
+        occl_pass.setUniform( "ModelViewMatrix", M );
     }
 
-    const size_t width = volume->resolution().x();
-    const size_t height = volume->resolution().y();
-    const size_t depth = volume->resolution().z();
-    m_volume_texture.setPixelFormat( data_format, GL_ALPHA, data_type );
-    m_volume_texture.setWrapS( GL_CLAMP_TO_BORDER );
-    m_volume_texture.setWrapT( GL_CLAMP_TO_BORDER );
-    m_volume_texture.setWrapR( GL_CLAMP_TO_BORDER );
-    m_volume_texture.setMagFilter( GL_LINEAR );
-    m_volume_texture.setMinFilter( GL_LINEAR );
-    m_volume_texture.create( width, height, depth, data_value.data() );
-}
+    // Setup OpenGL statement.
+    kvs::OpenGL::Disable( GL_CULL_FACE );
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
 
-void SSAOStochasticUniformGridRenderer::Engine::update_volume_texture(
-    const kvs::StructuredVolumeObject* volume )
-{
-    m_volume_texture.release();
-    this->create_volume_texture( volume );
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Creates trasfer function texture.
- */
-/*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create_transfer_function_texture()
-{
-    const size_t width = m_transfer_function.resolution();
-    const kvs::ValueArray<kvs::Real32> table = m_transfer_function.table();
-    m_transfer_function_texture.setWrapS( GL_CLAMP_TO_EDGE );
-    m_transfer_function_texture.setMagFilter( GL_LINEAR );
-    m_transfer_function_texture.setMinFilter( GL_LINEAR );
-    m_transfer_function_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGBA, GL_FLOAT  );
-    m_transfer_function_texture.create( width, table.data() );
-    m_transfer_function_changed = false;
-}
-
-void SSAOStochasticUniformGridRenderer::Engine::update_transfer_function_texture()
-{
-    m_transfer_function_texture.release();
-    this->create_transfer_function_texture();
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Creates bounding box buffer.
- *  @param  volume [in] pointer to the volume object
- */
-/*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::create_bounding_cube_buffer(
-    const kvs::StructuredVolumeObject* volume )
-{
-    /* Index number of the bounding cube.
-     *
-     *       4 ------------ 5
-     *     / |            / |
-     *    /  |           /  |
-     *   7--------------6   |
-     *   |   |          |   |
-     *   |   0 ---------|-- 1
-     *   |  /           |  /
-     *   | /            | /
-     *   3 ------------ 2
-     *
-     */
-    const kvs::Vector3ui min( 0, 0, 0 );
-    const kvs::Vector3ui max( volume->resolution() - kvs::Vector3ui( 1, 1, 1 ) );
-    const size_t nelements = 72; // = 4 vertices x 3 dimensions x 6 faces
-
-    const float minx = static_cast<float>( min.x() );
-    const float miny = static_cast<float>( min.y() );
-    const float minz = static_cast<float>( min.z() );
-    const float maxx = static_cast<float>( max.x() );
-    const float maxy = static_cast<float>( max.y() );
-    const float maxz = static_cast<float>( max.z() );
-
-    const float coords[ nelements ] = {
-        minx, miny, minz, // 0
-        maxx, miny, minz, // 1
-        maxx, miny, maxz, // 2
-        minx, miny, maxz, // 3
-
-        minx, maxy, maxz, // 7
-        maxx, maxy, maxz, // 6
-        maxx, maxy, minz, // 5
-        minx, maxy, minz, // 4
-
-        minx, maxy, minz, // 4
-        maxx, maxy, minz, // 5
-        maxx, miny, minz, // 1
-        minx, miny, minz, // 0
-
-        maxx, maxy, minz, // 5
-        maxx, maxy, maxz, // 6
-        maxx, miny, maxz, // 2
-        maxx, miny, minz, // 1
-
-        maxx, maxy, maxz, // 6
-        minx, maxy, maxz, // 7
-        minx, miny, maxz, // 3
-        maxx, miny, maxz, // 2
-
-        minx, miny, minz, // 0
-        minx, miny, maxz, // 3
-        minx, maxy, maxz, // 7
-        minx, maxy, minz  // 4
-    };
-
-    kvs::VertexBufferObjectManager::VertexBuffer vertex_array;
-    vertex_array.type = GL_FLOAT;
-    vertex_array.size = sizeof( float ) * nelements;
-    vertex_array.dim = 3;
-    vertex_array.pointer = coords;
-    m_bounding_cube_buffer.setVertexArray( vertex_array );
-    m_bounding_cube_buffer.create();
-}
-
-void SSAOStochasticUniformGridRenderer::Engine::update_bounding_cube_buffer(
-    const kvs::StructuredVolumeObject* volume )
-{
-    m_bounding_cube_buffer.release();
-    this->create_bounding_cube_buffer( volume );
+    if ( BaseClass::isEnabledShading() ) kvs::OpenGL::Enable( GL_LIGHTING );
+    else kvs::OpenGL::Disable( GL_LIGHTING );
 }
 
 /*===========================================================================*/
@@ -767,9 +450,9 @@ void SSAOStochasticUniformGridRenderer::Engine::update_framebuffer(
     const size_t height )
 {
     m_entry_texture.release();
-    m_entry_texture.create( width, height );
-
     m_exit_texture.release();
+
+    m_entry_texture.create( width, height );
     m_exit_texture.create( width, height );
 
     m_entry_exit_framebuffer.attachColorTexture( m_exit_texture, 0 );
@@ -784,52 +467,101 @@ void SSAOStochasticUniformGridRenderer::Engine::update_framebuffer(
     m_ao_buffer.updateFramebuffer( width, height );
 }
 
-/*===========================================================================*/
-/**
- *  @brief  Draws bounding box buffer.
- */
-/*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::draw_bounding_cube_buffer()
+void SSAOStochasticUniformGridRenderer::Engine::create_buffer_object(
+    const kvs::StructuredVolumeObject* volume )
 {
-    kvs::VertexBufferObjectManager::Binder binder( m_bounding_cube_buffer );
-    m_bounding_cube_buffer.drawArrays( GL_QUADS, 0, 72 );
-}
+    m_volume_buffer.create( volume, this->transferFunction() );
+    m_bounding_cube_buffer.create( volume );
 
-/*===========================================================================*/
-/**
- *  @brief  Draws quad to run shaders.
- */
-/*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::draw_quad()
-{
-    kvs::OpenGL::Disable( GL_LIGHTING );
-
-    kvs::OpenGL::WithPushedMatrix p1( GL_MODELVIEW );
-    p1.loadIdentity();
+    // Set uniform variables.
+    const kvs::Vec3 r( volume->resolution() );
+    const kvs::Real32 max_ngrids = kvs::Math::Max( r.x(), r.y(), r.z() );
+    const kvs::Vec3 ratio( r.x() / max_ngrids, r.y() / max_ngrids, r.z() / max_ngrids );
+    const kvs::Vec3 reciprocal( 1.0f / r.x(), 1.0f / r.y(), 1.0f / r.z() );
+    kvs::Real32 min_range = 0.0f;
+    kvs::Real32 max_range = 0.0f;
+    kvs::Real32 min_value = this->transferFunction().colorMap().minValue();
+    kvs::Real32 max_value = this->transferFunction().colorMap().maxValue();
+    const std::type_info& type = volume->values().typeInfo()->type();
+    if ( type == typeid( kvs::UInt8 ) )
     {
-        kvs::OpenGL::WithPushedMatrix p2( GL_PROJECTION );
-        p2.loadIdentity();
+        min_range = 0.0f;
+        max_range = 255.0f;
+        if ( !this->transferFunction().hasRange() )
         {
-            kvs::OpenGL::SetOrtho( 0, 1, 0, 1, -1, 1 );
-            kvs::OpenGL::Begin( GL_QUADS );
-            kvs::OpenGL::Color( kvs::Vec3( 1.0, 1.0, 1.0 ) );
-            kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 1 ), kvs::Vec2( 1, 1 ) );
-            kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 1 ), kvs::Vec2( 0, 1 ) );
-            kvs::OpenGL::TexCoordVertex( kvs::Vec2( 0, 0 ), kvs::Vec2( 0, 0 ) );
-            kvs::OpenGL::TexCoordVertex( kvs::Vec2( 1, 0 ), kvs::Vec2( 1, 0 ) );
-            kvs::OpenGL::End();
+            min_value = 0.0f;
+            max_value = 255.0f;
         }
     }
+    else if ( type == typeid( kvs::Int8 ) )
+    {
+        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt8>::Min() );
+        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt8>::Max() );
+        if ( !this->transferFunction().hasRange() )
+        {
+            min_value = -128.0f;
+            max_value = 127.0f;
+        }
+    }
+    else if ( type == typeid( kvs::UInt16 ) )
+    {
+        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt16>::Min() );
+        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::UInt16>::Max() );
+        if ( !this->transferFunction().hasRange() )
+        {
+            min_value = static_cast<kvs::Real32>( volume->minValue() );
+            max_value = static_cast<kvs::Real32>( volume->maxValue() );
+        }
+    }
+    else if ( type == typeid( kvs::Int16 ) )
+    {
+        min_range = static_cast<kvs::Real32>( kvs::Value<kvs::Int16>::Min() );
+        max_range = static_cast<kvs::Real32>( kvs::Value<kvs::Int16>::Max() );
+        if ( !this->transferFunction().hasRange() )
+        {
+            min_value = static_cast<kvs::Real32>( volume->minValue() );
+            max_value = static_cast<kvs::Real32>( volume->maxValue() );
+        }
+    }
+    else if ( type == typeid( kvs::UInt32 ) ||
+              type == typeid( kvs::Int32  ) ||
+              type == typeid( kvs::Real32 ) ||
+              type == typeid( kvs::Real64 ) )
+    {
+        min_range = 0.0f;
+        max_range = 1.0f;
+        min_value = 0.0f;
+        max_value = 1.0f;
+    }
+    else
+    {
+        kvsMessageError( "Not supported data type '%s'.",
+                         volume->values().typeInfo()->typeName() );
+    }
+
+    auto& shader = m_ao_buffer.geometryPassShader();
+    shader.bind();
+    shader.setUniform( "volume.resolution", r );
+    shader.setUniform( "volume.resolution_ratio", ratio );
+    shader.setUniform( "volume.resolution_reciprocal", reciprocal );
+    shader.setUniform( "volume.min_range", min_range );
+    shader.setUniform( "volume.max_range", max_range );
+    shader.setUniform( "transfer_function.min_value", min_value );
+    shader.setUniform( "transfer_function.max_value", max_value );
+    shader.unbind();
+}
+
+void SSAOStochasticUniformGridRenderer::Engine::update_buffer_object(
+    const kvs::StructuredVolumeObject* volume )
+{
+    m_volume_buffer.release();
+    m_bounding_cube_buffer.release();
+    this->create_buffer_object( volume );
 }
 
 void SSAOStochasticUniformGridRenderer::Engine::draw_buffer_object(
     const kvs::StructuredVolumeObject* volume )
 {
-    if ( isEnabledShading() ) kvs::OpenGL::Enable( GL_LIGHTING );
-    else kvs::OpenGL::Disable( GL_LIGHTING );
-    kvs::OpenGL::Disable( GL_CULL_FACE );
-    kvs::OpenGL::WithEnabled d( GL_DEPTH_TEST );
-
     const size_t size = BaseClass::randomTextureSize();
     const int count = BaseClass::repetitionCount() * ::RandomNumber();
     const float offset_x = static_cast<float>( ( count ) % size );
@@ -839,12 +571,12 @@ void SSAOStochasticUniformGridRenderer::Engine::draw_buffer_object(
     auto& geom_pass = m_ao_buffer.geometryPassShader();
     geom_pass.setUniform( "random_offset", random_offset );
 
-    kvs::Texture::Binder unit0( m_volume_texture, 0 );
+    kvs::Texture::Binder unit0( m_volume_buffer.manager(), 0 );
     kvs::Texture::Binder unit1( m_exit_texture, 1 );
     kvs::Texture::Binder unit2( m_entry_texture, 2 );
     kvs::Texture::Binder unit3( m_transfer_function_texture, 3 );
     kvs::Texture::Binder unit4( randomTexture(), 4 );
-    this->draw_quad();
+    m_volume_buffer.draw();
 }
 
 } // end of namespace AmbientOcclusionRendering
