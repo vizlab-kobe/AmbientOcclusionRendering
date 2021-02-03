@@ -171,13 +171,13 @@ void SSAOStochasticPolygonRenderer::Engine::create(
 {
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
-    BaseClass::setEnabledShading( has_normal );
+    BaseClass::setShadingEnabled( has_normal );
 
     BaseClass::attachObject( object );
     BaseClass::createRandomTexture();
 
     // Create shader program
-    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.createShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
 
     // Create framebuffer
     const float dpr = camera->devicePixelRatio();
@@ -203,7 +203,7 @@ void SSAOStochasticPolygonRenderer::Engine::update(
     kvs::Light* light )
 {
     // Update shader program
-    m_ao_buffer.updateShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.updateShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
 
     // Update framebuffer
     const float dpr = camera->devicePixelRatio();

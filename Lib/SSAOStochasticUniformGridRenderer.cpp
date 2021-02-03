@@ -321,7 +321,7 @@ void SSAOStochasticUniformGridRenderer::Engine::draw(
 void SSAOStochasticUniformGridRenderer::Engine::create_shader_program(
     const kvs::StructuredVolumeObject* volume )
 {
-    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.createShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
 
     auto& geom_pass = m_ao_buffer.geometryPassShader();
     geom_pass.bind();
@@ -396,7 +396,7 @@ void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
     kvs::OpenGL::Disable( GL_CULL_FACE );
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
 
-    if ( BaseClass::isEnabledShading() ) kvs::OpenGL::Enable( GL_LIGHTING );
+    if ( BaseClass::isShadingEnabled() ) kvs::OpenGL::Enable( GL_LIGHTING );
     else kvs::OpenGL::Disable( GL_LIGHTING );
 }
 

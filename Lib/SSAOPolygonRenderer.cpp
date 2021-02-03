@@ -47,7 +47,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
 
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
-    BaseClass::setEnabledShading( has_normal );
+    BaseClass::setShadingEnabled( has_normal );
 
     const size_t width = camera->windowWidth();
     const size_t height = camera->windowHeight();
@@ -95,7 +95,7 @@ void SSAOPolygonRenderer::create_shader_program()
 {
     m_ao_buffer.createShaderProgram(
         BaseClass::shadingModel(),
-        BaseClass::isEnabledShading() );
+        BaseClass::isShadingEnabled() );
 }
 
 /*===========================================================================*/
@@ -107,7 +107,7 @@ void SSAOPolygonRenderer::update_shader_program()
 {
     m_ao_buffer.updateShaderProgram(
         BaseClass::shadingModel(),
-        BaseClass::isEnabledShading() );
+        BaseClass::isShadingEnabled() );
 }
 
 /*===========================================================================*/

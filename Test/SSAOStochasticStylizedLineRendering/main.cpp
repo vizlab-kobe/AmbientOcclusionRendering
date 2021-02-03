@@ -75,7 +75,7 @@ struct Model
             renderer->setSamplingSphereRadius( radius );
             renderer->setNumberOfSamplingPoints( points );
             renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
+            renderer->setLODControlEnabled( lod );
             renderer->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
             renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setEdgeFactor( edge );
@@ -87,7 +87,7 @@ struct Model
             auto* renderer = new Renderer();
             renderer->setName( "Renderer" );
             renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
+            renderer->setLODControlEnabled( lod );
             renderer->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
             renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->enableShading();
@@ -152,12 +152,12 @@ int main( int argc, char** argv )
         if ( model.ssao )
         {
             auto* renderer = Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setEnabledLODControl( model.lod );
+            renderer->setLODControlEnabled( model.lod );
         }
         else
         {
             auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setEnabledLODControl( model.lod );
+            renderer->setLODControlEnabled( model.lod );
         }
     } );
 
