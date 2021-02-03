@@ -79,7 +79,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     this->setup_shader_program();
 
     m_ao_buffer.bind();
-    BaseClass::drawBufferObject( camera );
+    this->draw_buffer_object( polygon );
     m_ao_buffer.unbind();
     m_ao_buffer.draw();
 
@@ -146,6 +146,12 @@ void SSAOPolygonRenderer::update_framebuffer(
     const size_t height )
 {
     m_ao_buffer.updateFramebuffer( width, height );
+}
+
+void SSAOPolygonRenderer::draw_buffer_object( const kvs::PolygonObject* polygon )
+{
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    BaseClass::bufferObject().draw( polygon );
 }
 
 } // end of namespace AmbientOcclusionRendering
