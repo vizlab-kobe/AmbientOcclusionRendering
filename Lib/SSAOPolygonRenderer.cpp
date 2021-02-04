@@ -43,7 +43,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
 
     BaseClass::startTimer();
     kvs::OpenGL::WithPushedAttrib p( GL_ALL_ATTRIB_BITS );
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+//    kvs::OpenGL::Enable( GL_DEPTH_TEST );
 
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
@@ -151,6 +151,7 @@ void SSAOPolygonRenderer::update_framebuffer(
 void SSAOPolygonRenderer::draw_buffer_object( const kvs::PolygonObject* polygon )
 {
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     BaseClass::bufferObject().draw( polygon );
 }
 

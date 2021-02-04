@@ -320,6 +320,8 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object(
     geom_pass.setUniform( "random_texture_size_inv", 1.0f / size );
 
     // Draw buffer object
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     kvs::Texture::Binder bind( BaseClass::randomTexture() );
     m_buffer_object.draw( polygon );
 }
