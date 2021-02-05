@@ -67,9 +67,19 @@ SSAOStochasticPolygonRenderer::SSAOStochasticPolygonRenderer():
  *  @param  offset [in] offset value
  */
 /*===========================================================================*/
-void SSAOStochasticPolygonRenderer::setPolygonOffset( const float offset )
+//void SSAOStochasticPolygonRenderer::setPolygonOffset( const float offset )
+//{
+//    static_cast<Engine&>( engine() ).setPolygonOffset( offset );
+//}
+
+void SSAOStochasticPolygonRenderer::setDepthOffset( const kvs::Vec2& offset )
 {
-    static_cast<Engine&>( engine() ).setPolygonOffset( offset );
+    static_cast<Engine&>( engine() ).setDepthOffset( offset );
+}
+
+void SSAOStochasticPolygonRenderer::setDepthOffset( const float factor, const float units )
+{
+    static_cast<Engine&>( engine() ).setDepthOffset( factor, units );
 }
 
 /*===========================================================================*/
@@ -132,9 +142,7 @@ size_t SSAOStochasticPolygonRenderer::numberOfSamplingPoints() const
  *  @brief  Constructs a new Engine class.
  */
 /*===========================================================================*/
-SSAOStochasticPolygonRenderer::Engine::Engine():
-    m_edge_factor( 0.0f ),
-    m_polygon_offset( 0.0f )
+SSAOStochasticPolygonRenderer::Engine::Engine()
 {
     m_ao_buffer.setGeometryPassShaderFiles(
         "SSAO_SR_polygon_geom_pass.vert",
@@ -234,7 +242,6 @@ void SSAOStochasticPolygonRenderer::Engine::setup(
     // Setup additional variables in geom pass shader
     auto& geom_pass = m_ao_buffer.geometryPassShader();
     geom_pass.bind();
-    geom_pass.setUniform( "polygon_offset", m_polygon_offset );
     geom_pass.setUniform( "edge_factor", m_edge_factor );
     geom_pass.unbind();
 }
@@ -252,6 +259,17 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
     kvs::Camera* camera,
     kvs::Light* light )
 {
+    // Depth offset
+    if ( !kvs::Math::IsZero( m_depth_offset[0] ) )
+    {
+        kvs::OpenGL::SetPolygonOffset( m_depth_offset[0], m_depth_offset[1] );
+        kvs::OpenGL::Enable( GL_POLYGON_OFFSET_FILL );
+    }
+
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+    // Draw buffer object
     m_ao_buffer.bind();
     this->draw_buffer_object( kvs::PolygonObject::DownCast( object ) );
     m_ao_buffer.unbind();
@@ -267,18 +285,9 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
 void SSAOStochasticPolygonRenderer::Engine::create_buffer_object(
     const kvs::PolygonObject* polygon )
 {
-    // Create random index array
-    const size_t nvertices = ::NumberOfVertices( polygon );
-    const auto tex_size = randomTextureSize();
-    kvs::ValueArray<kvs::UInt16> indices( nvertices * 2 );
-    for ( size_t i = 0; i < nvertices; i++ )
-    {
-        const unsigned int count = i * 12347;
-        indices[ 2 * i + 0 ] = static_cast<kvs::UInt16>( ( count ) % tex_size );
-        indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
-    }
-
     // Create buffer object
+    const auto nvertices = ::NumberOfVertices( polygon );
+    const auto indices = BaseClass::randomIndices( nvertices );
     auto location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
     m_buffer_object.create( polygon );
@@ -320,8 +329,6 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object(
     geom_pass.setUniform( "random_texture_size_inv", 1.0f / size );
 
     // Draw buffer object
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
-    kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     kvs::Texture::Binder bind( BaseClass::randomTexture() );
     m_buffer_object.draw( polygon );
 }

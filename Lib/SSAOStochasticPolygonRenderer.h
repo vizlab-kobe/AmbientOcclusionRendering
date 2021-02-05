@@ -28,8 +28,10 @@ public:
 
 public:
     SSAOStochasticPolygonRenderer();
-    void setPolygonOffset( const float offset );
+
     void setEdgeFactor( const float factor );
+    void setDepthOffset( const kvs::Vec2& offset );
+    void setDepthOffset( const float factor, const float units = 0.0f );
     void setSamplingSphereRadius( const float radius );
     void setNumberOfSamplingPoints( const size_t nsamples );
     kvs::Real32 samplingSphereRadius() const;
@@ -47,8 +49,9 @@ class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEng
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
 
 private:
-    float m_edge_factor; ///< edge enhancement factor
-    float m_polygon_offset; ///< polygon offset
+    float m_edge_factor = 0.0f; ///< edge enhancement factor
+    kvs::Vec2 m_depth_offset{ 0.0f, 0.0f }; ///< depth offset {factor, units}
+
     BufferObject m_buffer_object; ///< geometry buffer object
     AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
@@ -59,9 +62,12 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
-    void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
 
+    void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
+    void setDepthOffset( const kvs::Vec2& offset ) { m_depth_offset = offset; }
+    void setDepthOffset( const float factor, const float units = 0.0f ) { m_depth_offset = kvs::Vec2( factor, units ); }
+
+    // AO buffer properties
     void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
     kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }

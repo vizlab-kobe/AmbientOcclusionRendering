@@ -43,7 +43,6 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
 
     BaseClass::startTimer();
     kvs::OpenGL::WithPushedAttrib p( GL_ALL_ATTRIB_BITS );
-//    kvs::OpenGL::Enable( GL_DEPTH_TEST );
 
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
@@ -148,8 +147,22 @@ void SSAOPolygonRenderer::update_framebuffer(
     m_ao_buffer.updateFramebuffer( width, height );
 }
 
+/*===========================================================================*/
+/**
+ *  @brief  Draws buffer object.
+ *  @param  polygon [in] pointer to the polygon object
+ */
+/*===========================================================================*/
 void SSAOPolygonRenderer::draw_buffer_object( const kvs::PolygonObject* polygon )
 {
+    // Depth offset
+    const auto depth_offset = BaseClass::depthOffset();
+    if ( !kvs::Math::IsZero( depth_offset[0] ) )
+    {
+        kvs::OpenGL::SetPolygonOffset( depth_offset[0], depth_offset[1] );
+        kvs::OpenGL::Enable( GL_POLYGON_OFFSET_FILL );
+    }
+
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
     kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     BaseClass::bufferObject().draw( polygon );
