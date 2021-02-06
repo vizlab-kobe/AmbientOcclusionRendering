@@ -123,7 +123,6 @@ void AmbientOcclusionBuffer::createShaderProgram( const kvs::Shader::ShadingMode
             {
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
-
             frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
         }
 
@@ -211,6 +210,14 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float rad
 {
     kvs::Xorshift128 rand;
     kvs::ValueArray<GLfloat> sampling_points( 3 * nsamples );
+    if( nsamples == 1)
+    {
+        sampling_points[ 0 ] = 0;
+        sampling_points[ 1 ] = 0;
+        sampling_points[ 2 ] = 0;
+
+        return sampling_points;
+    }
     for ( size_t i = 0; i < nsamples ; i++ )
     {
         const float pi = 3.1415926f;
@@ -229,7 +236,7 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float rad
         sampling_points[ 3 * i + 1 ] = y;
         sampling_points[ 3 * i + 2 ] = z;
     }
-
+    
     return sampling_points;
 }
 

@@ -10,7 +10,6 @@
 #include <kvs/TargetChangeEvent>
 #include <kvs/KeyPressEventListener>
 #include <kvs/StochasticUniformGridRenderer>
-#include "SSAOStochasticUniformGridRenderer.h"
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/PaintEventListener>
 

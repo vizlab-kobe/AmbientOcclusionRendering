@@ -18,6 +18,7 @@ uniform mat4 ProjectionMatrix;
 
 float OcclusionFactor( vec4 position, int nsamples )
 {
+    if( nsamples == 1 ) return 1.0;
     int count = 0;
     for ( int i = 0; i < nsamples ; i++ )
     {
