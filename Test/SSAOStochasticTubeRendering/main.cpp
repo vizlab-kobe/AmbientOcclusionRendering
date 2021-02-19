@@ -81,7 +81,7 @@ struct Model
             renderer->setTransferFunction( tfunc );
             renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
+            renderer->setLODControlEnabled( lod );
             renderer->enableShading();
             renderer->setSamplingSphereRadius( radius );
             renderer->setNumberOfSamplingPoints( points );
@@ -95,7 +95,7 @@ struct Model
             renderer->setTransferFunction( tfunc );
             renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setRepetitionLevel( repeats );
-            renderer->setEnabledLODControl( lod );
+            renderer->setLODControlEnabled( lod );
             renderer->enableShading();
             return renderer;
         }
@@ -158,12 +158,12 @@ int main( int argc, char** argv )
         if ( model.ssao )
         {
             auto* renderer = Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setEnabledLODControl( model.lod );
+            renderer->setLODControlEnabled( model.lod );
         }
         else
         {
             auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setEnabledLODControl( model.lod );
+            renderer->setLODControlEnabled( model.lod );
         }
     } );
 

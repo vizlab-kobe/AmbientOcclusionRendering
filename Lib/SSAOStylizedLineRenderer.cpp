@@ -95,7 +95,7 @@ void SSAOStylizedLineRenderer::create_shader_program()
 {
     m_ao_buffer.createShaderProgram(
         BaseClass::shadingModel(),
-        BaseClass::isEnabledShading() );
+        BaseClass::isShadingEnabled() );
 }
 
 /*===========================================================================*/
@@ -107,7 +107,7 @@ void SSAOStylizedLineRenderer::update_shader_program()
 {
     m_ao_buffer.updateShaderProgram(
         BaseClass::shadingModel(),
-        BaseClass::isEnabledShading() );
+        BaseClass::isShadingEnabled() );
 }
 
 /*===========================================================================*/

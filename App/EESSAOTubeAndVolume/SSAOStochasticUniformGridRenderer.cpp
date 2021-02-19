@@ -261,6 +261,7 @@ void SSAOStochasticUniformGridRenderer::Engine::setup( kvs::ObjectBase* object, 
         shader.setUniform( "to_zw2", to_zw2 );
         shader.setUniform( "to_ze1", to_ze1 );
         shader.setUniform( "to_ze2", to_ze2 );
+        shader.setUniform( "edge_factor", m_edge_factor );
     }
 
     //ここらへん要変更
@@ -410,7 +411,6 @@ void SSAOStochasticUniformGridRenderer::Engine::create_geometry_shader_program( 
     shader.setUniform( "transfer_function.min_value", min_value );
     shader.setUniform( "transfer_function.max_value", max_value );
     shader.setUniform( "sampling_step", m_step );
-    shader.setUniform( "edge_factor", m_edge_factor );
     shader.unbind();
 }
 

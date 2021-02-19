@@ -1,4 +1,7 @@
 #version 120
+
+#define ENABLE_TWO_SIDE_LIGHTING );
+
 #include "shading.h"
 #include "texture.h"
 
@@ -70,5 +73,6 @@ void main()
 #endif
 
     gl_FragColor = vec4( shaded_color, 1.0 );
+    //gl_FragColor = vec4( vec3( occlusion ), 1.0 );
     gl_FragDepth = LookupTexture2D( depth_texture, gl_TexCoord[0].st ).z;
 }

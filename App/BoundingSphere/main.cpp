@@ -168,10 +168,10 @@ kvs::PolygonObject* createBoundingSphere()
     polygon->setNormalTypeToPolygon();
     polygon->setNormals( normal );
     polygon->setColor( kvs::RGBColor::Red() );
-    polygon->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
     polygon->setName( "Polygon" );
 
     kvs::PolygonObject* sphere = new kvs::PolygonToPolygon( polygon );
+    sphere->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
     sphere->setColor( kvs::RGBColor::White() );
     sphere->setName( "Polygon" );
     
@@ -369,6 +369,48 @@ int main( int argc, char** argv )
       auto* scene = screen.scene();
       auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
       renderer->setEdgeFactor( edge );
+    } );
+
+    float edge2 = 1.0;
+    kvs::Slider edge2_slider( &screen );
+    edge2_slider.setCaption( "Edge2: " + kvs::String::ToString( edge2 ) );
+    edge2_slider.setValue( edge2 );
+    edge2_slider.setRange( 0.0, 5.0 );
+    edge2_slider.setMargin( 10 );
+    edge2_slider.anchorToBottom( &edge_slider );
+    edge2_slider.show();
+    edge2_slider.sliderMoved( [&] ()
+    {
+        edge2 = int( edge2_slider.value() * 10 ) * 0.1f;
+        edge2_slider.setCaption( "Edge2: " + kvs::String::From( edge2 ) );
+    } );
+    edge2_slider.sliderReleased( [&] ()
+    {
+      auto* scene = screen.scene();
+      auto*renderer2 = local::SSAOStochasticTubeRenderer::DownCast( scene->renderer( "StochasticTubeRenderer" ) );
+      renderer2->setEdgeFactor( edge2 );
+    } );
+
+    int nsamples = 256;
+    kvs::Slider nsample_slider( &screen );
+    nsample_slider.setCaption( "Nsample: " + kvs::String::ToString( nsamples ) );
+    nsample_slider.setValue( nsamples );
+    nsample_slider.setRange( 1, 256 );
+    nsample_slider.setMargin( 10 );
+    nsample_slider.anchorToBottom( &edge2_slider );
+    nsample_slider.show();
+    nsample_slider.sliderMoved( [&] ()
+    {
+        const int min_value = nsample_slider.minValue();
+        const int max_value = nsample_slider.maxValue();
+        const int v = int( nsample_slider.value() );
+        nsamples = kvs::Math::Clamp( v, min_value, max_value );
+        nsample_slider.setCaption( "Nsample: " + kvs::String::From( nsamples ) );
+    } );
+    nsample_slider.sliderReleased( [&] ()
+    {
+        compositor.setNumberOfSamplingPoints( nsamples );
+        screen.redraw();
     } );
 
     kvs::KeyPressEventListener h_key;

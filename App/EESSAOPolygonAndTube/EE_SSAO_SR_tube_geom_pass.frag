@@ -75,9 +75,13 @@ void main()
 
     //Edge enhancement
     vec3 normal = side_vec * tex.x - tex.y * up_vec;
-    vec3 N = normalize( normal );
-    vec3 E = normalize( -position.xyz );
-    opacity = pow( opacity, pow( dot( N, E ), edge_factor ) );
+    if( edge_factor > 0 )
+    {
+	vec3 N = normalize( normal );
+    	vec3 E = normalize( -position.xyz );
+	if( dot( N, E ) != 0 )
+    	opacity = pow( opacity, pow( abs( dot( N, E ) ), edge_factor ) );
+    }
 
     if ( R > opacity ) { discard; return; }
     

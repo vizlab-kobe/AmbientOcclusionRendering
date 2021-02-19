@@ -42,6 +42,25 @@ kvs::PolygonObject* createIsosurface( std::string filename )
     return polygon;
 }
 
+kvs::PolygonObject* changeIsosurface( std::string filename, double isolevel )
+{
+    kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( filename );
+    kvs::StructuredVolumeObject* scalar_volume = new kvs::StructuredVectorToScalar( volume );
+
+    double min_value = scalar_volume->minValue();
+    double max_value = scalar_volume->maxValue();
+    double isovalue = ( max_value + min_value ) * isolevel;  // Isolevel parameter.
+    double opacity = 0.5;
+    const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
+    const bool d = false;
+    const kvs::TransferFunction t( 256 );
+    auto* polygon = new kvs::Isosurface( scalar_volume, isovalue, n, d, t );
+    delete scalar_volume;
+    polygon->setName( "Polygon" );
+    polygon->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
+    return polygon;
+}
+
 kvs::PointObject* generateSeedPoints( kvs::StructuredVolumeObject* volume, kvs::Vec3i stride )
 {
     std::vector<kvs::Real32> v;
@@ -157,6 +176,7 @@ int main( int argc, char** argv )
         } );
     checkbox.show();
 
+    float opacity1;
     kvs::Slider opacity( &screen );
     opacity.setCaption( "Opacity: " + kvs::String::ToString( 0.5 ) );
     opacity.setWidth( 150 );
@@ -166,13 +186,14 @@ int main( int argc, char** argv )
     opacity.anchorToBottom( &checkbox );
     opacity.valueChanged(
         [&]() {
-	  opacity.setCaption( "Opacity: " + kvs::String::ToString( opacity.value() ) );
+            opacity1 = int( opacity.value() * 10 ) * 0.1f;
+            opacity.setCaption( "Opacity: " + kvs::String::ToString( opacity1 ) );
             auto* scene = screen.scene();
             auto* object1 = kvs::PolygonObject::DownCast( scene->object( "Polygon" ) );
             auto* object2 = new kvs::PolygonObject();           
             object2->shallowCopy( *object1 );
             object2->setName( "Polygon" );
-            object2->setOpacity( int( opacity.value() * 255 + 0.5 ) );
+            object2->setOpacity( int( opacity1 * 255 + 0.5 ) );
             scene->replaceObject( "Polygon", object2 );
         } );
     opacity.show();
@@ -252,7 +273,29 @@ int main( int argc, char** argv )
     {
       auto* scene = screen.scene();
       auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
+      auto* renderer2 = local::SSAOStochasticTubeRenderer::DownCast( scene->renderer( "TubeRenderer" ) );
       renderer->setEdgeFactor( edge );
+      renderer2->setEdgeFactor( edge );
+    } );
+
+    float isolevel = 0.05;
+    kvs::Slider isolevel_slider( &screen );
+    isolevel_slider.setCaption( "Isolevel: " + kvs::String::ToString( isolevel ) );
+    isolevel_slider.setValue( isolevel );
+    isolevel_slider.setRange( 0.01, 1.0 );
+    isolevel_slider.setMargin( 10 );
+    isolevel_slider.anchorToBottom( &edge_slider );
+    isolevel_slider.show();
+    isolevel_slider.sliderMoved( [&] ()
+    {
+        isolevel = int( isolevel_slider.value() * 100 ) * 0.01f;
+        isolevel_slider.setCaption( "Isolevel: " + kvs::String::From( isolevel ) );
+    } );
+    isolevel_slider.sliderReleased( [&] ()
+    {
+      auto* scene = screen.scene();
+      auto* object = changeIsosurface( magnetic_file, isolevel );
+      scene->replaceObject( "Polygon", object );
     } );
 
     kvs::KeyPressEventListener h_key;

@@ -185,7 +185,7 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
 void SSAOStochasticPolygonRenderer::Engine::create_geometry_shader_program()
 {
     kvs::ShaderSource vert( "SSAO_SR_polygon_geom_pass.vert" );
-    kvs::ShaderSource frag( "SSAO_SR_polygon_geom_pass.frag" );
+    kvs::ShaderSource frag( "EE_SSAO_SR_polygon_geom_pass.frag" );
     m_geom_pass_shader.build( vert, frag );
 }
 

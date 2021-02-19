@@ -342,7 +342,7 @@ int main( int argc, char** argv )
 
     float edge = 1.0;
     kvs::Slider edge_slider( &screen );
-    edge_slider.setCaption( "Edge: " + kvs::String::ToString( edge ) );
+    edge_slider.setCaption( "Volume Edge: " + kvs::String::ToString( edge ) );
     edge_slider.setValue( edge );
     edge_slider.setRange( 0.0, 5.0 );
     edge_slider.setMargin( 10 );
@@ -351,13 +351,33 @@ int main( int argc, char** argv )
     edge_slider.sliderMoved( [&] ()
     {
         edge = int( edge_slider.value() * 10 ) * 0.1f;
-        edge_slider.setCaption( "Edge: " + kvs::String::From( edge ) );
+        edge_slider.setCaption( "Volume Edge: " + kvs::String::From( edge ) );
     } );
     edge_slider.sliderReleased( [&] ()
     {
       auto* scene = screen.scene();
       auto* renderer = local::SSAOStochasticUniformGridRenderer::DownCast( scene->renderer( "UniformRenderer" ) );
       renderer->setEdgeFactor( edge );
+    } );
+
+    float edge2 = 1.0;
+    kvs::Slider edge2_slider( &screen );
+    edge2_slider.setCaption( "Tube Edge: " + kvs::String::ToString( edge2 ) );
+    edge2_slider.setValue( edge2 );
+    edge2_slider.setRange( 0.0, 5.0 );
+    edge2_slider.setMargin( 10 );
+    edge2_slider.anchorToBottom( &edge_slider );
+    edge2_slider.show();
+    edge2_slider.sliderMoved( [&] ()
+    {
+        edge2 = int( edge2_slider.value() * 10 ) * 0.1f;
+        edge2_slider.setCaption( "Tube Edge: " + kvs::String::From( edge2 ) );
+    } );
+    edge2_slider.sliderReleased( [&] ()
+    {
+      auto* scene = screen.scene();
+      auto* renderer = local::SSAOStochasticTubeRenderer::DownCast( scene->renderer( "TubeRenderer" ) );
+      renderer->setEdgeFactor( edge2 );
     } );
 
     kvs::KeyPressEventListener h_key;

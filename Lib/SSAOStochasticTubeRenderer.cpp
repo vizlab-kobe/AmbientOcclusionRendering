@@ -134,7 +134,7 @@ void SSAOStochasticTubeRenderer::Engine::create(
     BaseClass::createRandomTexture();
 
     // Create shader program
-    m_ao_buffer.createShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.createShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
 
     // Create framebuffer
     const float dpr = camera->devicePixelRatio();
@@ -152,7 +152,7 @@ void SSAOStochasticTubeRenderer::Engine::create(
 void SSAOStochasticTubeRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
 {
     // Update shader program
-    m_ao_buffer.updateShaderProgram( this->shader(), this->isEnabledShading() );
+    m_ao_buffer.updateShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
 
     // Update framebuffer
     const float dpr = camera->devicePixelRatio();

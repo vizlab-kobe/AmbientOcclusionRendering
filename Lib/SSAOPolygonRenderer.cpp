@@ -43,11 +43,10 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
 
     BaseClass::startTimer();
     kvs::OpenGL::WithPushedAttrib p( GL_ALL_ATTRIB_BITS );
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
 
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
-    BaseClass::setEnabledShading( has_normal );
+    BaseClass::setShadingEnabled( has_normal );
 
     const size_t width = camera->windowWidth();
     const size_t height = camera->windowHeight();
@@ -79,7 +78,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     this->setup_shader_program();
 
     m_ao_buffer.bind();
-    BaseClass::drawBufferObject( camera );
+    this->draw_buffer_object( polygon );
     m_ao_buffer.unbind();
     m_ao_buffer.draw();
 
@@ -95,7 +94,7 @@ void SSAOPolygonRenderer::create_shader_program()
 {
     m_ao_buffer.createShaderProgram(
         BaseClass::shadingModel(),
-        BaseClass::isEnabledShading() );
+        BaseClass::isShadingEnabled() );
 }
 
 /*===========================================================================*/
@@ -107,7 +106,7 @@ void SSAOPolygonRenderer::update_shader_program()
 {
     m_ao_buffer.updateShaderProgram(
         BaseClass::shadingModel(),
-        BaseClass::isEnabledShading() );
+        BaseClass::isShadingEnabled() );
 }
 
 /*===========================================================================*/
@@ -146,6 +145,27 @@ void SSAOPolygonRenderer::update_framebuffer(
     const size_t height )
 {
     m_ao_buffer.updateFramebuffer( width, height );
+}
+
+/*===========================================================================*/
+/**
+ *  @brief  Draws buffer object.
+ *  @param  polygon [in] pointer to the polygon object
+ */
+/*===========================================================================*/
+void SSAOPolygonRenderer::draw_buffer_object( const kvs::PolygonObject* polygon )
+{
+    // Depth offset
+    const auto depth_offset = BaseClass::depthOffset();
+    if ( !kvs::Math::IsZero( depth_offset[0] ) )
+    {
+        kvs::OpenGL::SetPolygonOffset( depth_offset[0], depth_offset[1] );
+        kvs::OpenGL::Enable( GL_POLYGON_OFFSET_FILL );
+    }
+
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    BaseClass::bufferObject().draw( polygon );
 }
 
 } // end of namespace AmbientOcclusionRendering

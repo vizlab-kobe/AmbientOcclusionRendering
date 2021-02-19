@@ -17,7 +17,6 @@
 #include "qualifire.h"
 #include "texture.h"
 
-
 // Input parameters from vertex shader
 FragIn vec3 position; // vertex position in camera coordinate
 FragIn vec3 normal; // normal vector in camera coodinate
@@ -58,11 +57,13 @@ void main()
     float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
     
     //Edge Enhancement
-    vec3 N = normalize( normal );
-    vec3 E = normalize( -position );
-    //alpha = pow( alpha, pow( dot( N, E ), 3 )*2 );
-    alpha = min( 1.0, alpha / pow( abs( dot( N, E ) ), edge_factor ) );
-
+    if( edge_factor > 0 )
+    {
+	vec3 N = normalize( normal );
+    	vec3 E = normalize( -position );
+    	alpha = min( 1.0, alpha / pow( abs( dot( N, E ) ), edge_factor ) );
+    }
+    
     if ( R > alpha ) { discard; return; }
 
     gl_FragData[0] = gl_Color;
