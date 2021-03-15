@@ -119,7 +119,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and Polygon");
-    screen.setSize( 1024, 1024 );
+    //screen.setSize( 1024, 1024 );
     screen.show();
 
     // Import volume object.
@@ -147,7 +147,7 @@ int main( int argc, char** argv )
 
     // Declare SSAOStochasticRenderingCompositor.
     local::StochasticRenderingCompositor compositor( screen.scene() );
-    compositor.setRepetitionLevel( 20 );
+    compositor.setRepetitionLevel( 1 );
     compositor.enableLODControl();
     compositor.setShader( kvs::Shader::BlinnPhong() );
     screen.setEvent( &compositor );
@@ -202,7 +202,7 @@ int main( int argc, char** argv )
     repetition.setCaption( "Repetition" );
     repetition.setWidth( 150 );
     repetition.setMargin( 10 );
-    repetition.setValue( 20 );
+    repetition.setValue( 1 );
     repetition.setRange( 1, 100 );
     repetition.anchorToBottom( &opacity );
     repetition.valueChanged(
@@ -332,7 +332,7 @@ int main( int argc, char** argv )
     
     screen.addEvent( &h_key );
     screen.addEvent( &capture_event );
-
+    /*
     kvs::PaintEventListener time;
     time.update( [&] ()
     {
@@ -350,6 +350,6 @@ int main( int argc, char** argv )
         } );
     
     screen.addEvent( &time );
-                
+    */ 
     return app.run();
 }

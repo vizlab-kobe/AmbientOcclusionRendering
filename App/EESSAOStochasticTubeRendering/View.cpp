@@ -32,7 +32,7 @@ void View::setup()
     auto* volume = m_model->import();
     auto* object = m_model->streamline( volume );
     auto* renderer = m_model->renderer();
-    m_screen.setSize( 1024, 1024 );
+    //m_screen.setSize( 1024, 1024 );
     m_screen.registerObject( object, renderer );
 
     const kvs::Indent indent(4);

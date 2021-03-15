@@ -19,6 +19,7 @@
 #include <kvs/RadioButton>
 #include <kvs/RadioButtonGroup>
 #include <kvs/PaintEventListener>
+#include <kvs/ColorMapBar>
 
 
 /*===========================================================================*/
@@ -59,12 +60,12 @@ struct Model
 
         minValue = scalar->minValue();
         maxValue = scalar->maxValue();
-        isovalue = ( maxValue + minValue ) * 0.05;
+        isovalue = ( maxValue + minValue ) * 0.02;
         const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
         const kvs::TransferFunction t( 256 );
         auto* isosurface = new kvs::Isosurface();
-        isosurface->setColorMap( kvs::ColorMap::Plasma( 256 ) );
+        //isosurface->setColorMap( kvs::ColorMap::Plasma( 256 ) );
         auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
         
         delete scalar;
@@ -157,7 +158,6 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle( "MagneticField" );
-    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Parameters.
@@ -475,6 +475,15 @@ int main( int argc, char** argv )
         } );
     
     screen.addEvent( &time );
+
+    kvs::TransferFunction t( 256 );
+    auto cmap = t.colorMap();
+    kvs::ColorMapBar cmap_bar( &screen );
+    cmap_bar.setCaption( "Colormap" );
+    cmap_bar.setColorMap( cmap );
+    cmap_bar.anchorToBottomRight();
+    cmap_bar.setRange( model.minValue, model.maxValue );
+    cmap_bar.show();
 
     return app.run();
 }

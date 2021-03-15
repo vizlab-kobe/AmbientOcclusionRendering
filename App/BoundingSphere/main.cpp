@@ -170,6 +170,7 @@ kvs::PolygonObject* createBoundingSphere()
     polygon->setColor( kvs::RGBColor::Red() );
     polygon->setName( "Polygon" );
 
+    std::cout << "debug\n" << std::endl;
     kvs::PolygonObject* sphere = new kvs::PolygonToPolygon( polygon );
     sphere->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
     sphere->setColor( kvs::RGBColor::White() );
@@ -236,7 +237,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and Polygon");
-    screen.setSize( 1024, 1024 );
+    //screen.setSize( 1024, 1024 );
     screen.show();
 
     // Import volume object.
@@ -319,7 +320,7 @@ int main( int argc, char** argv )
     repetition.setCaption( "Repetition" );
     repetition.setWidth( 150 );
     repetition.setMargin( 10 );
-    repetition.setValue( 20 );
+    repetition.setValue( 1 );
     repetition.setRange( 1, 100 );
     repetition.anchorToBottom( &opacity );
     repetition.valueChanged(
@@ -442,11 +443,13 @@ int main( int argc, char** argv )
     screen.addEvent( &h_key );
     screen.addEvent( &capture_event );
 
+    /*
     kvs::OrientationAxis orientation_axis( &screen, screen.scene() );
     orientation_axis.setBoxType( kvs::OrientationAxis::SolidBox );
     orientation_axis.anchorToBottomLeft();
     orientation_axis.show();
-
+    */
+    /*
     kvs::PaintEventListener time;
     time.update( [&] ()
     {
@@ -461,9 +464,9 @@ int main( int argc, char** argv )
             time = 0.0f;
         }
 
-        } );
-    
+    } );
+
     screen.addEvent( &time );
-                
+    */
     return app.run();
 }

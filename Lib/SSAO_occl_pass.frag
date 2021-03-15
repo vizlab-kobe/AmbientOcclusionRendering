@@ -30,7 +30,7 @@ float OcclusionFactor( vec4 position, int nsamples )
         }
     }
 
-    return clamp( float( count ) * 2.0 / float( nsamples ), 0.0, 1.0 );
+    return clamp( float( count )  * 2.0 / float( nsamples ), 0.0, 1.0 );
 }
 
 void main()

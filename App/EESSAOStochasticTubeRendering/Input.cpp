@@ -9,7 +9,7 @@ namespace local
 Input::Input():
     m_ssao_enabled( false ),
     m_lod_enabled( false ),
-    m_scale( 100.0f ),
+    m_scale( 1000.0f ),
     m_repeats( 50 ),
     m_radius( 0.5f ),
     m_points( 256 ),

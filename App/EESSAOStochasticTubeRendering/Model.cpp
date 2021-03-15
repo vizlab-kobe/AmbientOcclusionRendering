@@ -33,7 +33,7 @@ kvs::LineObject* Model::streamline( const kvs::StructuredVolumeObject* volume ) 
     if ( !volume ) { return NULL; }
 
     kvs::SharedPointer<kvs::PointObject> seeds( this->generate_seed_points() );
-//    typedef StochasticStreamline::Streamline Mapper;
+    //typedef StochasticStreamline::Streamline Mapper;
     typedef local::Streamline Mapper;
     Mapper* mapper = new Mapper();
     mapper->setSeedPoints( seeds.get() );
