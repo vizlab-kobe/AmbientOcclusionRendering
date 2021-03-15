@@ -65,7 +65,7 @@ The library includes the following classes used in the test programs and applica
 <br>Order-independent semi-transparent tube renderer class with screen space ambient occlusion effect<sup>[1,2]</sup>. The opacities can be specified for each vertex of streamlines by using the transfer function.
 
 * `AmbientOcclusionRendering::SSAOStochasticUniformGridRenderer`
-<br>Order-independent semi-transparent uniform grid renderer class with screen space ambient occlusion effect<sup>[1,2]</sup>. The opacities can be specified for each vertex by using the transfer function.
+<br>Order-independent semi-transparent uniform grid renderer class with screen space ambient occlusion effect. The opacities can be specified for each vertex by using the transfer function.
 
 ## Publications
 1. 藤田 泰之, 坂本 尚久, 確率的半透明流線可視化向けアンビエントオクルージョン, 第47回 可視化情報シンポジウム, 2019. [[repo](https://github.com/vizlab-kobe-paper/2019_VisSympo__YasuyukiFujita)]
