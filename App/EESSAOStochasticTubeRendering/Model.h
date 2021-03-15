@@ -6,8 +6,6 @@
 #include <kvs/PointObject>
 #include <kvs/RendererBase>
 #include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
-#include "SSAOStochasticTubeRenderer.h"
-
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
 
 

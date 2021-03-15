@@ -11,7 +11,6 @@
 #include <kvs/KeyPressEventListener>
 #include <kvs/PolygonToPolygon>
 #include <kvs/StochasticPolygonRenderer>
-#include "SSAOStochasticPolygonRenderer.h"
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
@@ -30,14 +29,12 @@
 struct Model
 {
     using EESSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
-    using SSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using EERenderer = local::StochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;
 
     enum Renderers
     {
         EESSAO,
-        SSAO,
         EE,
         SR
     };
@@ -64,8 +61,6 @@ struct Model
         const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
         const kvs::TransferFunction t( 256 );
-        auto* isosurface = new kvs::Isosurface();
-        //isosurface->setColorMap( kvs::ColorMap::Plasma( 256 ) );
         auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
         
         delete scalar;
@@ -106,18 +101,6 @@ struct Model
 	      renderer->enableShading();
 	      return renderer;
 	    }
-	  case SSAO:
-	    {
-	      auto* renderer = new SSAORenderer();
-	      renderer->setName( "Renderer" );
-	      renderer->setRepetitionLevel( repeats );
-	      renderer->setEnabledLODControl( lod );
-	      renderer->setSamplingSphereRadius( radius );
-	      renderer->setNumberOfSamplingPoints( points );
-	      renderer->enableShading();
-	      return renderer;
-	      break;
-	    }
 	  case EE:
 	    {
 	      auto* renderer = new EERenderer();
@@ -151,7 +134,6 @@ int main( int argc, char** argv )
 {
     // Shader path.
     kvs::ShaderSource::AddSearchPath( "../../Lib" );
-    //kvs::ShaderSource::AddSearchPath( "../../../StochasticStreamline/Lib" );
 
     // Application and screen.
     kvs::Application app( argc, argv );
@@ -189,34 +171,6 @@ int main( int argc, char** argv )
         }       
     } );
 
-    kvs::RadioButton ssao_button( &screen );
-    ssao_button.setCaption( "SSAO" );
-    ssao_button.setMargin( 10 );
-    ssao_button.anchorToRight( &eessao_button );
-    ssao_button.show();
-    ssao_button.stateChanged( [&] ()
-    {
-        if ( ssao_button.state() )
-        {
-            model.type = Model::SSAO;
-            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
-        }       
-    } );
-
-    kvs::RadioButton ee_button( &screen );
-    ee_button.setCaption( "EE" );
-    ee_button.setMargin( 10 );
-    ee_button.anchorToBottom( &ssao_button );
-    ee_button.show();
-    ee_button.stateChanged( [&] ()
-    {
-        if ( ee_button.state() )
-        {
-            model.type = Model::EE;
-            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
-        }       
-    } );
-
     kvs::RadioButton sr_button( &screen );
     sr_button.setCaption( "SR" );
     sr_button.setMargin( 10 );
@@ -231,9 +185,22 @@ int main( int argc, char** argv )
         }       
     } );
 
+    kvs::RadioButton ee_button( &screen );
+    ee_button.setCaption( "EE" );
+    ee_button.setMargin( 10 );
+    ee_button.anchorToRight( &sr_button );
+    ee_button.show();
+    ee_button.stateChanged( [&] ()
+    {
+        if ( ee_button.state() )
+        {
+            model.type = Model::EE;
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }       
+    } );
+
     kvs::RadioButtonGroup group;
     group.add( &eessao_button );
-    group.add( &ssao_button );
     group.add( &ee_button );
     group.add( &sr_button );
     group.show();
@@ -254,12 +221,6 @@ int main( int argc, char** argv )
         case Model::EESSAO:
         {
             auto* renderer = Model::EESSAORenderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setEnabledLODControl( model.lod );
-            break;
-        }
-        case Model::SSAO:
-        {
-             auto* renderer = Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setEnabledLODControl( model.lod );
             break;
         }
@@ -303,12 +264,6 @@ int main( int argc, char** argv )
             renderer->setRepetitionLevel( model.repeats );
             break;
         }
-        case Model::SSAO:
-        {
-            auto* renderer = Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setRepetitionLevel( model.repeats );
-            break;
-        }
         case Model::EE:
         {
             auto* renderer = Model::EERenderer::DownCast( scene->renderer( "Renderer" ) );
@@ -342,7 +297,7 @@ int main( int argc, char** argv )
     } );
     radius_slider.sliderReleased( [&] ()
     {
-        if ( model.type == Model::EESSAO || model.type == Model::SSAO )
+        if ( model.type == Model::EESSAO )
         {
             screen.scene()->replaceRenderer( "Renderer", model.renderer() );
         }
@@ -362,7 +317,7 @@ int main( int argc, char** argv )
     } );
     points_slider.sliderReleased( [&] ()
     {
-        if ( model.type == Model::EESSAO || model.type == Model::SSAO )
+        if ( model.type == Model::EESSAO )
         {  
             screen.scene()->replaceRenderer( "Renderer", model.renderer() );
         }
@@ -432,7 +387,6 @@ int main( int argc, char** argv )
         {
             const bool visible = lod_check_box.isVisible();
             eessao_button.setVisible( !visible );
-            ssao_button.setVisible( !visible );
             ee_button.setVisible( !visible );
             sr_button.setVisible( !visible );
             lod_check_box.setVisible( !visible );
