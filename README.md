@@ -43,12 +43,6 @@ The App directory contains several application programs. To build and run these 
 ## Class List
 The library includes the following classes used in the test programs and application programs. All of classes included in the library are defined in the namespace of `AmbientOcclusionRendering`.
 
-* `AmbientOcclusionRendering::PolygonToPolygon`
-<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-
-* `AmbientOcclusionRendering::SSAOPointSampling`
-<br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-
 * `AmbientOcclusionRendering::SSAOPolygonRenderer`
 <br>Polygon renderer class with screen space ambient occlusion effect.
 
