@@ -17,9 +17,8 @@
 #include <kvs/RadioButtonGroup>
 #include <kvs/PaintEventListener>
 #include <kvs/ColorMapBar>
-
-//#include "StochasticPolygonRenderer.h"
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
+
 
 /*===========================================================================*/
 /**
@@ -28,55 +27,50 @@
 /*===========================================================================*/
 struct Model
 {
-    using EESSAORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
-//    using EERenderer = local::StochasticPolygonRenderer;
+    using AORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;
 
-    enum Renderers
-    {
-        EESSAO,
-//        EE,
-        SR
-    };
-
-    int type;
+    bool ao; ///< AO flag
     bool lod; ///< LoD flag
     size_t repeats; ///< number of repetitions for stochasti rendering
     float radius; ///< radius of point sampling region for SSAO
     int points; ///< number of points used for SSAO
     float opacity; ///< opacity of polygon object
-    double minValue;
-    double maxValue;
-    double isovalue;
-    float edge;
+    float edge; ///< edge factor
+    double min_value; ///< min. value
+    double max_value; ///< max. value
+    double isovalue; ///< isovalue for isosurface extraction
 
     kvs::PolygonObject* import( const std::string filename )
     {
-        kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( filename );
-        kvs::StructuredVolumeObject* scalar = new kvs::StructuredVectorToScalar( volume );
+        auto* volume = new kvs::StructuredVolumeImporter( filename );
+        auto* scalar = new kvs::StructuredVectorToScalar( volume );
 
-        minValue = scalar->minValue();
-        maxValue = scalar->maxValue();
-        isovalue = ( maxValue + minValue ) * 0.02;
-        const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
+        min_value = scalar->minValue();
+        max_value = scalar->maxValue();
+        isovalue = ( max_value + min_value ) * 0.02;
+
+        const auto n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
-        const kvs::TransferFunction t( 256 );
+//        const kvs::TransferFunction t( 256 );
+        const auto t = this->transferFunction();
         auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
-
-        delete scalar;
         polygon->setName( "Object" );
         polygon->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
+
+        delete scalar;
         return polygon;
     }
 
     kvs::PolygonObject* changeIsovalue( const std::string filename )
     {
-        kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( filename );
-        kvs::StructuredVolumeObject* scalar = new kvs::StructuredVectorToScalar( volume );
+        auto* volume = new kvs::StructuredVolumeImporter( filename );
+        auto* scalar = new kvs::StructuredVectorToScalar( volume );
 
-        const kvs::PolygonObject::NormalType n = kvs::PolygonObject::VertexNormal;
+        const auto n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
-        const kvs::TransferFunction t( 256 );
+//        const kvs::TransferFunction t( 256 );
+        const auto t = this->transferFunction();
         auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
 
         delete scalar;
@@ -87,45 +81,37 @@ struct Model
 
     kvs::RendererBase* renderer()
     {
-        switch  ( type )
-          {
-          case EESSAO:
-            {
-              auto* renderer = new EESSAORenderer();
-              renderer->setName( "Renderer" );
-              renderer->setRepetitionLevel( repeats );
-//              renderer->setEnabledLODControl( lod );
-              renderer->setLODControlEnabled( lod );
-              renderer->setSamplingSphereRadius( radius );
-              renderer->setNumberOfSamplingPoints( points );
-              renderer->setEdgeFactor( edge );
-              renderer->enableShading();
-              return renderer;
-            }
-            /*
-          case EE:
-            {
-              auto* renderer = new EERenderer();
-              renderer->setName( "Renderer" );
-              renderer->setRepetitionLevel( repeats );
-              renderer->setEnabledLODControl( lod );
-              renderer->enableShading();
-              renderer->setEdgeFactor( edge );
-              return renderer;
-              break;
-            }
-            */
-          default:
-            {
-              auto* renderer = new Renderer();
-              renderer->setName( "Renderer" );
-              renderer->setRepetitionLevel( repeats );
-//              renderer->setEnabledLODControl( lod );
-              renderer->setLODControlEnabled( lod );
-              renderer->enableShading();
-              return renderer;
-            }
-          }
+        if ( this->ao )
+        {
+            auto* renderer = new AORenderer();
+            renderer->setName( "Renderer" );
+            renderer->setRepetitionLevel( repeats );
+            renderer->setLODControlEnabled( lod );
+            renderer->setSamplingSphereRadius( radius );
+            renderer->setNumberOfSamplingPoints( points );
+            renderer->setEdgeFactor( edge );
+            renderer->enableShading();
+            return renderer;
+        }
+        else
+        {
+            auto* renderer = new Renderer();
+            renderer->setName( "Renderer" );
+            renderer->setRepetitionLevel( repeats );
+            renderer->setLODControlEnabled( lod );
+            renderer->enableShading();
+            return renderer;
+        }
+    }
+
+    kvs::TransferFunction transferFunction()
+    {
+        //const auto cmap = kvs::ColorMap::CoolWarm( 256 );
+        const auto cmap = kvs::ColorMap::BrewerSpectral( 256 );
+        //const auto cmap = kvs::ColorMap::BrewerRdBu( 256 );
+        //const auto cmap = kvs::ColorMap::BrewerRdYlGn( 256 );
+        //const auto cmap = kvs::ColorMap::Viridis( 256 );
+        return kvs::TransferFunction( cmap );
     }
 };
 
@@ -148,7 +134,7 @@ int main( int argc, char** argv )
 
     // Parameters.
     Model model;
-    model.type = Model::EESSAO;
+    model.ao = true;
     model.lod = true;
     model.repeats = 20;
     model.radius = 0.5;
@@ -161,92 +147,37 @@ int main( int argc, char** argv )
     screen.registerObject( model.import( filename ), model.renderer() );
 
     // Widgets.
-    kvs::RadioButton eessao_button( &screen );
-    eessao_button.setCaption( "EESSAO" );
-    eessao_button.setMargin( 10 );
-    eessao_button.show();
-    eessao_button.setState( true );
-    eessao_button.stateChanged( [&] ()
+    kvs::CheckBox ao_check_box( &screen );
+    ao_check_box.setCaption( "AO" );
+    ao_check_box.setState( model.lod );
+    ao_check_box.setMargin( 10 );
+    ao_check_box.anchorToTopLeft();
+    ao_check_box.show();
+    ao_check_box.stateChanged( [&] ()
     {
-        if ( eessao_button.state() )
-        {
-            model.type = Model::EESSAO;
-            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
-        }
+        model.ao = ao_check_box.state();
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
     } );
-
-    kvs::RadioButton sr_button( &screen );
-    sr_button.setCaption( "SR" );
-    sr_button.setMargin( 10 );
-    sr_button.anchorToBottom( &eessao_button );
-    sr_button.show();
-    sr_button.stateChanged( [&] ()
-    {
-        if ( sr_button.state() )
-        {
-            model.type = Model::SR;
-            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
-        }
-    } );
-
-    /*
-    kvs::RadioButton ee_button( &screen );
-    ee_button.setCaption( "EE" );
-    ee_button.setMargin( 10 );
-    ee_button.anchorToRight( &sr_button );
-    ee_button.show();
-    ee_button.stateChanged( [&] ()
-    {
-        if ( ee_button.state() )
-        {
-            model.type = Model::EE;
-            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
-        }       
-    } );
-    */
-
-    kvs::RadioButtonGroup group;
-    group.add( &eessao_button );
-//    group.add( &ee_button );
-    group.add( &sr_button );
-    group.show();
 
     kvs::CheckBox lod_check_box( &screen );
     lod_check_box.setCaption( "LOD" );
     lod_check_box.setState( model.lod );
     lod_check_box.setMargin( 10 );
-    lod_check_box.anchorToBottom( &sr_button );
+    lod_check_box.anchorToBottom( &ao_check_box );
     lod_check_box.show();
     lod_check_box.stateChanged( [&] ()
     {
         model.lod = lod_check_box.state();
         auto* scene = screen.scene();
-        switch ( model.type )
+        if ( model.ao )
         {
-            
-        case Model::EESSAO:
-        {
-            auto* renderer = Model::EESSAORenderer::DownCast( scene->renderer( "Renderer" ) );
-//            renderer->setEnabledLODControl( model.lod );
+            auto* renderer = Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setLODControlEnabled( model.lod );
-            break;
         }
-        /*
-        case Model::EE:
-        {
-             auto* renderer = Model::EERenderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setEnabledLODControl( model.lod );
-            break;
-        }
-        */
-        case Model::SR:
+        else
         {
             auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
-//            renderer->setEnabledLODControl( model.lod );
             renderer->setLODControlEnabled( model.lod );
-            break;
-        }
-        
         }
     } );
 
@@ -265,30 +196,15 @@ int main( int argc, char** argv )
     repeat_slider.sliderReleased( [&] ()
     {
         auto* scene = screen.scene();
-        switch ( model.type )
+        if ( model.ao )
         {
-            
-        case Model::EESSAO:
-        {
-            auto* renderer = Model::EESSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+            auto* renderer = Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( model.repeats );
-            break;
         }
-        /*
-        case Model::EE:
-        {
-            auto* renderer = Model::EERenderer::DownCast( scene->renderer( "Renderer" ) );
-            renderer->setRepetitionLevel( model.repeats );
-            break;
-        }
-        */
-        case Model::SR:
+        else
         {
             auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( model.repeats );
-            break;
-        }
-        
         }
     } );
 
@@ -309,7 +225,7 @@ int main( int argc, char** argv )
     } );
     radius_slider.sliderReleased( [&] ()
     {
-        if ( model.type == Model::EESSAO )
+        if ( model.ao )
         {
             screen.scene()->replaceRenderer( "Renderer", model.renderer() );
         }
@@ -329,10 +245,28 @@ int main( int argc, char** argv )
     } );
     points_slider.sliderReleased( [&] ()
     {
-        if ( model.type == Model::EESSAO )
-        {  
+        if ( model.ao )
+        {
             screen.scene()->replaceRenderer( "Renderer", model.renderer() );
         }
+    } );
+
+    kvs::Slider edge_slider( &screen );
+    edge_slider.setCaption( "Edge: " + kvs::String::ToString( model.edge ) );
+    edge_slider.setValue( model.edge );
+    edge_slider.setRange( 0.0, 5.0 );
+    edge_slider.setMargin( 10 );
+    edge_slider.anchorToBottom( &points_slider );
+    edge_slider.show();
+    edge_slider.sliderMoved( [&] ()
+    {
+        float v = int( edge_slider.value() * 10 ) * 0.1f;
+        model.edge = v;
+        edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
+    } );
+    edge_slider.sliderReleased( [&] ()
+    {
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
     } );
 
     kvs::Slider opacity_slider( &screen );
@@ -340,7 +274,7 @@ int main( int argc, char** argv )
     opacity_slider.setValue( model.opacity );
     opacity_slider.setRange( 0, 1 );
     opacity_slider.setMargin( 10 );
-    opacity_slider.anchorToBottom( &points_slider );
+    opacity_slider.anchorToTopRight();
     opacity_slider.show();
     opacity_slider.sliderMoved( [&] ()
     {
@@ -358,9 +292,9 @@ int main( int argc, char** argv )
     kvs::Slider isovalue_slider( &screen );
     isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( model.isovalue ) );
     isovalue_slider.setValue( model.isovalue );
-    isovalue_slider.setRange( model.minValue, model.maxValue );
+    isovalue_slider.setRange( model.min_value, model.max_value );
     isovalue_slider.setMargin( 10 );
-    isovalue_slider.anchorToTopRight();
+    isovalue_slider.anchorToBottom( &opacity_slider );
     isovalue_slider.show();
     isovalue_slider.sliderMoved( [&] ()
     {
@@ -372,23 +306,13 @@ int main( int argc, char** argv )
         screen.scene()->replaceObject( "Object", model.changeIsovalue( filename ) );
     } );
 
-    kvs::Slider edge_slider( &screen );
-    edge_slider.setCaption( "Edge: " + kvs::String::ToString( model.edge ) );
-    edge_slider.setValue( model.edge );
-    edge_slider.setRange( 0.0, 5.0 );
-    edge_slider.setMargin( 10 );
-    edge_slider.anchorToBottom( &opacity_slider );
-    edge_slider.show();
-    edge_slider.sliderMoved( [&] ()
-    {
-        float v = int( edge_slider.value() * 10 ) * 0.1f;
-        model.edge = v;
-        edge_slider.setCaption( "Edge: " + kvs::String::From( model.edge ) );
-    } );
-    edge_slider.sliderReleased( [&] ()
-    {
-        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
-    } );
+    const auto cmap = model.transferFunction().colorMap();
+    kvs::ColorMapBar cmap_bar( &screen );
+    cmap_bar.setCaption( " " );
+    cmap_bar.setColorMap( cmap );
+    cmap_bar.anchorToBottomRight();
+    cmap_bar.setRange( model.min_value, model.max_value );
+    cmap_bar.show();
 
     // Events.
     kvs::KeyPressEventListener key_event( [&] ( kvs::KeyEvent* event )
@@ -398,9 +322,7 @@ int main( int argc, char** argv )
         case kvs::Key::i:
         {
             const bool visible = lod_check_box.isVisible();
-            eessao_button.setVisible( !visible );
-//            ee_button.setVisible( !visible );
-            sr_button.setVisible( !visible );
+            ao_check_box.setVisible( !visible );
             lod_check_box.setVisible( !visible );
             repeat_slider.setVisible( !visible );
             radius_slider.setVisible( !visible );
@@ -437,19 +359,9 @@ int main( int argc, char** argv )
             counter = 1;
             time = 0.0f;
         }
+    } );
 
-        } );
-    
     screen.addEvent( &time );
-
-    kvs::TransferFunction t( 256 );
-    auto cmap = t.colorMap();
-    kvs::ColorMapBar cmap_bar( &screen );
-    cmap_bar.setCaption( "Colormap" );
-    cmap_bar.setColorMap( cmap );
-    cmap_bar.anchorToBottomRight();
-    cmap_bar.setRange( model.minValue, model.maxValue );
-    cmap_bar.show();
 
     return app.run();
 }
