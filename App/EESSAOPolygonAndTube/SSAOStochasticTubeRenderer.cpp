@@ -158,10 +158,10 @@ void SSAOStochasticTubeRenderer::Engine::setup( kvs::ObjectBase* object, kvs::Ca
     shader.setUniform( "ProjectionMatrix", P );
     shader.setUniform( "NormalMatrix", N );
     shader.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-    shader.setUniform( "shape_texture", 0 );
-    shader.setUniform( "diffuse_texture", 1 );
-    shader.setUniform( "random_texture", 2 );
-    shader.setUniform( "transfer_function_texture", 3 );
+//    shader.setUniform( "shape_texture", 0 );
+//    shader.setUniform( "diffuse_texture", 1 );
+//    shader.setUniform( "random_texture", 2 );
+//    shader.setUniform( "transfer_function_texture", 3 );
     shader.setUniform( "edge_factor", m_edge_factor );
     shader.unbind();
 }
@@ -217,8 +217,14 @@ void SSAOStochasticTubeRenderer::Engine::draw_buffer_object( const kvs::LineObje
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
     //kvs::ProgramObject::Binder bind2( m_geom_pass_shader );
-    m_geom_pass_shader.setUniform( "random_offset", random_offset );
-   
+
+    auto& shader = m_geom_pass_shader;
+    shader.setUniform( "random_offset", random_offset );
+    shader.setUniform( "shape_texture", 0 );
+    shader.setUniform( "diffuse_texture", 1 );
+    shader.setUniform( "random_texture", 2 );
+    shader.setUniform( "transfer_function_texture", 3 );
+
     kvs::Texture::Binder unit2( randomTexture(), 2 );
     kvs::Texture::Binder unit3( m_tfunc_texture, 3 );
     m_buffer_object.draw( line );

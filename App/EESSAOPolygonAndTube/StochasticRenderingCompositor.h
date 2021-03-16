@@ -41,7 +41,7 @@ private:
     kvs::Vec3 m_camera_position; ///< camera position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
     kvs::Shader::ShadingModel* m_shader;
-    AmbientOcclusionBuffer m_ao_buffer;
+    local::AmbientOcclusionBuffer m_ao_buffer;
     
 public:
     StochasticRenderingCompositor( kvs::Scene* scene );

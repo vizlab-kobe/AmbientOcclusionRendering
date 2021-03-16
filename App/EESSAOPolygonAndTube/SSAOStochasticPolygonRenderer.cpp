@@ -114,7 +114,8 @@ void SSAOStochasticPolygonRenderer::Engine::create(
 {
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
-    if ( !has_normal ) { setEnabledShading( false ); }
+//    if ( !has_normal ) { setEnabledShading( false ); }
+    setEnabledShading( has_normal );
 
     attachObject( object );
     createRandomTexture();
@@ -158,7 +159,7 @@ void SSAOStochasticPolygonRenderer::Engine::setup(
     m_geom_pass_shader.setUniform( "ModelViewProjectionMatrix", PM );
     m_geom_pass_shader.setUniform( "NormalMatrix", N );
     m_geom_pass_shader.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-    m_geom_pass_shader.setUniform( "random_texture", 0 );
+//    m_geom_pass_shader.setUniform( "random_texture", 0 );
     m_geom_pass_shader.setUniform( "polygon_offset", m_polygon_offset );
     m_geom_pass_shader.setUniform( "edge_factor", m_edge_factor );
     m_geom_pass_shader.unbind();
@@ -214,12 +215,17 @@ void SSAOStochasticPolygonRenderer::Engine::create_buffer_object( const kvs::Pol
 
 void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::PolygonObject* polygon )
 {
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::Enable( GL_TEXTURE_2D );
+
     const size_t size = randomTextureSize();
     const int count = repetitionCount() * ::RandomNumber();
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
+
     m_geom_pass_shader.setUniform( "random_offset", random_offset );
+    m_geom_pass_shader.setUniform( "random_texture", 0 );
 
     kvs::Texture::Binder bind3( randomTexture() );
     m_buffer_object.draw( polygon );

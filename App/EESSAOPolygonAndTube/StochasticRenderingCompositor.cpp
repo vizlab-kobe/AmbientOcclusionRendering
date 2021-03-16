@@ -20,6 +20,10 @@
 #include "StochasticRendererBase.h"
 #include <kvs/ParticleBasedRenderer>
 
+#include <kvs/ColorImage>
+#include <kvs/GrayImage>
+#include <kvs/String>
+
 
 namespace local
 {
@@ -351,6 +355,16 @@ void StochasticRenderingCompositor::engines_draw()
                 m_scene->updateGLModelingMatrix( object );
                 stochastic_renderer->engine().draw( object, camera, light );
                 stochastic_renderer->engine().countRepetitions();
+
+                /*
+                auto width = camera->windowWidth();
+                auto height = camera->windowHeight();
+                kvs::ValueArray<kvs::Real32> buffer( width * height );
+                kvs::OpenGL::ReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer.data() );
+                kvs::GrayImage depth_image( width, height, buffer );
+                depth_image.write( "output_" + kvs::String::From( i, 2, '0' ) + ".bmp" );
+                */
+
                 kvs::OpenGL::PopMatrix();
             }
         }
