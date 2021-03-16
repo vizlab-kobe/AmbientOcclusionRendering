@@ -30,16 +30,16 @@ struct Model
     using AORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;
 
-    bool ao; ///< AO flag
-    bool lod; ///< LoD flag
-    size_t repeats; ///< number of repetitions for stochasti rendering
-    float radius; ///< radius of point sampling region for SSAO
-    int points; ///< number of points used for SSAO
-    float opacity; ///< opacity of polygon object
-    float edge; ///< edge factor
-    double min_value; ///< min. value
-    double max_value; ///< max. value
-    double isovalue; ///< isovalue for isosurface extraction
+    bool ao = true; ///< AO flag
+    bool lod = true; ///< LoD flag
+    size_t repeats = 20; ///< number of repetitions for stochasti rendering
+    float radius = 0.5f; ///< radius of point sampling region for SSAO
+    int points = 256; ///< number of points used for SSAO
+    float opacity = 0.1f; ///< opacity of polygon object
+    float edge = 1.0f; ///< edge factor
+    double min_value = 0.0; ///< min. value
+    double max_value = 0.0; ///< max. value
+    double isovalue = 0.0; ///< isovalue for isosurface extraction
 
     kvs::PolygonObject* import( const std::string filename )
     {
@@ -52,7 +52,6 @@ struct Model
 
         const auto n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
-//        const kvs::TransferFunction t( 256 );
         const auto t = this->transferFunction();
         auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
         polygon->setName( "Object" );
@@ -69,7 +68,6 @@ struct Model
 
         const auto n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
-//        const kvs::TransferFunction t( 256 );
         const auto t = this->transferFunction();
         auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
 
@@ -134,13 +132,6 @@ int main( int argc, char** argv )
 
     // Parameters.
     Model model;
-    model.ao = true;
-    model.lod = true;
-    model.repeats = 20;
-    model.radius = 0.5;
-    model.points = 256;
-    model.opacity = 0.1f;
-    model.edge = 1.0;
 
     // Visualization pipeline.
     const std::string filename = argv[1];
@@ -350,14 +341,14 @@ int main( int argc, char** argv )
     time.update( [&] ()
     {
         static size_t counter = 1;
-        static float time = 0.0f;
+        static float timer = 0.0f;
 
-        time += screen.scene()->renderer("Renderer")->timer().msec();
+        timer += screen.scene()->renderer("Renderer")->timer().msec();
         if ( counter++ == 50 )
         {
-            std::cout << "Rendering time: " << time / counter << " [msec]" << std::endl;
+            std::cout << "Rendering time: " << timer / counter << " [msec]" << std::endl;
             counter = 1;
-            time = 0.0f;
+            timer = 0.0f;
         }
     } );
 
