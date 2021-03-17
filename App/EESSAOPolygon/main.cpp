@@ -2,116 +2,19 @@
 #include <kvs/Screen>
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/StructuredVolumeObject>
-#include <kvs/PolygonRenderer>
 #include <kvs/ShaderSource>
 #include <kvs/CheckBox>
 #include <kvs/Slider>
 #include <kvs/ScreenCaptureEvent>
 #include <kvs/TargetChangeEvent>
 #include <kvs/KeyPressEventListener>
-#include <kvs/PolygonToPolygon>
-#include <kvs/StochasticPolygonRenderer>
-#include <kvs/StructuredVectorToScalar>
-#include <kvs/Isosurface>
 #include <kvs/RadioButton>
 #include <kvs/RadioButtonGroup>
 #include <kvs/PaintEventListener>
 #include <kvs/ColorMapBar>
-#include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
 
-
-/*===========================================================================*/
-/**
- *  @brief  Model class manages SSAO parameters
- */
-/*===========================================================================*/
-struct Model
-{
-    using AORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
-    using Renderer = kvs::StochasticPolygonRenderer;
-
-    bool ao = true; ///< AO flag
-    bool lod = true; ///< LoD flag
-    size_t repeats = 20; ///< number of repetitions for stochasti rendering
-    float radius = 0.5f; ///< radius of point sampling region for SSAO
-    int points = 256; ///< number of points used for SSAO
-    float opacity = 0.1f; ///< opacity of polygon object
-    float edge = 1.0f; ///< edge factor
-    double min_value = 0.0; ///< min. value
-    double max_value = 0.0; ///< max. value
-    double isovalue = 0.0; ///< isovalue for isosurface extraction
-
-    kvs::PolygonObject* import( const std::string filename )
-    {
-        auto* volume = new kvs::StructuredVolumeImporter( filename );
-        auto* scalar = new kvs::StructuredVectorToScalar( volume );
-
-        min_value = scalar->minValue();
-        max_value = scalar->maxValue();
-        isovalue = ( max_value + min_value ) * 0.02;
-
-        const auto n = kvs::PolygonObject::VertexNormal;
-        const bool d = false;
-        const auto t = this->transferFunction();
-        auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
-        polygon->setName( "Object" );
-        polygon->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
-
-        delete scalar;
-        return polygon;
-    }
-
-    kvs::PolygonObject* changeIsovalue( const std::string filename )
-    {
-        auto* volume = new kvs::StructuredVolumeImporter( filename );
-        auto* scalar = new kvs::StructuredVectorToScalar( volume );
-
-        const auto n = kvs::PolygonObject::VertexNormal;
-        const bool d = false;
-        const auto t = this->transferFunction();
-        auto* polygon = new kvs::Isosurface( scalar, isovalue, n, d, t );
-
-        delete scalar;
-        polygon->setName( "Object" );
-        polygon->setOpacity( kvs::Math::Clamp( int( opacity * 255.0 ), 0, 255 ) );
-        return polygon;
-    }
-
-    kvs::RendererBase* renderer()
-    {
-        if ( this->ao )
-        {
-            auto* renderer = new AORenderer();
-            renderer->setName( "Renderer" );
-            renderer->setRepetitionLevel( repeats );
-            renderer->setLODControlEnabled( lod );
-            renderer->setSamplingSphereRadius( radius );
-            renderer->setNumberOfSamplingPoints( points );
-            renderer->setEdgeFactor( edge );
-            renderer->enableShading();
-            return renderer;
-        }
-        else
-        {
-            auto* renderer = new Renderer();
-            renderer->setName( "Renderer" );
-            renderer->setRepetitionLevel( repeats );
-            renderer->setLODControlEnabled( lod );
-            renderer->enableShading();
-            return renderer;
-        }
-    }
-
-    kvs::TransferFunction transferFunction()
-    {
-        //const auto cmap = kvs::ColorMap::CoolWarm( 256 );
-        const auto cmap = kvs::ColorMap::BrewerSpectral( 256 );
-        //const auto cmap = kvs::ColorMap::BrewerRdBu( 256 );
-        //const auto cmap = kvs::ColorMap::BrewerRdYlGn( 256 );
-        //const auto cmap = kvs::ColorMap::Viridis( 256 );
-        return kvs::TransferFunction( cmap );
-    }
-};
+#include "Input.h"
+#include "Model.h"
 
 /*===========================================================================*/
 /**
@@ -130,12 +33,18 @@ int main( int argc, char** argv )
     screen.setTitle( "MagneticField" );
     screen.show();
 
-    // Parameters.
-    Model model;
+    // Input parameters.
+    local::Input input;
+    if ( !input.parse( argc, argv ) ) { return 1; }
 
-    // Visualization pipeline.
-    const std::string filename = argv[1];
-    screen.registerObject( model.import( filename ), model.renderer() );
+    local::Model model( input );
+
+    // Isosurface extraction.
+    auto* volume = model.import();
+    const auto min_value = volume->minValue();
+    const auto max_value = volume->maxValue();
+    const auto isovalue = ( max_value + min_value ) * 0.02f;
+    screen.registerObject( model.isosurface( isovalue ), model.renderer() );
 
     // Widgets.
     kvs::CheckBox ao_check_box( &screen );
@@ -162,12 +71,12 @@ int main( int argc, char** argv )
         auto* scene = screen.scene();
         if ( model.ao )
         {
-            auto* renderer = Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
+            auto* renderer = local::Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setLODControlEnabled( model.lod );
         }
         else
         {
-            auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
+            auto* renderer = local::Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setLODControlEnabled( model.lod );
         }
     } );
@@ -189,12 +98,12 @@ int main( int argc, char** argv )
         auto* scene = screen.scene();
         if ( model.ao )
         {
-            auto* renderer = Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
+            auto* renderer = local::Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( model.repeats );
         }
         else
         {
-            auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
+            auto* renderer = local::Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
             renderer->setRepetitionLevel( model.repeats );
         }
     } );
@@ -208,10 +117,10 @@ int main( int argc, char** argv )
     radius_slider.show();
     radius_slider.sliderMoved( [&] ()
     {
-        const float min_value = radius_slider.minValue();
-        const float max_value = radius_slider.maxValue();
+        const float min_rad = radius_slider.minValue();
+        const float max_rad = radius_slider.maxValue();
         const float v = int( radius_slider.value() * 2 ) * 0.5f;
-        model.radius = kvs::Math::Clamp( v, min_value, max_value );
+        model.radius = kvs::Math::Clamp( v, min_rad, max_rad );
         radius_slider.setCaption( "Radius: " + kvs::String::From( model.radius ) );
     } );
     radius_slider.sliderReleased( [&] ()
@@ -281,20 +190,25 @@ int main( int argc, char** argv )
     } );
 
     kvs::Slider isovalue_slider( &screen );
-    isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( model.isovalue ) );
-    isovalue_slider.setValue( model.isovalue );
-    isovalue_slider.setRange( model.min_value, model.max_value );
+//    isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( model.isovalue ) );
+    isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( isovalue ) );
+//    isovalue_slider.setValue( model.isovalue );
+//    isovalue_slider.setRange( model.min_value, model.max_value );
+    isovalue_slider.setValue( isovalue );
+    isovalue_slider.setRange( min_value, max_value );
     isovalue_slider.setMargin( 10 );
     isovalue_slider.anchorToBottom( &opacity_slider );
     isovalue_slider.show();
     isovalue_slider.sliderMoved( [&] ()
     {
-        model.isovalue = isovalue_slider.value();
-        isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( model.isovalue) );
+//        model.isovalue = isovalue_slider.value();
+//        isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( model.isovalue) );
+        isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( isovalue_slider.value() ) );
     } );
     isovalue_slider.sliderReleased( [&] ()
     {
-        screen.scene()->replaceObject( "Object", model.changeIsovalue( filename ) );
+//        screen.scene()->replaceObject( "Object", model.changeIsovalue( filename ) );
+        screen.scene()->replaceObject( "Object", model.isosurface( isovalue_slider.value() ) );
     } );
 
     const auto cmap = model.transferFunction().colorMap();
@@ -302,7 +216,8 @@ int main( int argc, char** argv )
     cmap_bar.setCaption( " " );
     cmap_bar.setColorMap( cmap );
     cmap_bar.anchorToBottomRight();
-    cmap_bar.setRange( model.min_value, model.max_value );
+//    cmap_bar.setRange( model.min_value, model.max_value );
+    cmap_bar.setRange( min_value, max_value );
     cmap_bar.show();
 
     // Events.
