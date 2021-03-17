@@ -39,11 +39,13 @@ public:
         m_screen.setBackgroundColor( kvs::RGBColor::White() );
         m_screen.setTitle( "MagneticField" );
 
-        auto* volume = m_model.import();
+        const auto* volume = m_model.import();
         const auto min_value = volume->minValue();
         const auto max_value = volume->maxValue();
         const auto isovalue = ( max_value + min_value ) * 0.02f;
-        m_screen.registerObject( m_model.isosurface( isovalue ), m_model.renderer() );
+        auto* object = m_model.isosurface( isovalue );
+        auto* renderer = m_model.renderer();
+        m_screen.registerObject( object, renderer );
     }
 };
 

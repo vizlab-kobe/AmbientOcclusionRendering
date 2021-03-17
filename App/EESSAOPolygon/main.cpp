@@ -13,6 +13,7 @@
 int main( int argc, char** argv )
 {
     kvs::ShaderSource::AddSearchPath( "../../Lib" );
+
     return kvs::Program( [&] ()
     {
         // Application

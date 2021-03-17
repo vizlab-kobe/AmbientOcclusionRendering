@@ -22,6 +22,7 @@ struct Input
     bool parse( int argc, char** argv )
     {
         kvs::CommandLine cl( argc, argv );
+        cl.addHelpOption();
         cl.addOption( "ao","Enable SSAO (default: false).", 0, false );
         cl.addOption( "lod","Enable LoD (default: false).", 0, false );
         cl.addOption( "r", "Number of repeatitions (default: 20).", 1, false );

@@ -28,10 +28,13 @@ private:
     mutable kvs::StructuredVolumeObject* m_cached_volume = nullptr;
 
 public:
-    Model( Input& input ): Input( input ) {}
+    Model( local::Input& input ): local::Input( input ) {}
     ~Model() { if ( m_cached_volume ) { delete m_cached_volume; } }
 
-    const kvs::StructuredVolumeObject* cachedVolume() const { return m_cached_volume; }
+    const kvs::StructuredVolumeObject* cachedVolume() const
+    {
+        return m_cached_volume;
+    }
 
     kvs::StructuredVolumeObject* import( const bool cache = true ) const
     {
@@ -64,7 +67,7 @@ public:
         return polygon;
     }
 
-    kvs::RendererBase* renderer()
+    kvs::RendererBase* renderer() const
     {
         if ( Input::ao )
         {

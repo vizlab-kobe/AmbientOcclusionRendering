@@ -12,7 +12,7 @@ MAX_COORD="250 250 250"
 STRIDE="30 30 30"
 
 ./$PROGRAM $FILENAME \
-    -ssao \
+    -ao \
     -lod \
     -s $SCALE \
     -r $REPEATS \
