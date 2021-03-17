@@ -18,7 +18,6 @@ namespace local
  *  @brief  Model class manages SSAO parameters
  */
 /*===========================================================================*/
-//struct Model
 class Model : public local::Input
 {
 public:
