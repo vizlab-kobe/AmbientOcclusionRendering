@@ -4,6 +4,7 @@
 #include <kvs/RadioButton>
 #include <kvs/RadioButtonGroup>
 #include <kvs/ColorMapBar>
+#include <kvs/OrientationAxis>
 #include <kvs/ScreenCaptureEvent>
 #include <kvs/TargetChangeEvent>
 #include <kvs/KeyPressEventListener>
@@ -30,6 +31,7 @@ private:
     kvs::Slider m_edge_slider;
     kvs::Slider m_opacity_slider;
     kvs::Slider m_isovalue_slider;
+    kvs::OrientationAxis m_axis;
     kvs::ColorMapBar m_cmap_bar;
 
     // Events
@@ -50,6 +52,7 @@ public:
         m_edge_slider( &view.screen() ),
         m_opacity_slider( &view.screen() ),
         m_isovalue_slider( &view.screen() ),
+        m_axis( &view.screen(), view.screen().scene() ),
         m_cmap_bar( &view.screen() )
     {
         // Initial values.
@@ -61,9 +64,6 @@ public:
         // AO
         m_ao_check_box.setCaption( "AO" );
         m_ao_check_box.setState( m_model.ao );
-        m_ao_check_box.setMargin( 10 );
-        m_ao_check_box.anchorToTopLeft();
-        m_ao_check_box.show();
         m_ao_check_box.stateChanged( [&] ()
         {
             m_model.ao = m_ao_check_box.state();
@@ -73,9 +73,6 @@ public:
         // LOD
         m_lod_check_box.setCaption( "LOD" );
         m_lod_check_box.setState( m_model.lod );
-        m_lod_check_box.setMargin( 10 );
-        m_lod_check_box.anchorToBottom( &m_ao_check_box );
-        m_lod_check_box.show();
         m_lod_check_box.stateChanged( [&] ()
         {
             m_model.lod = m_lod_check_box.state();
@@ -96,9 +93,6 @@ public:
         m_repeat_slider.setCaption( "Repeats: " + kvs::String::ToString( m_model.repeats ) );
         m_repeat_slider.setValue( m_model.repeats );
         m_repeat_slider.setRange( 1, 100 );
-        m_repeat_slider.setMargin( 10 );
-        m_repeat_slider.anchorToBottom( &m_lod_check_box );
-        m_repeat_slider.show();
         m_repeat_slider.sliderMoved( [&] ()
         {
             m_model.repeats = m_repeat_slider.value();
@@ -123,9 +117,6 @@ public:
         m_radius_slider.setCaption( "Radius: " + kvs::String::ToString( m_model.radius ) );
         m_radius_slider.setValue( m_model.radius );
         m_radius_slider.setRange( 0.1, 5.0 );
-        m_radius_slider.setMargin( 10 );
-        m_radius_slider.anchorToBottom( &m_repeat_slider );
-        m_radius_slider.show();
         m_radius_slider.sliderMoved( [&] ()
         {
             const float min_rad = m_radius_slider.minValue();
@@ -146,9 +137,6 @@ public:
         m_points_slider.setCaption( "Points: " + kvs::String::From( m_model.points ) );
         m_points_slider.setValue( m_model.points );
         m_points_slider.setRange( 1, 256 );
-        m_points_slider.setMargin( 10 );
-        m_points_slider.anchorToBottom( &m_radius_slider );
-        m_points_slider.show();
         m_points_slider.sliderMoved( [&] ()
         {
             m_model.points = int( m_points_slider.value() );
@@ -166,9 +154,6 @@ public:
         m_edge_slider.setCaption( "Edge: " + kvs::String::ToString( m_model.edge ) );
         m_edge_slider.setValue( m_model.edge );
         m_edge_slider.setRange( 0.0, 5.0 );
-        m_edge_slider.setMargin( 10 );
-        m_edge_slider.anchorToBottom( &m_points_slider );
-        m_edge_slider.show();
         m_edge_slider.sliderMoved( [&] ()
         {
             float v = int( m_edge_slider.value() * 10 ) * 0.1f;
@@ -184,9 +169,6 @@ public:
         m_opacity_slider.setCaption( "Opacity: " + kvs::String::From( m_model.opacity ) );
         m_opacity_slider.setValue( m_model.opacity );
         m_opacity_slider.setRange( 0, 1 );
-        m_opacity_slider.setMargin( 10 );
-        m_opacity_slider.anchorToTopRight();
-        m_opacity_slider.show();
         m_opacity_slider.sliderMoved( [&] ()
         {
             m_model.opacity = m_opacity_slider.value();
@@ -204,9 +186,6 @@ public:
         m_isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( isovalue ) );
         m_isovalue_slider.setValue( isovalue );
         m_isovalue_slider.setRange( min_value, max_value );
-        m_isovalue_slider.setMargin( 10 );
-        m_isovalue_slider.anchorToBottom( &m_opacity_slider );
-        m_isovalue_slider.show();
         m_isovalue_slider.sliderMoved( [&] ()
         {
             m_isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( m_isovalue_slider.value() ) );
@@ -216,17 +195,15 @@ public:
             m_view.screen().scene()->replaceObject( "Object", m_model.isosurface( m_isovalue_slider.value() ) );
         } );
 
+        // Axis
+        m_axis.setBoxType( kvs::OrientationAxis::SolidBox );
+        m_axis.anchorToBottomLeft();
+
         // Colormap bar
         const auto cmap = m_model.transferFunction().colorMap();
         m_cmap_bar.setCaption( " " );
         m_cmap_bar.setColorMap( cmap );
-        m_cmap_bar.anchorToBottomRight();
         m_cmap_bar.setRange( min_value, max_value );
-        m_cmap_bar.show();
-
-        // Screen capture and target change events
-        m_view.screen().addEvent( &m_capture_event );
-        m_view.screen().addEvent( &m_target_change_event );
 
         // Key press event
         m_key_event.update( [&] ( kvs::KeyEvent* event )
@@ -235,23 +212,19 @@ public:
             {
             case kvs::Key::i:
             {
-                const bool visible = m_lod_check_box.isVisible();
-                m_ao_check_box.setVisible( !visible );
-                m_lod_check_box.setVisible( !visible );
-                m_repeat_slider.setVisible( !visible );
-                m_radius_slider.setVisible( !visible );
-                m_points_slider.setVisible( !visible );
-                m_opacity_slider.setVisible( !visible );
-                m_isovalue_slider.setVisible( !visible );
-                m_edge_slider.setVisible( !visible );
-                m_view.redraw();
+                this->setVisible( !this->isVisible(), false );
+                break;
+            }
+            case kvs::Key::I:
+            {
+                this->setVisible( !this->isVisible(), true );
                 break;
             }
             default:
-                break;
+                return;
             }
+            m_view.redraw();
         } );
-        m_view.screen().addEvent( &m_key_event );
 
         // Paint event
         m_paint_event.update( [&] ()
@@ -267,7 +240,68 @@ public:
                 timer = 0.0f;
             }
         } );
+
+        m_view.screen().addEvent( &m_capture_event );
+        m_view.screen().addEvent( &m_target_change_event );
+        m_view.screen().addEvent( &m_key_event );
         m_view.screen().addEvent( &m_paint_event );
+
+        this->setLayout( 10 );
+        this->setVisible( true );
+    }
+
+private:
+    bool isVisible() const
+    {
+        return m_ao_check_box.isVisible();
+    }
+
+    void setVisible( const bool visible = true, const bool all = true )
+    {
+        m_ao_check_box.setVisible( visible );
+        m_lod_check_box.setVisible( visible );
+        m_repeat_slider.setVisible( visible );
+        m_radius_slider.setVisible( visible );
+        m_points_slider.setVisible( visible );
+        m_opacity_slider.setVisible( visible );
+        m_isovalue_slider.setVisible( visible );
+        m_edge_slider.setVisible( visible );
+
+        if ( all )
+        {
+            m_axis.setVisible( visible );
+            m_cmap_bar.setVisible( visible );
+        }
+    }
+
+    void setLayout( const int margin = 10 )
+    {
+        m_ao_check_box.setMargin( margin );
+        m_ao_check_box.anchorToTopLeft();
+
+        m_lod_check_box.setMargin( margin );
+        m_lod_check_box.anchorToBottom( &m_ao_check_box );
+
+        m_repeat_slider.setMargin( margin );
+        m_repeat_slider.anchorToBottom( &m_lod_check_box );
+
+        m_radius_slider.setMargin( margin );
+        m_radius_slider.anchorToBottom( &m_repeat_slider );
+
+        m_points_slider.setMargin( margin );
+        m_points_slider.anchorToBottom( &m_radius_slider );
+
+        m_edge_slider.setMargin( margin );
+        m_edge_slider.anchorToBottom( &m_points_slider );
+
+        m_opacity_slider.setMargin( margin );
+        m_opacity_slider.anchorToTopRight();
+
+        m_isovalue_slider.setMargin( margin );
+        m_isovalue_slider.anchorToBottom( &m_opacity_slider );
+
+        m_axis.anchorToBottomLeft();
+        m_cmap_bar.anchorToBottomRight();
     }
 };
 

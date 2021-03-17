@@ -15,7 +15,6 @@ namespace local
 
 class Model : public local::Input
 {
-
 public:
     using AORenderer = AmbientOcclusionRendering::SSAOStochasticTubeRenderer;
     using Renderer = StochasticStreamline::StochasticTubeRenderer;
@@ -90,7 +89,6 @@ public:
             renderer->enableShading();
             return renderer;
         }
-
     }
 
 private:

@@ -73,12 +73,12 @@ public:
             auto* scene = m_view.screen().scene();
             if ( m_model.ao )
             {
-                auto* renderer = local::Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setLODControlEnabled( m_model.lod );
             }
             else
             {
-                auto* renderer = local::Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setLODControlEnabled( m_model.lod );
             }
         } );
@@ -99,12 +99,12 @@ public:
             auto* scene = m_view.screen().scene();
             if ( m_model.ao )
             {
-                auto* renderer = local::Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setRepetitionLevel( m_model.repeats );
             }
             else
             {
-                auto* renderer = local::Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setRepetitionLevel( m_model.repeats );
             }
         } );
@@ -189,12 +189,12 @@ public:
             auto* scene = m_view.screen().scene();
             if ( m_model.ao )
             {
-                auto* renderer = local::Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setTransferFunction( tfunc );
             }
             else
             {
-                auto* renderer = local::Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setTransferFunction( tfunc );
             }
             m_cmap_bar.setColorMap( tfunc.colorMap() );
