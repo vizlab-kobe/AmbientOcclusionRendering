@@ -7,6 +7,7 @@ SCALE=100
 REPEATS=20
 RADIUS=0.5
 POINTS=256
+EDGE=1.0
 MIN_COORD="0 0 0"
 MAX_COORD="250 250 250"
 STRIDE="30 30 30"
@@ -18,6 +19,7 @@ STRIDE="30 30 30"
     -r $REPEATS \
     -radius $RADIUS \
     -points $POINTS \
+    -edge $EDGE \
     -min_coord $MIN_COORD \
     -max_coord $MAX_COORD \
     -stride $STRIDE

@@ -1,12 +1,14 @@
 #pragma once
 #include <kvs/CheckBox>
 #include <kvs/Slider>
-#include <kvs/OrientationAxis>
+#include <kvs/RadioButton>
+#include <kvs/RadioButtonGroup>
 #include <kvs/ColorMapBar>
+#include <kvs/OrientationAxis>
 #include <kvs/TransferFunctionEditor>
-#include <kvs/KeyPressEventListener>
 #include <kvs/ScreenCaptureEvent>
 #include <kvs/TargetChangeEvent>
+#include <kvs/KeyPressEventListener>
 #include <kvs/PaintEventListener>
 #include "Model.h"
 #include "View.h"
@@ -73,12 +75,12 @@ public:
             auto* scene = m_view.screen().scene();
             if ( m_model.ao )
             {
-                auto* renderer = local::Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = local::Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setLODControlEnabled( m_model.lod );
             }
             else
             {
-                auto* renderer = local::Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = local::Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setLODControlEnabled( m_model.lod );
             }
         } );
@@ -99,12 +101,12 @@ public:
             auto* scene = m_view.screen().scene();
             if ( m_model.ao )
             {
-                auto* renderer = local::Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = local::Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setRepetitionLevel( m_model.repeats );
             }
             else
             {
-                auto* renderer = local::Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = local::Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setRepetitionLevel( m_model.repeats );
             }
         } );
@@ -176,7 +178,7 @@ public:
         m_axis.show();
 
         // Colormap bar
-        m_cmap_bar.setCaption( "Velocity Magnitude" );
+        m_cmap_bar.setCaption( " " );
         m_cmap_bar.setColorMap( m_model.tfunc.colorMap() );
         m_cmap_bar.anchorToBottomRight();
 
@@ -189,12 +191,12 @@ public:
             auto* scene = m_view.screen().scene();
             if ( m_model.ao )
             {
-                auto* renderer = local::Model::SSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = local::Model::AORenderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setTransferFunction( tfunc );
             }
             else
             {
-                auto* renderer = local::Model::NoSSAORenderer::DownCast( scene->renderer( "Renderer" ) );
+                auto* renderer = local::Model::Renderer::DownCast( scene->renderer( "Renderer" ) );
                 renderer->setTransferFunction( tfunc );
             }
             m_cmap_bar.setColorMap( tfunc.colorMap() );

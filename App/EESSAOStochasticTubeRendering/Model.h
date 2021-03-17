@@ -1,5 +1,4 @@
 #pragma once
-#include "Input.h"
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/LineObject>
@@ -7,6 +6,7 @@
 #include <kvs/RendererBase>
 #include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
+#include "Input.h"
 #include "Streamline.h"
 
 
@@ -67,7 +67,7 @@ public:
     {
         if ( local::Input::ao )
         {
-            AORenderer* renderer = new AORenderer();
+            auto* renderer = new AORenderer();
             renderer->setName( "Renderer" );
             renderer->setTransferFunction( Input::tfunc );
             renderer->setShader( kvs::Shader::BlinnPhong() );
@@ -81,7 +81,7 @@ public:
         }
         else
         {
-            Renderer* renderer = new Renderer();
+            auto* renderer = new Renderer();
             renderer->setName( "Renderer" );
             renderer->setTransferFunction( Input::tfunc );
             renderer->setShader( kvs::Shader::BlinnPhong() );
