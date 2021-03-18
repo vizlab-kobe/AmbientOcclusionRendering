@@ -55,7 +55,6 @@ public:
         // AO
         m_ao_check_box.setCaption( "AO" );
         m_ao_check_box.setState( m_model.ao );
-        m_ao_check_box.setMargin( 10 );
         m_ao_check_box.stateChanged( [&] ()
         {
             m_model.ao = m_ao_check_box.state();
@@ -65,8 +64,6 @@ public:
         // LOD
         m_lod_check_box.setCaption( "LOD" );
         m_lod_check_box.setState( m_model.lod );
-        m_lod_check_box.setMargin( 10 );
-        m_lod_check_box.anchorToBottom( &m_ao_check_box );
         m_lod_check_box.stateChanged( [&] ()
         {
             m_model.lod = m_lod_check_box.state();
@@ -87,8 +84,6 @@ public:
         m_repeat_slider.setCaption( "Repeats: " + kvs::String::ToString( m_model.repeats ) );
         m_repeat_slider.setValue( m_model.repeats );
         m_repeat_slider.setRange( 1, 100 );
-        m_repeat_slider.setMargin( 10 );
-        m_repeat_slider.anchorToBottom( &m_lod_check_box );
         m_repeat_slider.sliderMoved( [&] ()
         {
             m_model.repeats = m_repeat_slider.value();
@@ -113,8 +108,6 @@ public:
         m_radius_slider.setCaption( "Radius: " + kvs::String::ToString( m_model.radius ) );
         m_radius_slider.setValue( m_model.radius );
         m_radius_slider.setRange( 0.1, 5.0 );
-        m_radius_slider.setMargin( 10 );
-        m_radius_slider.anchorToBottom( &m_repeat_slider );
         m_radius_slider.sliderMoved( [&] ()
         {
             const float min_value = m_radius_slider.minValue();
@@ -135,8 +128,6 @@ public:
         m_points_slider.setCaption( "Points: " + kvs::String::From( m_model.points ) );
         m_points_slider.setValue( m_model.points );
         m_points_slider.setRange( 1, 256 );
-        m_points_slider.setMargin( 10 );
-        m_points_slider.anchorToBottom( &m_radius_slider );
         m_points_slider.sliderMoved( [&] ()
         {
             m_model.points = int( m_points_slider.value() );
@@ -154,8 +145,6 @@ public:
         m_edge_slider.setCaption( "Edge: " + kvs::String::From( m_model.edge ) );
         m_edge_slider.setValue( m_model.edge );
         m_edge_slider.setRange( 0, 5 );
-        m_edge_slider.setMargin( 10 );
-        m_edge_slider.anchorToBottom( &m_points_slider );
         m_edge_slider.sliderMoved( [&] ()
         {
             const float v = int( m_edge_slider.value() * 10 ) * 0.1f;
@@ -172,17 +161,13 @@ public:
 
         // Axis
         m_axis.setBoxType( kvs::OrientationAxis::SolidBox );
-        m_axis.anchorToBottomLeft();
-        m_axis.show();
 
         // Colormap bar
-        m_cmap_bar.setCaption( "Velocity Magnitude" );
+        m_cmap_bar.setCaption( m_model.label );
         m_cmap_bar.setColorMap( m_model.tfunc.colorMap() );
-        m_cmap_bar.anchorToBottomRight();
 
         // Transfer function editor
         m_editor.setTransferFunction( m_model.tfunc );
-        m_editor.show();
         m_editor.apply( [&] ( kvs::TransferFunction tfunc )
         {
             m_model.tfunc = tfunc;
@@ -200,6 +185,7 @@ public:
             m_cmap_bar.setColorMap( tfunc.colorMap() );
             m_view.screen().redraw();
         } );
+        m_editor.show();
 
         // Key press event
         m_key_event.update( [&] ( kvs::KeyEvent* event )
@@ -208,13 +194,18 @@ public:
             {
             case kvs::Key::i:
             {
-                if ( this->isVisible() ) { this->hide(); }
-                else { this->show(); }
-                m_view.screen().redraw();
+                this->setVisible( !this->isVisible(), false );
                 break;
             }
-            default: break;
+            case kvs::Key::I:
+            {
+                this->setVisible( !this->isVisible(), true );
+                break;
             }
+            default:
+                return;
+            }
+            m_view.screen().redraw();
         } );
 
         // Paint event
@@ -237,7 +228,8 @@ public:
         m_view.screen().addEvent( &m_capture_event );
         m_view.screen().addEvent( &m_target_change_event );
 
-        this->show();
+        this->setLayout();
+        this->setVisible();
     }
 
 protected:
@@ -246,28 +238,44 @@ protected:
         return m_ao_check_box.isVisible();
     }
 
-    void show()
+    void setVisible( const bool visible = true, const bool all = true )
     {
-        m_ao_check_box.show();
-        m_lod_check_box.show();
-        m_repeat_slider.show();
-        m_radius_slider.show();
-        m_points_slider.show();
-        m_edge_slider.show();
-        m_axis.show();
-        m_cmap_bar.show();
+        m_ao_check_box.setVisible( visible );
+        m_lod_check_box.setVisible( visible );
+        m_repeat_slider.setVisible( visible );
+        m_radius_slider.setVisible( visible );
+        m_points_slider.setVisible( visible );
+        m_edge_slider.setVisible( visible );
+
+        if ( all )
+        {
+            m_axis.setVisible( visible );
+            m_cmap_bar.setVisible( visible );
+        }
     }
 
-    void hide()
+    void setLayout( const int margin = 10 )
     {
-        m_ao_check_box.hide();
-        m_lod_check_box.hide();
-        m_repeat_slider.hide();
-        m_radius_slider.hide();
-        m_points_slider.hide();
-        m_edge_slider.hide();
-        m_axis.hide();
-        m_cmap_bar.hide();
+        m_ao_check_box.setMargin( margin );
+        m_ao_check_box.anchorToTopLeft();
+
+        m_lod_check_box.setMargin( margin );
+        m_lod_check_box.anchorToBottom( &m_ao_check_box );
+
+        m_repeat_slider.setMargin( margin );
+        m_repeat_slider.anchorToBottom( &m_lod_check_box );
+
+        m_radius_slider.setMargin( margin );
+        m_radius_slider.anchorToBottom( &m_repeat_slider );
+
+        m_points_slider.setMargin( margin );
+        m_points_slider.anchorToBottom( &m_radius_slider );
+
+        m_edge_slider.setMargin( margin );
+        m_edge_slider.anchorToBottom( &m_points_slider );
+
+        m_axis.anchorToBottomLeft();
+        m_cmap_bar.anchorToBottomRight();
     }
 };
 

@@ -24,6 +24,7 @@ private:
 
 public:
     Model( local::Input& input ): local::Input( input ) {}
+    ~Model() { if ( m_cached_volume ) { delete m_cached_volume; } }
 
     const kvs::StructuredVolumeObject* cachedVolume() const
     {

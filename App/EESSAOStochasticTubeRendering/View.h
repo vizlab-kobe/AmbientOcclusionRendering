@@ -36,7 +36,7 @@ public:
 
     void setup()
     {
-        m_screen.setTitle( "MHD Streamline" );
+        m_screen.setTitle( m_model.title );
         m_screen.setBackgroundColor( kvs::RGBColor::White() );
 
         auto* object = m_model.streamline();

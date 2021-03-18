@@ -37,7 +37,8 @@ public:
     void setup()
     {
         m_screen.setBackgroundColor( kvs::RGBColor::White() );
-        m_screen.setTitle( "MagneticField" );
+//        m_screen.setTitle( "MagneticField" );
+        m_screen.setTitle( m_model.title );
 
         const auto* volume = m_model.import();
         const auto min_value = volume->minValue();

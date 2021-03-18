@@ -200,8 +200,8 @@ public:
         m_axis.anchorToBottomLeft();
 
         // Colormap bar
-        const auto cmap = m_model.transferFunction().colorMap();
-        m_cmap_bar.setCaption( " " );
+        const auto cmap = m_model.tfunc.colorMap();
+        m_cmap_bar.setCaption( m_model.label );
         m_cmap_bar.setColorMap( cmap );
         m_cmap_bar.setRange( min_value, max_value );
 
@@ -246,8 +246,8 @@ public:
         m_view.screen().addEvent( &m_key_event );
         m_view.screen().addEvent( &m_paint_event );
 
-        this->setLayout( 10 );
-        this->setVisible( true );
+        this->setLayout();
+        this->setVisible();
     }
 
 private:

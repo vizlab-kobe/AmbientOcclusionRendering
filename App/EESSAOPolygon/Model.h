@@ -60,7 +60,7 @@ public:
 
         const auto n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
-        const auto t = this->transferFunction();
+        const auto t = Input::tfunc;
         auto* polygon = new kvs::Isosurface( volume, isovalue, n, d, t );
         polygon->setName( "Object" );
         polygon->setOpacity( kvs::Math::Clamp( int( Input::opacity * 255.0 ), 0, 255 ) );
@@ -90,12 +90,6 @@ public:
             renderer->enableShading();
             return renderer;
         }
-    }
-
-    kvs::TransferFunction transferFunction() const
-    {
-        const auto cmap = kvs::ColorMap::BrewerSpectral( 256 );
-        return kvs::TransferFunction( cmap );
     }
 };
 

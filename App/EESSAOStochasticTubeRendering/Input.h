@@ -1,9 +1,8 @@
 #pragma once
-#include <string>
-#include <kvs/Indent>
 #include <kvs/Vector3>
 #include <kvs/TransferFunction>
 #include <kvs/CommandLine>
+#include <string>
 
 
 namespace local
@@ -22,6 +21,8 @@ struct Input
     kvs::Vec3i max_coord = kvs::Vec3i( 250, 250, 250 ); ///< max. coords
     kvs::Vec3i stride = kvs::Vec3i( 30, 30, 30 ); ///< grid stride for generating seed points
     kvs::TransferFunction tfunc = kvs::ColorMap::BrewerSpectral( 256 ); ///< transfer function
+    std::string title = ""; ///< application title
+    std::string label = " "; ///< value label
     std::string filename = ""; ///< input filename
 
     Input() = default;
@@ -34,13 +35,15 @@ struct Input
         cl.addOption( "lod","Enable LoD (default: false).", 0, false );
         cl.addOption( "s", "Scaling factor (default: 1.0).", 1, false );
         cl.addOption( "r", "Number of repeatitions (default: 50).", 1, false );
-        cl.addOption( "t", "Transfer function file (default: diverging colormap).", 1, false );
+        cl.addOption( "t", "Transfer function file (default: brewer spectral).", 1, false );
         cl.addOption( "radius", "Sampling radius for SSAO (default: 0.5).", 1, false );
         cl.addOption( "points", "Sampling points for SSAO (default: 256).", 1, false );
         cl.addOption( "edge", "Edge factor for SSAO (default: 1.0).", 1, false );
         cl.addOption( "min_coord", "Min. object coordinates (default: 0 0 0).", 3, false );
         cl.addOption( "max_coord", "Max. object coordinates (default: 250 250 250).", 3, false );
         cl.addOption( "stride", "Grid stride for generating seed points (default: 30 30 30).", 3, false );
+        cl.addOption( "title", "Application title (default: "").", 1, false );
+        cl.addOption( "label", "Value label (default: "").", 1, false );
         cl.addValue( "Input file (*.kvsml).", true );
         if ( !cl.parse() ) { return false; }
 
@@ -70,6 +73,8 @@ struct Input
             stride[1] = cl.optionValue<int>("stride", 1);
             stride[2] = cl.optionValue<int>("stride", 2);
         }
+        if ( cl.hasOption("title") ) title = cl.optionValue<std::string>("title");
+        if ( cl.hasOption("label") ) label = cl.optionValue<std::string>("label");
         if ( cl.hasValues() ) filename = cl.value<std::string>();
 
         return true;

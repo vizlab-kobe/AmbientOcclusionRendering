@@ -1,4 +1,5 @@
 #pragma once
+#include <kvs/TransferFunction>
 #include <kvs/CommandLine>
 #include <string>
 
@@ -15,6 +16,9 @@ struct Input
     int points = 256; ///< number of points used for SSAO
     float opacity = 0.1f; ///< opacity of polygon object
     float edge = 1.0f; ///< edge factor
+    kvs::TransferFunction tfunc = kvs::ColorMap::BrewerSpectral( 256 ); ///< transfer function
+    std::string title = ""; ///< application title
+    std::string label = " "; ///< value label
     std::string filename = ""; ///< input filename
 
     Input() = default;
@@ -26,18 +30,24 @@ struct Input
         cl.addOption( "ao","Enable SSAO (default: false).", 0, false );
         cl.addOption( "lod","Enable LoD (default: false).", 0, false );
         cl.addOption( "r", "Number of repeatitions (default: 20).", 1, false );
+        cl.addOption( "t", "Transfer function file (default: brewer spectral).", 1, false );
         cl.addOption( "radius", "Sampling radius for SSAO (default: 0.5).", 1, false );
         cl.addOption( "points", "Sampling points for SSAO (default: 256).", 1, false );
         cl.addOption( "edge", "Edge factor for SSAO (default: 1.0).", 1, false );
+        cl.addOption( "title", "Application title (default: "").", 1, false );
+        cl.addOption( "label", "Value label (default: "").", 1, false );
         cl.addValue( "Input file (*.kvsml).", true );
         if ( !cl.parse() ) { return false; }
 
         ao = cl.hasOption( "ao" );
         lod = cl.hasOption( "lod" );
         if ( cl.hasOption("r") ) repeats = cl.optionValue<size_t>("r");
+        if ( cl.hasOption("t") ) tfunc = kvs::TransferFunction( cl.optionValue<std::string>("t") );
         if ( cl.hasOption("radius") ) radius = cl.optionValue<float>("radius");
         if ( cl.hasOption("points") ) points = cl.optionValue<int>("points");
         if ( cl.hasOption("edge") ) edge = cl.optionValue<float>("edge");
+        if ( cl.hasOption("title") ) title = cl.optionValue<std::string>("title");
+        if ( cl.hasOption("label") ) label = cl.optionValue<std::string>("label");
         if ( cl.hasValues() ) filename = cl.value<std::string>();
 
         return true;
