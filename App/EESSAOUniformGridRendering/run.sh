@@ -1,16 +1,23 @@
 #!/bin/bash
 PROGRAM=${PWD##*/}
 
+# Input file
 FILENAME=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_B_20190125.kvsml
 #FILENAME=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_V_20190125.kvsml
 #FILENAME=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle90_B_20190125.kvsml
 #FILENAME=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle90_V_20190125.kvsml
 
+TITLE="MHD Simulation"
+LABEL="Magnetic field |B|"
+
+# Initial parameters
 REPEATS=20
 RADIUS=0.5
 POINTS=256
 
 ./$PROGRAM $FILENAME \
+    -title "$TITLE" \
+    -label "$LABEL" \
     -ao \
     -lod \
     -r $REPEATS \

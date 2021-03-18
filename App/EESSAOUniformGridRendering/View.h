@@ -36,8 +36,8 @@ public:
 
     void setup()
     {
+        m_screen.setTitle( m_model.title );
         m_screen.setBackgroundColor( kvs::RGBColor::White() );
-        m_screen.setTitle( "SSAOStochasticUniformGridRenderer" );
 
         auto* object = m_model.import();
         auto* renderer = m_model.renderer();

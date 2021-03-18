@@ -47,7 +47,6 @@ public:
 
     kvs::RendererBase* renderer()
     {
-        //kvs::Light::SetModelTwoSide( true );
         if ( Input::ao )
         {
             auto* renderer = new AORenderer();

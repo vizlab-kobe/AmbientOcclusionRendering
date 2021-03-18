@@ -18,6 +18,8 @@ struct Input
     int points = 256; ///< sampling points for SSAO
     float edge = 1.0f; ///< edge factor
     kvs::TransferFunction tfunc = kvs::ColorMap::BrewerSpectral( 256 ); ///< transfer function
+    std::string title = ""; ///< application title
+    std::string label = " "; ///< value label
     std::string filename = ""; ///< input filename
 
     Input() = default;
@@ -33,6 +35,8 @@ struct Input
         cl.addOption( "radius", "Sampling radius for SSAO (default: 0.5).", 1, false );
         cl.addOption( "points", "Sampling points for SSAO (default: 256).", 1, false );
         cl.addOption( "edge", "Edge factor for SSAO (default: 1.0).", 1, false );
+        cl.addOption( "title", "Application title (default: "").", 1, false );
+        cl.addOption( "label", "Value label (default: "").", 1, false );
         cl.addValue( "Input file (*.kvsml).", true );
         if ( !cl.parse() ) { return false; }
 
@@ -43,6 +47,8 @@ struct Input
         if ( cl.hasOption("radius") ) radius = cl.optionValue<float>("radius");
         if ( cl.hasOption("points") ) points = cl.optionValue<int>("points");
         if ( cl.hasOption("edge") ) edge = cl.optionValue<float>("edge");
+        if ( cl.hasOption("title") ) title = cl.optionValue<std::string>("title");
+        if ( cl.hasOption("label") ) label = cl.optionValue<std::string>("label");
         if ( cl.hasValues() ) filename = cl.value<std::string>();
 
         return true;
