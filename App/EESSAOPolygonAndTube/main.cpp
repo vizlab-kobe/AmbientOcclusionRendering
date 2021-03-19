@@ -19,6 +19,9 @@
 #include <kvs/Isosurface>
 #include <kvs/PaintEventListener>
 
+#include "Input.h"
+#include "Model.h"
+
 
 kvs::Vec3i min_coord( 0, 0, 0 );
 kvs::Vec3i max_coord( 250, 250, 250 );
@@ -114,6 +117,13 @@ int main( int argc, char** argv )
     kvs::ShaderSource::AddSearchPath("../../Lib");
     kvs::ShaderSource::AddSearchPath("../../../StochasticStreamline/Lib");
 
+    // Input parameters
+    local::Input input;
+    if ( !input.parse( argc, argv ) ) { return 1; }
+
+    input.ao = true;
+    local::Model model( input );
+
     // Application and screen.
     kvs::Application app( argc, argv );
     kvs::Screen screen( &app );
@@ -123,14 +133,26 @@ int main( int argc, char** argv )
     screen.show();
 
     // Import volume object.
-    std::string magnetic_file = argv[1];
-    std::string velocity_file = argv[2];
+//    std::string magnetic_file = argv[1];
+//    std::string velocity_file = argv[2];
+    std::string magnetic_file = input.filenames[ local::Input::Isosurface ];
+    std::string velocity_file = input.filenames[ local::Input::Streamline ];
 
     kvs::StructuredVolumeObject* volume = new kvs::StructuredVolumeImporter( velocity_file );
     kvs::PolygonObject* polygon = createIsosurface( magnetic_file );
     kvs::LineObject* streamline = createStreamline( velocity_file );
-    
-    // Declare SSAOStochasticPolygonRenderer
+
+    /*
+    const auto* volume = model.import( local::Input::MappingMethod::Isosurface );
+    const auto min_value = volume->minValue();
+    const auto max_value = volume->maxValue();
+    const auto isovalue = ( max_value + min_value ) * 0.05;  // Isolevel parameter.
+
+    auto* polygon = model.isosurface( isovalue );
+    auto* streamline = model.streamline();
+    */
+
+// Declare SSAOStochasticPolygonRenderer
     local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
     polygon_renderer->setName( "PolygonRenderer" );
     polygon_renderer->setShader( kvs::Shader::BlinnPhong() );
@@ -140,7 +162,7 @@ int main( int argc, char** argv )
     tube_renderer->setName( "TubeRenderer" );
     tube_renderer->setTransferFunction( kvs::DivergingColorMap::CoolWarm( 256 ) );
     tube_renderer->setShader( kvs::Shader::BlinnPhong() );
-    
+
     // Register objects and renderers
     screen.registerObject( polygon, polygon_renderer );
     screen.registerObject( streamline, tube_renderer );
@@ -295,6 +317,7 @@ int main( int argc, char** argv )
     {
       auto* scene = screen.scene();
       auto* object = changeIsosurface( magnetic_file, isolevel );
+//      auto* object = model.isosurface( isolevel );
       scene->replaceObject( "Polygon", object );
     } );
 
