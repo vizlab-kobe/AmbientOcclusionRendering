@@ -5,7 +5,10 @@
 namespace local
 {
 
-void StochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+void StochasticRendererBase::exec(
+    kvs::ObjectBase* object,
+    kvs::Camera* camera,
+    kvs::Light* light )
 {
     startTimer();
     kvs::OpenGL::WithPushedAttrib p( GL_ALL_ATTRIB_BITS );
@@ -24,8 +27,9 @@ void StochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* camera,
         BaseClass::createEnsembleBuffer( frame_width, frame_height );
         BaseClass::createEngine( object, camera, light );
 
+        const auto enable_shading = kvs::RendererBase::isEnabledShading();
         m_ao_buffer.createFramebuffer( frame_width, frame_height );
-        m_ao_buffer.createShaderProgram( BaseClass::shader(), kvs::RendererBase::isEnabledShading() );
+        m_ao_buffer.createShaderProgram( BaseClass::shader(), enable_shading );
     }
 
     if ( BaseClass::isWindowResized( width, height ) )
@@ -41,8 +45,9 @@ void StochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* camera,
         // Update engine
         BaseClass::engine().update( object, camera, light );
 
+        const auto enable_shading = kvs::RendererBase::isEnabledShading();
         m_ao_buffer.createFramebuffer( frame_width, frame_height );
-        m_ao_buffer.createShaderProgram( BaseClass::shader(), kvs::RendererBase::isEnabledShading() );
+        m_ao_buffer.createShaderProgram( BaseClass::shader(), enable_shading );
     }
 
     if ( BaseClass::isObjectChanged( object ) )
@@ -65,11 +70,13 @@ void StochasticRendererBase::exec( kvs::ObjectBase* object, kvs::Camera* camera,
     {
         // Render to the ensemble buffer.
         BaseClass::ensembleBuffer().bind();
+
         m_ao_buffer.bind();
         BaseClass::engine().draw( object, camera, light );
+        BaseClass::engine().countRepetitions();
         m_ao_buffer.unbind();
         m_ao_buffer.draw();
-        BaseClass::engine().countRepetitions();
+
         BaseClass::ensembleBuffer().unbind();
 
         // Progressive averaging.

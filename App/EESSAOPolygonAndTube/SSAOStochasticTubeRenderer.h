@@ -7,7 +7,7 @@
 #include <kvs/ProgramObject>
 #include <kvs/VertexBufferObjectManager>
 #include <kvs/Texture2D>
-#include "StochasticRenderingEngine.h"
+#include <kvs/StochasticRenderingEngine>
 #include "StochasticRendererBase.h"
 #include <kvs/TransferFunction>
 #include <kvs/StylizedLineRenderer>
@@ -35,7 +35,7 @@ public:
     void setEdgeFactor( const float edge_factor );
 };
 
-class SSAOStochasticTubeRenderer::Engine : public local::StochasticRenderingEngine
+class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine
 {
     using BufferObject = kvs::StylizedLineRenderer::BufferObject;
 
