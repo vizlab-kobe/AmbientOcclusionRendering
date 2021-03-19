@@ -36,9 +36,9 @@ namespace local
 {
 
 AmbientOcclusionBuffer::AmbientOcclusionBuffer():
-    m_id( 0 ),
     m_occl_pass_shader_vert_file("SSAO_occl_pass.vert"),
     m_occl_pass_shader_frag_file("SSAO_occl_pass.frag"),
+    m_bound_id( 0 ),
     m_sampling_sphere_radius( 0.5f ),
     m_nsamples( 256 )
 {
@@ -53,9 +53,9 @@ void AmbientOcclusionBuffer::setOcclusionPassShaderFiles( const std::string& ver
 void AmbientOcclusionBuffer::bind()
 {
     // Gaurded bind.
-    m_id = kvs::OpenGL::Integer( GL_FRAMEBUFFER_BINDING );
-    if ( m_id != m_framebuffer.id() ) { m_framebuffer.bind(); }
-    
+    m_bound_id = kvs::OpenGL::Integer( GL_FRAMEBUFFER_BINDING );
+    if ( m_bound_id != m_framebuffer.id() ) { m_framebuffer.bind(); }
+
     // Initialize FBO.
     kvs::OpenGL::Clear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -69,9 +69,9 @@ void AmbientOcclusionBuffer::bind()
 
 void AmbientOcclusionBuffer::unbind()
 {
-    if ( m_id != m_framebuffer.id() )
+    if ( m_bound_id != m_framebuffer.id() )
     {
-        KVS_GL_CALL( glBindFramebufferEXT( GL_FRAMEBUFFER, m_id ) );
+        KVS_GL_CALL( glBindFramebufferEXT( GL_FRAMEBUFFER, m_bound_id ) );
     }
 }
 
@@ -95,7 +95,10 @@ void AmbientOcclusionBuffer::draw()
 
 void AmbientOcclusionBuffer::release()
 {
+    // Release occl pas shader resources
     m_occl_pass_shader.release();
+
+    // Release framebuffer resources
     m_framebuffer.release();
     m_color_texture.release();
     m_position_texture.release();
@@ -147,6 +150,11 @@ void AmbientOcclusionBuffer::updateShaderProgram( const kvs::Shader::ShadingMode
 {
     m_occl_pass_shader.release();
     this->createShaderProgram( shading_model, shading_enabled );
+}
+
+void AmbientOcclusionBuffer::setupShaderProgram(
+    const kvs::Shader::ShadingModel& shading_model )
+{
 }
 
 void AmbientOcclusionBuffer::createFramebuffer( const size_t width, const size_t height )
@@ -210,7 +218,6 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float rad
 {
     kvs::Xorshift128 rand;
     kvs::ValueArray<GLfloat> sampling_points( 3 * nsamples );
-    
     for ( size_t i = 0; i < nsamples ; i++ )
     {
         const float pi = 3.1415926f;
@@ -229,7 +236,7 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints( const float rad
         sampling_points[ 3 * i + 1 ] = y;
         sampling_points[ 3 * i + 2 ] = z;
     }
-    
+
     return sampling_points;
 }
 

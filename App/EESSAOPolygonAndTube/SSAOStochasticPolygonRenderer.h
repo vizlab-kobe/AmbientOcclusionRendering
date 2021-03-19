@@ -5,7 +5,8 @@
 #include <kvs/VertexBufferObjectManager>
 #include <kvs/PolygonRenderer>
 #include <kvs/Texture2D>
-#include "StochasticRenderingEngine.h"
+//#include "StochasticRenderingEngine.h"
+#include <kvs/StochasticRenderingEngine>
 #include "StochasticRendererBase.h"
 
 
@@ -36,7 +37,8 @@ public:
  *  @brief  Engine class for stochastic polygon renderer.
  */
 /*===========================================================================*/
-class SSAOStochasticPolygonRenderer::Engine : public local::StochasticRenderingEngine
+//class SSAOStochasticPolygonRenderer::Engine : public local::StochasticRenderingEngine
+class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEngine
 {
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
 

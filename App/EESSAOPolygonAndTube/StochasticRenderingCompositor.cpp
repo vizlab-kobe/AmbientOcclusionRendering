@@ -197,7 +197,8 @@ void StochasticRenderingCompositor::check_window_resized()
 /*===========================================================================*/
 void StochasticRenderingCompositor::check_object_changed()
 {
-    typedef StochasticRendererBase Renderer;
+//    typedef StochasticRendererBase Renderer;
+    using Renderer = local::StochasticRendererBase;
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
