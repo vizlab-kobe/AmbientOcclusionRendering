@@ -18,7 +18,8 @@ struct Input
     size_t repeats = 20; ///< number of repetitions
     float radius = 0.5f; ///< sampling radius for SSAO
     int points = 256; ///< sampling points for SSAO
-    float opacity = 0.1f; ///< opacity of polygon object
+//    float opacity = 0.1f; ///< opacity of polygon object
+    float opacity = 0.5f; ///< opacity of polygon object
     float edge = 1.0f; ///< edge factor
     kvs::Vec3i min_coord = kvs::Vec3i( 0, 0, 0 ); ///< min. coords
     kvs::Vec3i max_coord = kvs::Vec3i( 250, 250, 250 ); ///< max. coords

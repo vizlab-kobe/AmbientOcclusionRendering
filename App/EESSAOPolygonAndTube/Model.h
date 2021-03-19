@@ -1,6 +1,8 @@
 #pragma once
 #include <kvs/StructuredVolumeObject>
 #include <kvs/StructuredVolumeImporter>
+#include <kvs/StructuredVectorToScalar>
+#include <kvs/Isosurface>
 #include <kvs/LineObject>
 #include <kvs/PointObject>
 #include <kvs/RendererBase>
@@ -136,7 +138,7 @@ private:
 
     kvs::StructuredVolumeObject* import_streamline( const bool cache = true ) const
     {
-        const MappingMethod method = Input::MappingMethod::Isosurface;
+        const MappingMethod method = Input::MappingMethod::Streamline;
         auto* cached_volume = m_cached_volumes[ method ];
         if ( cached_volume ) { delete cached_volume; }
 
