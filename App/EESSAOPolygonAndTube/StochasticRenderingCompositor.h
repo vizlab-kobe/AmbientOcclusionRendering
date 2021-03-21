@@ -64,7 +64,7 @@ public:
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
     template <typename ShadingType>
     void setShader( const ShadingType shader );
-    
+
 private:
     StochasticRenderingCompositor();
     void draw();

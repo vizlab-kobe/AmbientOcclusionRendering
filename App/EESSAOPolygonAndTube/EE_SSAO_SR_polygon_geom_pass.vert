@@ -24,9 +24,6 @@ VertOut vec3 position; // vertex position in camera coordinate
 VertOut vec3 normal; // normal vector in camera coodinate
 VertOut vec2 index; // index for accessing to the random texture
 
-// Uniform parameter.
-uniform float polygon_offset; // polygon offset in clip coordinate
-
 // Uniform variables (OpenGL variables).
 uniform mat4 ModelViewMatrix; // model-view matrix
 uniform mat4 ModelViewProjectionMatrix; // model-view projection matrix
@@ -41,7 +38,6 @@ uniform mat3 NormalMatrix; // normal matrix
 void main()
 {
     gl_Position = ModelViewProjectionMatrix * gl_Vertex;
-    gl_Position.z -= polygon_offset;
     gl_FrontColor = gl_Color;
 
     position = ( ModelViewMatrix * gl_Vertex ).xyz;

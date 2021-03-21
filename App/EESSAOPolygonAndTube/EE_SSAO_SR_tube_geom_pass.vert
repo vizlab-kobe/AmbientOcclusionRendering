@@ -69,7 +69,10 @@ void main()
     coord = gl_MultiTexCoord0.xzy;
     depth0 = gl_Position.zw;
 
-    float depth = min( 1.0 / dot( up_vec, -v ), 1.0) * abs( gl_MultiTexCoord0.x );
+//    float depth = min( 1.0 / dot( up_vec, -v ), 1.0 ) * abs( gl_MultiTexCoord0.x );
+    float depth = abs( gl_MultiTexCoord0.x );
+    float e = dot( up_vec, -v );
+    if ( e > 1.0e-4 ) depth *= min( 1.0 / e, 1.0 );
     vec4 mp = ProjectionMatrix * vec4( p.xyz + v * depth, 1.0 );
 
     // transfer front position z and w values to fragment shader

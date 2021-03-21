@@ -5,7 +5,6 @@
 #include <kvs/VertexBufferObjectManager>
 #include <kvs/PolygonRenderer>
 #include <kvs/Texture2D>
-//#include "StochasticRenderingEngine.h"
 #include <kvs/StochasticRenderingEngine>
 #include "StochasticRendererBase.h"
 
@@ -28,8 +27,10 @@ public:
 
 public:
     SSAOStochasticPolygonRenderer();
-    void setPolygonOffset( const float polygon_offset );
-    void setEdgeFactor( const float edge_control );
+
+    void setEdgeFactor( const float factor );
+    void setDepthOffset( const kvs::Vec2& offset );
+    void setDepthOffset( const float factor, const float units = 0.0f );
 };
 
 /*===========================================================================*/
@@ -37,14 +38,15 @@ public:
  *  @brief  Engine class for stochastic polygon renderer.
  */
 /*===========================================================================*/
-//class SSAOStochasticPolygonRenderer::Engine : public local::StochasticRenderingEngine
 class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
 
 private:
-    float m_polygon_offset; ///< polygon offset
-    float m_edge_factor; ///< edge enhancement control factor
+    float m_edge_factor = 0.0f; ///< edge enhancement factor
+    kvs::Vec2 m_depth_offset{ 0.0f, 0.0f }; ///< depth offset {factor, units}
+
     BufferObject m_buffer_object;
     kvs::ProgramObject m_geom_pass_shader;
 
@@ -55,10 +57,11 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    
-    void setPolygonOffset( const float offset ) { m_polygon_offset = offset; }
+
     void setEdgeFactor( const float edge_factor ) { m_edge_factor = edge_factor; }
-    
+    void setDepthOffset( const kvs::Vec2& offset ) { m_depth_offset = offset; }
+    void setDepthOffset( const float factor, const float units = 0.0f ) { m_depth_offset = kvs::Vec2( factor, units ); }
+
 private:
     void create_geometry_shader_program();
     void create_buffer_object( const kvs::PolygonObject* polygon );

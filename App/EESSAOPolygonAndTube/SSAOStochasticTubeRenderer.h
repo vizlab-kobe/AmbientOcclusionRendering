@@ -37,9 +37,11 @@ public:
 
 class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::StylizedLineRenderer::BufferObject;
 
 private:
+    float m_edge_factor;
     kvs::Real32 m_radius_size;
     kvs::Real32 m_halo_size;
     BufferObject m_buffer_object;
@@ -48,7 +50,6 @@ private:
     kvs::TransferFunction m_tfunc; ///< transfer function
     kvs::Texture1D m_tfunc_texture; ///< transfer function texture
     kvs::ProgramObject m_geom_pass_shader;
-    float m_edge_factor;
 
 public:
     Engine();
@@ -57,7 +58,7 @@ public:
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
-    
+
 public:
     void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
     void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
@@ -68,9 +69,13 @@ public:
     void setEdgeFactor( const float edge_factor ) { m_edge_factor = edge_factor; }
 
 private:
-    void create_buffer_object( const kvs::LineObject* line );
     void create_transfer_function_texture();
+    void update_transfer_function_texture();
+
+    void create_buffer_object( const kvs::LineObject* line );
+    void update_buffer_object( const kvs::LineObject* line );
     void draw_buffer_object( const kvs::LineObject* line );
+
     void create_geometry_shader_program();
 };
 

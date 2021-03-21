@@ -52,19 +52,22 @@ void main()
 {
     vec3 color = gl_Color.rgb;
     float alpha = gl_Color.a;
-    if ( alpha == 0.0 ) { discard; return; }
+    if ( alpha == 0.0 ) { discard; }
+
+    //Edge Enhancement
+    if( edge_factor > 0.0 )
+    {
+        vec3 N = normalize( normal );
+        vec3 E = normalize( -position );
+        float dotNE = abs( dot( N, E ) );
+        if ( dotNE > 0.0 )
+        {
+            alpha = min( 1.0, alpha / pow( dotNE, edge_factor ) );
+        }
+    }
 
     float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
-    
-    //Edge Enhancement
-    if( edge_factor > 0 )
-    {
-	vec3 N = normalize( normal );
-    	vec3 E = normalize( -position );
-    	alpha = min( 1.0, alpha / pow( abs( dot( N, E ) ), edge_factor ) );
-    }
-    
-    if ( R > alpha ) { discard; return; }
+    if ( R > alpha ) { discard; }
 
     gl_FragData[0] = gl_Color;
     gl_FragData[1] = vec4( position.xyz, 1.0 );

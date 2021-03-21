@@ -238,17 +238,10 @@ void SSAOStochasticTubeRenderer::Engine::update_transfer_function_texture()
 
 void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineObject* line )
 {
-    const size_t nvertices = line->numberOfVertices() * 2;
-    const auto tex_size = randomTextureSize();
-    kvs::ValueArray<kvs::UInt16> indices( nvertices * 2 );
-    for ( size_t i = 0; i < nvertices; i++ )
-    {
-        const unsigned int count = i * 12347;
-        indices[ 2 * i + 0 ] = static_cast<kvs::UInt16>( ( count ) % tex_size );
-        indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
-    }
-
     auto& geom_pass = m_ao_buffer.geometryPassShader();
+
+    const auto nvertices = line->numberOfVertices() * 2;
+    const auto indices= BaseClass::randomIndices( nvertices );
     const auto indices_location = geom_pass.attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, indices_location, 2 );
 
