@@ -40,21 +40,32 @@ public:
 /*===========================================================================*/
 class SSAOStochasticPolygonRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+public:
     using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::glsl::PolygonRenderer::BufferObject;
+
+    class RenderPass : public kvs::glsl::PolygonRenderer::RenderPass
+    {
+    private:
+        using BaseRenderPass = kvs::glsl::PolygonRenderer::RenderPass;
+        using Parent = BaseClass;
+        const Parent* m_parent; ///< reference to the engine
+    public:
+        RenderPass( BufferObject& buffer_object, Parent* parent );
+        void create( const kvs::Shader::ShadingModel& model, const bool enable );
+        void setup( const kvs::Shader::ShadingModel& model );
+    };
 
 private:
     float m_edge_factor = 0.0f; ///< edge enhancement factor
     kvs::Vec2 m_depth_offset{ 0.0f, 0.0f }; ///< depth offset {factor, units}
 
     BufferObject m_buffer_object{}; ///< geometry buffer object
-    std::string m_geom_pass_vert_file = ""; ///< vertex shader file for geom. pass
-    std::string m_geom_pass_frag_file = ""; ///< fragment shader file for geom. pass
-    kvs::ProgramObject m_geom_pass_shader{}; ///< geometry pass shader for AO
+    RenderPass m_render_pass{ m_buffer_object, this };
 
 public:
-    Engine();
-    void release();
+    Engine() = default;
+    void release() { m_render_pass.release(); m_buffer_object.release(); }
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void setup( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
@@ -67,9 +78,6 @@ public:
 private:
     void create_buffer_object( const kvs::PolygonObject* polygon );
     void draw_buffer_object( const kvs::PolygonObject* polygon );
-
-    void create_geom_pass();
-    void setup_geom_pass();
 };
 
 } // end of namespace local
