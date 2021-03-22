@@ -7,6 +7,7 @@
 #include <kvs/Assert>
 #include <kvs/Message>
 #include <kvs/Xorshift128>
+#include <kvs/IgnoreUnusedVariable>
 
 
 namespace
@@ -94,6 +95,8 @@ void SSAOStochasticPolygonRenderer::setDepthOffset( const float factor, const fl
 /*===========================================================================*/
 SSAOStochasticPolygonRenderer::Engine::Engine()
 {
+    m_geom_pass_vert_file = "EE_SSAO_SR_polygon_geom_pass.vert";
+    m_geom_pass_frag_file = "EE_SSAO_SR_polygon_geom_pass.frag";
 }
 
 /*===========================================================================*/
@@ -127,7 +130,7 @@ void SSAOStochasticPolygonRenderer::Engine::create(
     BaseClass::attachObject( object );
     BaseClass::createRandomTexture();
 
-    this->create_geometry_shader_program();
+    this->create_geom_pass();
     this->create_buffer_object( polygon );
 }
 
@@ -159,16 +162,11 @@ void SSAOStochasticPolygonRenderer::Engine::setup(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
-    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
-    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+    kvs::IgnoreUnusedVariable( object );
+    kvs::IgnoreUnusedVariable( camera );
+    kvs::IgnoreUnusedVariable( light );
 
-    m_geom_pass_shader.bind();
-    m_geom_pass_shader.setUniform( "ModelViewMatrix", M );
-    m_geom_pass_shader.setUniform( "ModelViewProjectionMatrix", PM );
-    m_geom_pass_shader.setUniform( "NormalMatrix", N );
-    m_geom_pass_shader.setUniform( "edge_factor", m_edge_factor );
-    m_geom_pass_shader.unbind();
+    this->setup_geom_pass();
 }
 
 /*===========================================================================*/
@@ -197,13 +195,6 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
     m_geom_pass_shader.bind();
     this->draw_buffer_object( kvs::PolygonObject::DownCast( object ) );
     m_geom_pass_shader.unbind();
-}
-
-void SSAOStochasticPolygonRenderer::Engine::create_geometry_shader_program()
-{
-    kvs::ShaderSource vert( "EE_SSAO_SR_polygon_geom_pass.vert" );
-    kvs::ShaderSource frag( "EE_SSAO_SR_polygon_geom_pass.frag" );
-    m_geom_pass_shader.build( vert, frag );
 }
 
 /*===========================================================================*/
@@ -235,6 +226,27 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::Polyg
 
     kvs::Texture::Binder bind3( randomTexture() );
     m_buffer_object.draw( polygon );
+}
+
+void SSAOStochasticPolygonRenderer::Engine::create_geom_pass()
+{
+    kvs::ShaderSource vert( m_geom_pass_vert_file );
+    kvs::ShaderSource frag( m_geom_pass_frag_file );
+    m_geom_pass_shader.build( vert, frag );
+}
+
+void SSAOStochasticPolygonRenderer::Engine::setup_geom_pass()
+{
+    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
+    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+
+    m_geom_pass_shader.bind();
+    m_geom_pass_shader.setUniform( "ModelViewMatrix", M );
+    m_geom_pass_shader.setUniform( "ModelViewProjectionMatrix", PM );
+    m_geom_pass_shader.setUniform( "NormalMatrix", N );
+    m_geom_pass_shader.setUniform( "edge_factor", m_edge_factor );
+    m_geom_pass_shader.unbind();
 }
 
 } // end of namespace local

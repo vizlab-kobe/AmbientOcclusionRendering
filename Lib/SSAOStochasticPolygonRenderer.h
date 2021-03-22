@@ -32,6 +32,8 @@ public:
     void setEdgeFactor( const float factor );
     void setDepthOffset( const kvs::Vec2& offset );
     void setDepthOffset( const float factor, const float units = 0.0f );
+
+    // AO buffer properties
     void setSamplingSphereRadius( const float radius );
     void setNumberOfSamplingPoints( const size_t nsamples );
     kvs::Real32 samplingSphereRadius() const;

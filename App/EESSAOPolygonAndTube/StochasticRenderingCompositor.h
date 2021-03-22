@@ -42,7 +42,7 @@ private:
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
     kvs::Shader::ShadingModel* m_shader;
     local::AmbientOcclusionBuffer m_ao_buffer;
-    
+
 public:
     StochasticRenderingCompositor( kvs::Scene* scene );
     const kvs::Timer& timer() const { return m_timer; }
