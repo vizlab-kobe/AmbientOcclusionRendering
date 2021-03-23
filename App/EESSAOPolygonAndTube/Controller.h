@@ -24,17 +24,17 @@ private:
     local::View& m_view;
 
     // Widgets
-    kvs::CheckBox m_ao_check_box;
-    kvs::CheckBox m_lod_check_box;
-    kvs::Slider m_repeat_slider;
-    kvs::Slider m_radius_slider;
-    kvs::Slider m_points_slider;
-    kvs::Slider m_edge_slider;
-    kvs::Slider m_opacity_slider;
-    kvs::Slider m_isovalue_slider;
-    kvs::OrientationAxis m_axis;
-    kvs::ColorMapBar m_cmap_bar;
-    kvs::TransferFunctionEditor m_editor;
+    kvs::CheckBox m_ao_check_box{ &m_view.screen() };
+    kvs::CheckBox m_lod_check_box{ &m_view.screen() };
+    kvs::Slider m_repeat_slider{ &m_view.screen() };
+    kvs::Slider m_radius_slider{ &m_view.screen() };
+    kvs::Slider m_points_slider{ &m_view.screen() };
+    kvs::Slider m_edge_slider{ &m_view.screen() };
+    kvs::Slider m_opacity_slider{ &m_view.screen() };
+    kvs::Slider m_isovalue_slider{ &m_view.screen() };
+    kvs::OrientationAxis m_axis{ &m_view.screen(), m_view.screen().scene() };
+    kvs::ColorMapBar m_cmap_bars[2] = { kvs::ColorMapBar( &m_view.screen() ), kvs::ColorMapBar( &m_view.screen() ) };
+    kvs::TransferFunctionEditor m_editor{ &m_view.screen() };
 
     // Events
     kvs::ScreenCaptureEvent m_capture_event;
@@ -45,24 +45,18 @@ private:
 public:
     Controller( local::Model& model, local::View& view ):
         m_model( model ),
-        m_view( view ),
-        m_ao_check_box( &view.screen() ),
-        m_lod_check_box( &view.screen() ),
-        m_repeat_slider( &view.screen() ),
-        m_radius_slider( &view.screen() ),
-        m_points_slider( &view.screen() ),
-        m_edge_slider( &view.screen() ),
-        m_opacity_slider( &view.screen() ),
-        m_isovalue_slider( &view.screen() ),
-        m_axis( &view.screen(), view.screen().scene() ),
-        m_cmap_bar( &view.screen() ),
-        m_editor( &view.screen() )
+        m_view( view )
     {
-        // Initial values.
-        auto* volume = m_model.import( Input::MappingMethod::Isosurface );
-        const auto min_value = volume->minValue();
-        const auto max_value = volume->maxValue();
-        const auto isovalue = ( max_value + min_value ) * 0.02f;
+        // Initial values for isosurface.
+        auto* isosurface_volume = m_model.import( Input::MappingMethod::Isosurface );
+        const auto isosurface_min_value = isosurface_volume->minValue();
+        const auto isosurface_max_value = isosurface_volume->maxValue();
+        const auto isovalue = ( isosurface_max_value + isosurface_min_value ) * 0.02f;
+
+        // Initial values for streamline.
+        auto* streamline_volume = m_model.import( Input::MappingMethod::Streamline );
+        const auto streamline_min_value = streamline_volume->minValue();
+        const auto streamline_max_value = streamline_volume->maxValue();
 
         // AO
         m_ao_check_box.setCaption( "AO" );
@@ -174,7 +168,7 @@ public:
         // Isovalue
         m_isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( isovalue ) );
         m_isovalue_slider.setValue( isovalue );
-        m_isovalue_slider.setRange( min_value, max_value );
+        m_isovalue_slider.setRange( isosurface_min_value, isosurface_max_value );
         m_isovalue_slider.sliderMoved( [&] ()
         {
             m_isovalue_slider.setCaption( "Isovalue: " + kvs::String::From( m_isovalue_slider.value() ) );
@@ -187,27 +181,34 @@ public:
 
         // Axis
         m_axis.setBoxType( kvs::OrientationAxis::SolidBox );
-        m_axis.anchorToBottomLeft();
 
         // Colormap bar
-        const auto cmap = m_model.tfunc.colorMap();
-        m_cmap_bar.setCaption( m_model.label );
-        m_cmap_bar.setColorMap( cmap );
-        m_cmap_bar.setRange( min_value, max_value );
+        const auto isosurface_cmap = m_model.tfuncs[Model::MappingMethod::Isosurface].colorMap();
+        auto& isosurface_cmap_bar = m_cmap_bars[Model::MappingMethod::Isosurface];
+        isosurface_cmap_bar.setCaption( m_model.labels[Model::MappingMethod::Isosurface] );
+        isosurface_cmap_bar.setColorMap( isosurface_cmap );
+        isosurface_cmap_bar.setRange( isosurface_min_value, isosurface_max_value );
+
+        const auto streamline_cmap = m_model.tfuncs[Model::MappingMethod::Streamline].colorMap();
+        auto& streamline_cmap_bar = m_cmap_bars[Model::MappingMethod::Streamline];
+        streamline_cmap_bar.setCaption( m_model.labels[Model::MappingMethod::Streamline] );
+        streamline_cmap_bar.setColorMap( streamline_cmap );
+        streamline_cmap_bar.setRange( streamline_min_value, streamline_max_value );
 
         // Transfer function editor
-        m_editor.setTransferFunction( m_model.tfunc );
+        m_editor.setTransferFunction( m_model.tfuncs[Model::MappingMethod::Streamline] );
         m_editor.setVolumeObject( m_model.import( Model::MappingMethod::Streamline ) );
         m_editor.apply( [&] ( kvs::TransferFunction tfunc )
         {
-            m_model.tfunc = tfunc;
+            m_model.tfuncs[Model::MappingMethod::Streamline] = tfunc;
 
             auto* scene = m_view.screen().scene();
             using Renderer = local::Model::AOStreamlineRenderer;
             auto* renderer = Renderer::DownCast( scene->renderer( "StreamlineRenderer" ) );
             renderer->setTransferFunction( tfunc );
 
-            m_cmap_bar.setColorMap( tfunc.colorMap() );
+            auto& streamline_cmap_bar = m_cmap_bars[Model::MappingMethod::Streamline];
+            streamline_cmap_bar.setColorMap( tfunc.colorMap() );
             m_view.screen().redraw();
         } );
         m_editor.show();
@@ -236,21 +237,17 @@ public:
         // Paint event
         m_paint_event.update( [&] ()
         {
-            /*
             static size_t counter = 1;
             static float timer = 0.0f;
 
-            timer += m_view.screen().scene()->renderer("Renderer")->timer().msec();
+            timer += m_view.compositor().timer().msec();
             if ( counter++ == 50 )
             {
                 std::cout << "Rendering time: " << timer / counter << " [msec]" << std::endl;
                 counter = 1;
                 timer = 0.0f;
             }
-            */
         } );
-
-        std::cout << "Paint event" << std::endl;
 
         m_view.screen().addEvent( &m_capture_event );
         m_view.screen().addEvent( &m_target_change_event );
@@ -281,7 +278,8 @@ private:
         if ( all )
         {
             m_axis.setVisible( visible );
-            m_cmap_bar.setVisible( visible );
+            m_cmap_bars[Model::MappingMethod::Isosurface].setVisible( visible );
+            m_cmap_bars[Model::MappingMethod::Streamline].setVisible( visible );
         }
     }
 
@@ -312,7 +310,11 @@ private:
         m_isovalue_slider.anchorToBottom( &m_opacity_slider );
 
         m_axis.anchorToBottomLeft();
-        m_cmap_bar.anchorToBottomRight();
+
+        auto& isosurface_cmap_bar = m_cmap_bars[Model::MappingMethod::Isosurface];
+        auto& streamline_cmap_bar = m_cmap_bars[Model::MappingMethod::Streamline];
+        streamline_cmap_bar.anchorToBottomRight();
+        isosurface_cmap_bar.anchorToTop( &streamline_cmap_bar );
     }
 };
 

@@ -59,7 +59,7 @@ public:
 
         const auto n = kvs::PolygonObject::VertexNormal;
         const bool d = false;
-        const auto t = Input::tfunc;
+        const auto t = Input::tfuncs[Input::MappingMethod::Isosurface];
         auto* polygon = new kvs::Isosurface( volume, isovalue, n, d, t );
         polygon->setName( "IsosurfaceObject" );
         polygon->setOpacity( kvs::Math::Clamp( int( Input::opacity * 255.0 ), 0, 255 ) );
@@ -79,7 +79,7 @@ public:
         mapper->setIntegrationInterval( 0.1 );
         mapper->setIntegrationMethod( Mapper::RungeKutta4th );
         mapper->setIntegrationDirection( Mapper::ForwardDirection );
-        mapper->setTransferFunction( Input::tfunc );
+        mapper->setTransferFunction( Input::tfuncs[Input::MappingMethod::Streamline] );
         return mapper->exec( volume );
     }
 
@@ -192,7 +192,7 @@ private:
         {
             auto* renderer = new AORenderer();
             renderer->setName( "StreamlineRenderer" );
-            renderer->setTransferFunction( Input::tfunc );
+            renderer->setTransferFunction( Input::tfuncs[Input::MappingMethod::Streamline] );
 //            renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setRepetitionLevel( Input::repeats );
             renderer->setLODControlEnabled( Input::lod );
@@ -206,7 +206,7 @@ private:
         {
             auto* renderer = new Renderer();
             renderer->setName( "StreamlineRenderer" );
-            renderer->setTransferFunction( Input::tfunc );
+            renderer->setTransferFunction( Input::tfuncs[Input::MappingMethod::Streamline] );
 //            renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setRepetitionLevel( Input::repeats );
             renderer->setLODControlEnabled( Input::lod );

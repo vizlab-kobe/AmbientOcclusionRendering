@@ -6,7 +6,8 @@ FILENAME1=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle6
 FILENAME2=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_V_20190125.kvsml
 
 TITLE="MHD Simulation"
-LABEL="Velocity |V|"
+LABEL1="Isosurfaces |B|"
+LABEL2="Streamlines |V|"
 
 # Initial parameters
 SCALE=100
@@ -18,9 +19,12 @@ MIN_COORD="0 0 0"
 MAX_COORD="250 250 250"
 STRIDE="30 30 30"
 
-./$PROGRAM -isosurface $FILENAME1 -streamline $FILENAME2 \
+./$PROGRAM \
     -title "$TITLE" \
-    -label "$LABEL" \
+    -isosurface_file $FILENAME1 \
+    -streamline_file $FILENAME2 \
+    -isosurface_label "$LABEL1" \
+    -streamline_label "$LABEL2" \
     -ao \
     -lod \
     -s $SCALE \
