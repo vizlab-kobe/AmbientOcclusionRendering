@@ -20,6 +20,10 @@
 #include "StochasticRendererBase.h"
 #include <kvs/ParticleBasedRenderer>
 
+#include <kvs/ColorImage>
+#include <kvs/GrayImage>
+#include <kvs/String>
+
 
 namespace local
 {
@@ -193,7 +197,8 @@ void StochasticRenderingCompositor::check_window_resized()
 /*===========================================================================*/
 void StochasticRenderingCompositor::check_object_changed()
 {
-    typedef StochasticRendererBase Renderer;
+//    typedef StochasticRendererBase Renderer;
+    using Renderer = local::StochasticRendererBase;
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
@@ -211,7 +216,7 @@ void StochasticRenderingCompositor::check_object_changed()
                 stochastic_renderer->engine().setDepthTexture( m_ensemble_buffer.currentDepthTexture() );
                 stochastic_renderer->engine().setShader( &stochastic_renderer->shader() );
                 stochastic_renderer->engine().setRepetitionLevel( m_repetition_level );
-                stochastic_renderer->engine().setEnabledShading( stochastic_renderer->isEnabledShading() );
+                stochastic_renderer->engine().setShadingEnabled( stochastic_renderer->isShadingEnabled() );
 
                 kvs::OpenGL::PushMatrix();
                 m_scene->updateGLModelingMatrix( object );
@@ -255,7 +260,7 @@ void StochasticRenderingCompositor::engines_create()
             stochastic_renderer->engine().setDepthTexture( m_ensemble_buffer.currentDepthTexture() );
             stochastic_renderer->engine().setShader( &stochastic_renderer->shader() );
             stochastic_renderer->engine().setRepetitionLevel( m_repetition_level );
-            stochastic_renderer->engine().setEnabledShading( stochastic_renderer->isEnabledShading() );
+            stochastic_renderer->engine().setShadingEnabled( stochastic_renderer->isShadingEnabled() );
 
             kvs::OpenGL::PushMatrix();
             m_scene->updateGLModelingMatrix( object );
@@ -351,6 +356,16 @@ void StochasticRenderingCompositor::engines_draw()
                 m_scene->updateGLModelingMatrix( object );
                 stochastic_renderer->engine().draw( object, camera, light );
                 stochastic_renderer->engine().countRepetitions();
+
+                /*
+                auto width = camera->windowWidth();
+                auto height = camera->windowHeight();
+                kvs::ValueArray<kvs::Real32> buffer( width * height );
+                kvs::OpenGL::ReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer.data() );
+                kvs::GrayImage depth_image( width, height, buffer );
+                depth_image.write( "output_" + kvs::String::From( i, 2, '0' ) + ".bmp" );
+                */
+
                 kvs::OpenGL::PopMatrix();
             }
         }

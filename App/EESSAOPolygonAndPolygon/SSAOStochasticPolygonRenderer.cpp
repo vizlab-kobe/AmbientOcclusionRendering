@@ -7,6 +7,7 @@
 #include <kvs/Assert>
 #include <kvs/Message>
 #include <kvs/Xorshift128>
+#include <kvs/IgnoreUnusedVariable>
 
 
 namespace
@@ -61,42 +62,56 @@ SSAOStochasticPolygonRenderer::SSAOStochasticPolygonRenderer():
 {
 }
 
-/*===========================================================================*/
-/**
- *  @brief  Sets a polygon offset.
- *  @param  offset [in] offset value
- */
-/*===========================================================================*/
-void SSAOStochasticPolygonRenderer::setPolygonOffset( const float offset )
-{
-    static_cast<Engine&>( engine() ).setPolygonOffset( offset );
-}
-
 void SSAOStochasticPolygonRenderer::setEdgeFactor( const float edge_factor )
 {
     static_cast<Engine&>( engine() ).setEdgeFactor( edge_factor );
 }
-  
-/*===========================================================================*/
-/**
- *  @brief  Constructs a new Engine class.
- */
-/*===========================================================================*/
-SSAOStochasticPolygonRenderer::Engine::Engine():
-    m_polygon_offset( 0.0f ),
-    m_edge_factor( 1.0f )
+
+void SSAOStochasticPolygonRenderer::setDepthOffset( const kvs::Vec2& offset )
 {
+    static_cast<Engine&>( engine() ).setDepthOffset( offset );
 }
 
-/*===========================================================================*/
-/**
- *  @brief  Releases the GPU resources.
- */
-/*===========================================================================*/
-void SSAOStochasticPolygonRenderer::Engine::release()
+void SSAOStochasticPolygonRenderer::setDepthOffset( const float factor, const float units )
 {
-    m_geom_pass_shader.release();
-    m_buffer_object.release();
+    static_cast<Engine&>( engine() ).setDepthOffset( factor, units );
+}
+
+SSAOStochasticPolygonRenderer::Engine::RenderPass::RenderPass(
+    Engine::BufferObject& buffer_object,
+    RenderPass::Parent* parent ):
+    BaseRenderPass( buffer_object ),
+    m_parent( parent )
+{
+    this->setShaderFiles(
+        "EE_SSAO_SR_polygon_geom_pass.vert",
+        "EE_SSAO_SR_polygon_geom_pass.frag" );
+}
+
+void SSAOStochasticPolygonRenderer::Engine::RenderPass::create(
+    const kvs::Shader::ShadingModel& model,
+    const bool enable )
+{
+    kvs::IgnoreUnusedVariable( enable );
+
+    auto& shader_program = this->shaderProgram();
+    kvs::ShaderSource vert( this->vertexShaderFile() );
+    kvs::ShaderSource frag( this->fragmentShaderFile() );
+    shader_program.build( vert, frag );
+}
+
+void SSAOStochasticPolygonRenderer::Engine::RenderPass::setup(
+    const kvs::Shader::ShadingModel& model )
+{
+    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
+    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+
+    auto& shader_program = this->shaderProgram();
+    kvs::ProgramObject::Binder bind( shader_program );
+    shader_program.setUniform( "ModelViewMatrix", M );
+    shader_program.setUniform( "ModelViewProjectionMatrix", PM );
+    shader_program.setUniform( "NormalMatrix", N );
 }
 
 /*===========================================================================*/
@@ -114,11 +129,13 @@ void SSAOStochasticPolygonRenderer::Engine::create(
 {
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
-    if ( !has_normal ) { setEnabledShading( false ); }
+    BaseClass::setShadingEnabled( has_normal );
 
-    attachObject( object );
-    createRandomTexture();
-    this->create_geometry_shader_program();
+    BaseClass::attachObject( object );
+    BaseClass::createRandomTexture();
+
+    m_render_pass.create( BaseClass::shader(), BaseClass::isShadingEnabled() );
+
     this->create_buffer_object( polygon );
 }
 
@@ -150,18 +167,15 @@ void SSAOStochasticPolygonRenderer::Engine::setup(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
-    const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
-    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
-    m_geom_pass_shader.bind();
-    m_geom_pass_shader.setUniform( "ModelViewMatrix", M );
-    m_geom_pass_shader.setUniform( "ModelViewProjectionMatrix", PM );
-    m_geom_pass_shader.setUniform( "NormalMatrix", N );
-    m_geom_pass_shader.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-    m_geom_pass_shader.setUniform( "random_texture", 0 );
-    m_geom_pass_shader.setUniform( "polygon_offset", m_polygon_offset );
-    m_geom_pass_shader.setUniform( "edge_factor", m_edge_factor );
-    m_geom_pass_shader.unbind();
+    kvs::IgnoreUnusedVariable( object );
+    kvs::IgnoreUnusedVariable( camera );
+    kvs::IgnoreUnusedVariable( light );
+
+    m_render_pass.setup( BaseClass::shader() );
+
+    auto& shader_program = m_render_pass.shaderProgram();
+    kvs::ProgramObject::Binder bind( shader_program );
+    shader_program.setUniform( "edge_factor", m_edge_factor );
 }
 
 /*===========================================================================*/
@@ -177,16 +191,19 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    m_geom_pass_shader.bind();
-    this->draw_buffer_object( kvs::PolygonObject::DownCast( object ) );
-    m_geom_pass_shader.unbind();
-}
+    // Depth offset
+    if ( !kvs::Math::IsZero( m_depth_offset[0] ) )
+    {
+        kvs::OpenGL::SetPolygonOffset( m_depth_offset[0], m_depth_offset[1] );
+        kvs::OpenGL::Enable( GL_POLYGON_OFFSET_FILL );
+    }
 
-void SSAOStochasticPolygonRenderer::Engine::create_geometry_shader_program()
-{
-    kvs::ShaderSource vert( "EE_SSAO_SR_polygon_geom_pass.vert" );
-    kvs::ShaderSource frag( "EE_SSAO_SR_polygon_geom_pass.frag" );
-    m_geom_pass_shader.build( vert, frag );
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+    auto& shader_program = m_render_pass.shaderProgram();
+    kvs::ProgramObject::Binder bind( shader_program );
+    this->draw_buffer_object( kvs::PolygonObject::DownCast( object ) );
 }
 
 /*===========================================================================*/
@@ -197,17 +214,10 @@ void SSAOStochasticPolygonRenderer::Engine::create_geometry_shader_program()
 /*===========================================================================*/
 void SSAOStochasticPolygonRenderer::Engine::create_buffer_object( const kvs::PolygonObject* polygon )
 {
-    const size_t nvertices = ::NumberOfVertices( polygon );
-    const auto tex_size = randomTextureSize();
-    kvs::ValueArray<kvs::UInt16> indices( nvertices * 2 );
-    for ( size_t i = 0; i < nvertices; i++ )
-    {
-        const unsigned int count = i * 12347;
-        indices[ 2 * i + 0 ] = static_cast<kvs::UInt16>( ( count ) % tex_size );
-        indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
-    }
-
-    auto location = m_geom_pass_shader.attributeLocation( "random_index" );
+    auto& shader_program = m_render_pass.shaderProgram();
+    const auto nvertices = ::NumberOfVertices( polygon );
+    const auto indices= BaseClass::randomIndices( nvertices );
+    auto location = shader_program.attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
     m_buffer_object.create( polygon );
 }
@@ -219,7 +229,11 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object( const kvs::Polyg
     const float offset_x = static_cast<float>( ( count ) % size );
     const float offset_y = static_cast<float>( ( count / size ) % size );
     const kvs::Vec2 random_offset( offset_x, offset_y );
-    m_geom_pass_shader.setUniform( "random_offset", random_offset );
+
+    auto& shader_program = m_render_pass.shaderProgram();
+    shader_program.setUniform( "random_texture", 0 );
+    shader_program.setUniform( "random_offset", random_offset );
+    shader_program.setUniform( "random_texture_size_inv", 1.0f / size );
 
     kvs::Texture::Binder bind3( randomTexture() );
     m_buffer_object.draw( polygon );
