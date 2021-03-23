@@ -129,7 +129,7 @@ void SSAOStochasticPolygonRenderer::Engine::create(
 {
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
-    BaseClass::setEnabledShading( has_normal );
+    BaseClass::setShadingEnabled( has_normal );
 
     BaseClass::attachObject( object );
     BaseClass::createRandomTexture();
