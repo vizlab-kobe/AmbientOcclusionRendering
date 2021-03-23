@@ -65,8 +65,8 @@ public:
 
         m_compositor.setRepetitionLevel( m_model.repeats );
         m_compositor.enableLODControl();
-        m_compositor.setShader( kvs::Shader::BlinnPhong() );
-        m_screen.setEvent( &m_compositor );
+        //m_compositor.setShader( kvs::Shader::BlinnPhong() );
+//        m_screen.setEvent( &m_compositor );
     }
 };
 

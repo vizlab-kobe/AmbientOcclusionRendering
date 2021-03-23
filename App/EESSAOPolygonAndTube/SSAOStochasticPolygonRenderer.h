@@ -61,7 +61,7 @@ private:
     kvs::Vec2 m_depth_offset{ 0.0f, 0.0f }; ///< depth offset {factor, units}
 
     BufferObject m_buffer_object{}; ///< geometry buffer object
-    RenderPass m_render_pass{ m_buffer_object, this };
+    RenderPass m_render_pass{ m_buffer_object, this }; ///< geometry pass for AO
 
 public:
     Engine() = default;

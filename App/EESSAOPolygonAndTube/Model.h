@@ -165,10 +165,10 @@ private:
             auto* renderer = new AORenderer();
             renderer->setName( "IsosurfaceRenderer" );
             renderer->setRepetitionLevel( Input::repeats );
-//            renderer->setLODControlEnabled( Input::lod );
             renderer->setSamplingSphereRadius( Input::radius );
             renderer->setNumberOfSamplingPoints( Input::points );
             renderer->setEdgeFactor( Input::edge );
+            renderer->setLODControlEnabled( Input::lod );
             renderer->enableShading();
             return renderer;
         }
@@ -193,9 +193,9 @@ private:
             auto* renderer = new AORenderer();
             renderer->setName( "StreamlineRenderer" );
             renderer->setTransferFunction( Input::tfunc );
-            renderer->setShader( kvs::Shader::BlinnPhong() );
+//            renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setRepetitionLevel( Input::repeats );
-//            renderer->setLODControlEnabled( Input::lod );
+            renderer->setLODControlEnabled( Input::lod );
             renderer->setSamplingSphereRadius( Input::radius );
             renderer->setNumberOfSamplingPoints( Input::points );
             renderer->setEdgeFactor( Input::edge );
@@ -207,7 +207,7 @@ private:
             auto* renderer = new Renderer();
             renderer->setName( "StreamlineRenderer" );
             renderer->setTransferFunction( Input::tfunc );
-            renderer->setShader( kvs::Shader::BlinnPhong() );
+//            renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setRepetitionLevel( Input::repeats );
             renderer->setLODControlEnabled( Input::lod );
             renderer->enableShading();
