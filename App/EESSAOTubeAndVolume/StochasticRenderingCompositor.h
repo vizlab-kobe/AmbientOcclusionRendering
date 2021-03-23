@@ -13,7 +13,6 @@
 #include <kvs/EnsembleAverageBuffer>
 #include "AmbientOcclusionBuffer.h"
 #include <kvs/Shader>
-#include <kvs/Timer>
 
 
 namespace local
@@ -42,8 +41,8 @@ private:
     kvs::Vec3 m_camera_position; ///< camera position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
     kvs::Shader::ShadingModel* m_shader;
-    AmbientOcclusionBuffer m_ao_buffer;
-    
+    local::AmbientOcclusionBuffer m_ao_buffer;
+
 public:
     StochasticRenderingCompositor( kvs::Scene* scene );
     const kvs::Timer& timer() const { return m_timer; }
@@ -65,7 +64,7 @@ public:
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
     template <typename ShadingType>
     void setShader( const ShadingType shader );
-    
+
 private:
     StochasticRenderingCompositor();
     void draw();

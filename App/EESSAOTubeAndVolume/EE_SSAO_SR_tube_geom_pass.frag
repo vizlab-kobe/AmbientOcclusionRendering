@@ -61,11 +61,8 @@ vec2 RandomIndex( in vec2 p )
 /*===========================================================================*/
 void main()
 {
-    float opacity = diffuse.a;
-    if ( opacity == 0.0 ) { discard; return; }
-
-    // Stochastic color assignment.
-    float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
+    float alpha = diffuse.a;
+    if ( alpha < 1.0e-4 ) { discard; }
 
     vec2 tcd = coord.xy;
     tcd.x = ( coord.x / coord.z ) * 0.5 + 0.5;
@@ -73,14 +70,23 @@ void main()
     vec3 tex = LookupTexture2D( shape_texture, tcd.xy ).xyz;
     tex.x = tex.x * 2.0 - 1.0;
 
-    //Edge enhancement
     vec3 normal = side_vec * tex.x - tex.y * up_vec;
-    vec3 N = normalize( normal );
-    vec3 E = normalize( -position.xyz );
-    opacity = pow( opacity, pow( dot( N, E ), edge_factor ) );
 
-    if ( R > opacity ) { discard; return; }
-    
+    //Edge enhancement
+    if ( edge_factor > 0.0 )
+    {
+        vec3 N = normalize( normal );
+        vec3 E = normalize( -position );
+        float e = pow( abs( dot( N, E ) ), edge_factor );
+        if ( e > 1.0e-4 )
+        {
+            alpha = clamp( alpha / e, 0.0, 1.0 );
+        }
+    }
+
+    float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
+    if ( R > alpha ) { discard; }
+
     vec4 color;
     if ( tcd.x < 0.0 || tcd.x > 1.0 )
     {
