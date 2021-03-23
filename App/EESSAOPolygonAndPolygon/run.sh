@@ -1,25 +1,30 @@
 #!/bin/bash
 PROGRAM=${PWD##*/}
 
-FILENAME=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_B_20190125.kvsml
-#FILENAME2=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_V_20190125.kvsml
+# Input files
+FILENAME0=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_B_20190125.kvsml
+#FILENAME1=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_V_20190125.kvsml
+FILENAME1=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle90_B_20190125.kvsml
+#FILENAME1=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle60_B_20190125.kvsml
 
-FILENAME2=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle90_B_20190125.kvsml
-#FILENAME2=~/Work/Data/MHDData/data_from_Ueda_20190125/result4_v_from_Ueda_angle90_B_20190125.kvsml
+TITLE="MHD Simulation"
+LABEL0="|B| (angle60)"
+LABEL1="|B| (angle90)"
 
-SCALE=100
-REPEATS=40
+# Initial parameters
+REPEATS=20
 RADIUS=0.5
 POINTS=256
-MIN_COORD="0 0 0"
-MAX_COORD="250 250 250"
+EDGE=1.0
 
-./$PROGRAM $FILENAME $FILENAME2
-    -ssao \
+./$PROGRAM \
+    -title "$TITLE" \
+    -file0 $FILENAME0 \
+    -file1 $FILENAME1 \
+    -label0 "$LABEL0" \
+    -label1 "$LABEL1" \
+    -ao \
     -lod \
-    -s $SCALE \
     -r $REPEATS \
     -radius $RADIUS \
     -points $POINTS \
-    -min_coord $MIN_COORD \
-    -max_coord $MAX_COORD \
