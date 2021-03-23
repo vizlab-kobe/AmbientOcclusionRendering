@@ -79,7 +79,7 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     this->setup_shader_program();
 
     m_ao_buffer.bind();
-    BaseClass::drawBufferObject( camera );
+    this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
     m_ao_buffer.unbind();
     m_ao_buffer.draw();
 
@@ -153,6 +153,16 @@ void SSAOStylizedLineRenderer::update_framebuffer(
     const size_t height )
 {
     m_ao_buffer.updateFramebuffer( width, height );
+}
+
+void SSAOStylizedLineRenderer::draw_buffer_object( const kvs::LineObject* line )
+{
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::Enable( GL_TEXTURE_2D );
+    kvs::OpenGL::Enable( GL_BLEND );
+    kvs::OpenGL::SetBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+    kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
+    BaseClass::bufferObject().draw( line );
 }
 
 } // end of namespace AmbientOcclusionRendering

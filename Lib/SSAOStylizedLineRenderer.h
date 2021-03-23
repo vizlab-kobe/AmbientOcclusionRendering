@@ -46,6 +46,8 @@ private:
 
     void create_framebuffer( const size_t width, const size_t height );
     void update_framebuffer( const size_t width, const size_t height );
+
+    void draw_buffer_object( const kvs::LineObject* line );
 };
 
 } // end of namespace AmbientOcclusionRendering
