@@ -192,7 +192,7 @@ int main( int argc, char** argv )
     kvs::Screen screen( &app );
     screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.setTitle("SSAOStochasticRenderingCompositor Streamline and UniformGrid");
-    screen.setSize( 1024, 1024 );
+//    screen.setSize( 1024, 1024 );
     screen.show();
 
     // Parameters.
