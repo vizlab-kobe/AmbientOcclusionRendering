@@ -35,7 +35,7 @@ namespace
  *  @return random number
  */
 /*===========================================================================*/
-int RandomNumber()
+inline int RandomNumber()
 {
     const int C = 12347;
     static kvs::Xorshift128 R;

@@ -60,6 +60,7 @@ class SSAOStochasticUniformGridRenderer::Engine : public kvs::StochasticRenderin
 public:
     using BufferObject = kvs::glsl::RayCastingRenderer::BufferObject;
     using BoundingBufferObject = kvs::glsl::RayCastingRenderer::BoundingBufferObject;
+    using BoundingRenderPass = kvs::glsl::RayCastingRenderer::BoundingRenderPass;
 
 private:
     // Variables
@@ -71,14 +72,17 @@ private:
     kvs::TransferFunction m_transfer_function; ///< transfer function
     kvs::Texture1D m_transfer_function_texture; ///< transfer function texture
 
-    // Buffer object
-    BufferObject m_volume_buffer; ///< volume buffer object
-    BoundingBufferObject m_bounding_cube_buffer; ///< bounding cube buffer
-
     // Exit/entry framebuffer
     kvs::FrameBufferObject m_entry_exit_framebuffer; ///< framebuffer object for entry/exit point texture
     kvs::Texture2D m_entry_texture; ///< entry point texture
     kvs::Texture2D m_exit_texture; ///< exit point texture
+
+    // Buffer object
+    BufferObject m_volume_buffer; ///< volume buffer object
+    BoundingBufferObject m_bounding_cube_buffer; ///< bounding cube buffer
+
+    // Render pass
+    BoundingRenderPass m_bounding_render_pass{ m_bounding_cube_buffer };
 
     // AO buffer
     AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer

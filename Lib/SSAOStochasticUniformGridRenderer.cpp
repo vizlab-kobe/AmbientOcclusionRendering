@@ -30,7 +30,7 @@ namespace
  *  @return random number
  */
 /*===========================================================================*/
-int RandomNumber()
+inline int RandomNumber()
 {
     const int C = 12347;
     static kvs::Xorshift128 R;
@@ -321,6 +321,8 @@ void SSAOStochasticUniformGridRenderer::Engine::draw(
 void SSAOStochasticUniformGridRenderer::Engine::create_shader_program(
     const kvs::StructuredVolumeObject* volume )
 {
+    m_bounding_render_pass.create();
+
     m_ao_buffer.createShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
 
     auto& geom_pass = m_ao_buffer.geometryPassShader();
@@ -337,6 +339,7 @@ void SSAOStochasticUniformGridRenderer::Engine::create_shader_program(
 void SSAOStochasticUniformGridRenderer::Engine::update_shader_program(
     const kvs::StructuredVolumeObject* volume )
 {
+    m_bounding_render_pass.release();
     m_ao_buffer.geometryPassShader().release();
     m_ao_buffer.occlusionPassShader().release();
     this->create_shader_program( volume );
@@ -356,7 +359,8 @@ void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
     {
         // Change renderig target to the entry/exit FBO.
         kvs::FrameBufferObject::GuardedBinder binder( m_entry_exit_framebuffer );
-        m_bounding_cube_buffer.draw( PM );
+        m_bounding_render_pass.setup();
+        m_bounding_render_pass.draw();
     }
 
     // Setup shader program
