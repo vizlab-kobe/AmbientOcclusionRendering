@@ -85,7 +85,7 @@ void main()
     }
 
     float R = LookupTexture2D( random_texture, RandomIndex( gl_FragCoord.xy ) ).a;
-    if ( R > alpha ) { discard; }
+    if ( R > alpha ) { gl_FragData[0] = vec4( 1.0, 0.0, 0.0, 1.0 ); discard; }
 
     vec4 color;
     if ( tcd.x < 0.0 || tcd.x > 1.0 )

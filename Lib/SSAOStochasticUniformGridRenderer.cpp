@@ -179,8 +179,8 @@ SSAOStochasticUniformGridRenderer::Engine::Engine():
         "SSAO_SR_uniform_grid_geom_pass.frag" );
 
     m_ao_buffer.setOcclusionPassShaderFiles(
-        "SSAO_SR_uniform_grid_occl_pass.vert",
-        "SSAO_SR_uniform_grid_occl_pass.frag" );
+        "SSAO_occl_pass.vert",
+        "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -368,9 +368,10 @@ void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
     auto& geom_pass = m_ao_buffer.geometryPassShader();
     {
         kvs::ProgramObject::Binder bind( geom_pass );
-        geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
+//        geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
         geom_pass.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
         geom_pass.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
+//        geom_pass.setUniform( "ModelViewMatrix", M );
 
         const float f = camera->back();
         const float n = camera->front();
@@ -389,10 +390,10 @@ void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
     auto& occl_pass = m_ao_buffer.occlusionPassShader();
     {
         kvs::ProgramObject::Binder bind( occl_pass );
-        const kvs::Vec3 L = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( object ).position();
-        const kvs::Vec3 C = kvs::WorldCoordinate( camera->position() ).toObjectCoordinate( object ).position();
-        occl_pass.setUniform( "light_position", L );
-        occl_pass.setUniform( "camera_position", C );
+//        const kvs::Vec3 L = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( object ).position();
+//        const kvs::Vec3 C = kvs::WorldCoordinate( camera->position() ).toObjectCoordinate( object ).position();
+//        occl_pass.setUniform( "light_position", L );
+//        occl_pass.setUniform( "camera_position", C );
         occl_pass.setUniform( "ModelViewMatrix", M );
     }
 

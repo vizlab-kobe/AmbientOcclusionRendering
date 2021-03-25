@@ -45,6 +45,8 @@ uniform float edge_factor; // edge enhacement factor
 
 // Uniform variables (OpenGL variables).
 uniform mat4 ModelViewProjectionMatrixInverse; // inverse matrix of model-view projection matrix
+uniform mat4 ModelViewMatrix; // model-view matrix
+uniform mat3 NormalMatrix; // normal matrix
 
 
 /*===========================================================================*/
@@ -178,20 +180,24 @@ void main()
 #if defined( ENABLE_ALPHA_CORRECTION )
         c.a = 1.0 - pow( 1.0 - c.a, dT );
 #endif
+        // Get the normal vector in object coordinate.
+        vec3 offset_index = vec3( volume.resolution_reciprocal );
+        vec3 normal = VolumeGradient( volume_data, volume_index, offset_index );
+
+        // Normal vector (N) in object coordinate.
+        vec3 N = normalize( normal );
+
         // Edge enhancement
         if ( edge_factor > 0.0 )
         {
-            // Get the normal vector in object coordinate.
-            vec3 offset_index = vec3( volume.resolution_reciprocal );
-            vec3 normal = VolumeGradient( volume_data, volume_index, offset_index );
-
-            // Normal vector (N) in camera coordinate.
-            vec3 N = normalize( gl_NormalMatrix * normal );
-
-            if ( length(N) > 0.0 )
+            if ( length( N ) > 0.0 )
             {
                 vec3 E = normalize( -direction );
-                c.a = min( 1.0, c.a / pow( abs( dot( N, E ) ), edge_factor ) );
+                float dotNE = abs( dot( N, E ) );
+                if ( dotNE > 0.0 )
+                {
+                    c.a = min( 1.0, c.a / pow( dotNE, edge_factor ) );
+                }
             }
         }
 
@@ -199,19 +205,10 @@ void main()
         accum_alpha += ( 1.0 - accum_alpha ) * c.a;
         if ( R <= accum_alpha )
         {
-            // Get the normal vector in object coordinate.
-            vec3 offset_index = vec3( volume.resolution_reciprocal );
-            vec3 normal = VolumeGradient( volume_data, volume_index, offset_index );
-
-            // Normal vector (N) in camera coordinate.
-            vec3 N = normalize( gl_NormalMatrix * normal );
-
-            float depth = RayDepth( w, entry_depth, exit_depth );
-
             gl_FragData[0] = vec4( c.rgb, 1.0 );
-            gl_FragData[1] = vec4( position, 1.0 );
-            gl_FragData[2] = vec4( N, 1.0 );
-            gl_FragDepth = depth;
+            gl_FragData[1] = ModelViewMatrix * vec4( position, 1.0 ); // position in camera coordinate
+            gl_FragData[2] = vec4( NormalMatrix * N, 1.0 ); // normal vector in camera coordinate
+            gl_FragDepth = RayDepth( w, entry_depth, exit_depth );
             return;
         }
 

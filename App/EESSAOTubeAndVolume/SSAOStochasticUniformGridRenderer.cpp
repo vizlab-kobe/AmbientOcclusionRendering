@@ -303,10 +303,15 @@ void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
         m_render_pass.setup( shading_model, object, camera, light );
 
         const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+        const kvs::Mat4 PM = kvs::OpenGL::ProjectionMatrix() * M;
+        const kvs::Mat4 PM_inverse = PM.inverted();
+        const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
         kvs::ProgramObject::Binder bind( m_render_pass.shaderProgram() );
+        m_render_pass.shaderProgram().setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
+        m_render_pass.shaderProgram().setUniform( "ModelViewMatrix", M );
+        m_render_pass.shaderProgram().setUniform( "NormalMatrix", N );
         m_render_pass.shaderProgram().setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
         m_render_pass.shaderProgram().setUniform( "edge_factor", m_edge_factor );
-        m_render_pass.shaderProgram().setUniform( "ModelViewMatrix", M );
     }
 
     // Setup OpenGL statement.
