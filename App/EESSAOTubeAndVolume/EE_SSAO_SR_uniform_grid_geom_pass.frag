@@ -185,21 +185,21 @@ void main()
 
         // Normal vector (N) in camera coordinate.
         vec3 N = normalize( gl_NormalMatrix * normal );
-	vec3 E = normalize( -direction );
-	
+        vec3 E = normalize( -direction );
+
         if ( length( N ) > 0 )
-	{
-	    float cos_theta = dot( N, E );
-	    c.a = min( 1.0, c.a / pow( abs( cos_theta ), edge_factor ) );
-	}
+        {
+            float cos_theta = dot( N, E );
+            c.a = min( 1.0, c.a / pow( abs( cos_theta ), edge_factor ) );
+        }
 
         accum_alpha += ( 1.0 - accum_alpha ) * c.a;
         if ( R <= accum_alpha )
         {
             float depth = RayDepth( w, entry_depth, exit_depth );
 
-	    // Convert position to camera coordinate from object coordinate.
-	    vec3 position_c = ( ModelViewMatrix * vec4( position, 1.0 ) ).xyz;
+            // Convert position to camera coordinate from object coordinate.
+            vec3 position_c = ( ModelViewMatrix * vec4( position, 1.0 ) ).xyz;
 
             gl_FragData[0] = vec4( c.rgb, 1.0 );
             gl_FragData[1] = vec4( position_c, 1.0 );

@@ -55,9 +55,8 @@ public:
 /*===========================================================================*/
 class SSAOStochasticUniformGridRenderer::Engine : public kvs::StochasticRenderingEngine
 {
-    using BaseClass = kvs::StochasticRenderingEngine;
-
 public:
+    using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::glsl::RayCastingRenderer::BufferObject;
     using BoundingBufferObject = kvs::glsl::RayCastingRenderer::BoundingBufferObject;
     using BoundingRenderPass = kvs::glsl::RayCastingRenderer::BoundingRenderPass;
