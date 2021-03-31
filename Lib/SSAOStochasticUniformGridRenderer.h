@@ -37,6 +37,7 @@ public:
 
 public:
     SSAOStochasticUniformGridRenderer();
+    virtual ~SSAOStochasticUniformGridRenderer() {}
     void setEdgeFactor( const float factor );
     void setSamplingStep( const float step );
     void setTransferFunction( const kvs::TransferFunction& transfer_function );
@@ -63,31 +64,32 @@ public:
 
 private:
     // Variables
-    float m_edge_factor; ///< edge enhancement factor
-    float m_step; ///< sampling step
+    float m_edge_factor = 0.0f; ///< edge enhancement factor
+    float m_step = 0.5f; ///< sampling step
 
     // Transfer function
-    bool m_transfer_function_changed; ///< flag for changin transfer function
-    kvs::TransferFunction m_transfer_function; ///< transfer function
-    kvs::Texture1D m_transfer_function_texture; ///< transfer function texture
+    bool m_transfer_function_changed = true; ///< flag for changin transfer function
+    kvs::TransferFunction m_transfer_function{}; ///< transfer function
+    kvs::Texture1D m_transfer_function_texture{}; ///< transfer function texture
 
     // Exit/entry framebuffer
-    kvs::FrameBufferObject m_entry_exit_framebuffer; ///< framebuffer object for entry/exit point texture
-    kvs::Texture2D m_entry_texture; ///< entry point texture
-    kvs::Texture2D m_exit_texture; ///< exit point texture
+    kvs::FrameBufferObject m_entry_exit_framebuffer{}; ///< framebuffer object for entry/exit point texture
+    kvs::Texture2D m_entry_texture{}; ///< entry point texture
+    kvs::Texture2D m_exit_texture{}; ///< exit point texture
 
     // Buffer object
-    BufferObject m_volume_buffer; ///< volume buffer object
-    BoundingBufferObject m_bounding_cube_buffer; ///< bounding cube buffer
+    BufferObject m_volume_buffer{}; ///< volume buffer object
+    BoundingBufferObject m_bounding_cube_buffer{}; ///< bounding cube buffer
 
     // Render pass
     BoundingRenderPass m_bounding_render_pass{ m_bounding_cube_buffer };
 
     // AO buffer
-    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
+    AmbientOcclusionBuffer m_ao_buffer{}; ///< ambient occlusion buffer
 
 public:
     Engine();
+    virtual ~Engine() { this->release(); }
     void release();
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
@@ -113,7 +115,11 @@ public:
 private:
     void create_shader_program( const kvs::StructuredVolumeObject* volume );
     void update_shader_program( const kvs::StructuredVolumeObject* volume );
-    void setup_shader_program( const kvs::Shader::ShadingModel& shading_model, const kvs::ObjectBase* object, const kvs::Camera* camera, const kvs::Light* light );
+    void setup_shader_program(
+        const kvs::Shader::ShadingModel& shading_model,
+        const kvs::ObjectBase* object,
+        const kvs::Camera* camera,
+        const kvs::Light* light );
 
     void create_framebuffer( const size_t width, const size_t height );
     void update_framebuffer( const size_t width, const size_t height );

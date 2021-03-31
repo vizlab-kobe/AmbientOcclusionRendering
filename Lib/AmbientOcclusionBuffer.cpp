@@ -157,11 +157,11 @@ void AmbientOcclusionBuffer::release()
     m_occl_pass_shader.release();
 
     // Release framebuffer resources
-    m_framebuffer.release();
     m_color_texture.release();
     m_position_texture.release();
     m_normal_texture.release();
     m_depth_texture.release();
+    m_framebuffer.release();
 }
 
 /*===========================================================================*/
@@ -326,7 +326,10 @@ void AmbientOcclusionBuffer::updateFramebuffer( const size_t width, const size_t
     m_position_texture.release();
     m_normal_texture.release();
     m_depth_texture.release();
+    m_framebuffer.release();
 
+    this->createFramebuffer( width, height );
+    /*
     // Create
     m_color_texture.create( width, height );
     m_position_texture.create( width, height );
@@ -338,6 +341,7 @@ void AmbientOcclusionBuffer::updateFramebuffer( const size_t width, const size_t
     m_framebuffer.attachColorTexture( m_position_texture, 1 );
     m_framebuffer.attachColorTexture( m_normal_texture, 2 );
     m_framebuffer.attachDepthTexture( m_depth_texture );
+    */
 }
 
 /*===========================================================================*/

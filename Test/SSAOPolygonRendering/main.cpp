@@ -22,11 +22,11 @@ struct Model
     using SSAORenderer = AmbientOcclusionRendering::SSAOPolygonRenderer;
     using Renderer = kvs::glsl::PolygonRenderer;
 
-    bool ssao; ///< SSAO flag
-    float radius; ///< radius of point sampling region for SSAM
-    size_t points; ///< number of points used for SSAO
+    bool ssao = true; ///< SSAO flag
+    float radius = 0.5f; ///< radius of point sampling region for SSAM
+    size_t points = 256; ///< number of points used for SSAO
 
-    kvs::PolygonObject* import( const std::string filename )
+    kvs::PolygonObject* import( const std::string filename ) const
     {
         kvs::PolygonObject* polygon = new kvs::PolygonImporter( filename );
         const size_t nvertices = polygon->numberOfVertices();
@@ -40,7 +40,7 @@ struct Model
         return polygon;
     }
 
-    kvs::RendererBase* renderer()
+    kvs::RendererBase* renderer() const
     {
         if ( ssao )
         {
@@ -80,9 +80,6 @@ int main( int argc, char** argv )
 
     // Parameters.
     Model model;
-    model.ssao = true;
-    model.radius = 0.5f;
-    model.points = 256;
 
     // Visualization pipeline.
     const std::string filename = argv[1];

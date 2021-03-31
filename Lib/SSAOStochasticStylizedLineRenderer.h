@@ -31,6 +31,7 @@ public:
 
 public:
     SSAOStochasticStylizedLineRenderer();
+    virtual ~SSAOStochasticStylizedLineRenderer() {}
     void setEdgeFactor( const float factor );
     /*KVS_DEPRECATED*/ void setOpacity( const kvs::UInt8 opacity );
     void setRadiusSize( const kvs::Real32 size );
@@ -64,6 +65,7 @@ private:
 
 public:
     Engine();
+    virtual ~Engine() { this-> release(); }
     void release();
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );

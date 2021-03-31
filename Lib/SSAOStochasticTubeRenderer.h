@@ -27,6 +27,7 @@ public:
 
 public:
     SSAOStochasticTubeRenderer();
+    virtual ~SSAOStochasticTubeRenderer() {}
     void setEdgeFactor( const float factor );
     void setTransferFunction( const kvs::TransferFunction& tfunc );
     void setRadiusSize( const kvs::Real32 size );
@@ -58,6 +59,7 @@ private:
 
 public:
     Engine();
+    virtual ~Engine() { this->release(); }
     void release();
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );

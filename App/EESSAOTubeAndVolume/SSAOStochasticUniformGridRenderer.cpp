@@ -483,6 +483,9 @@ void SSAOStochasticUniformGridRenderer::Engine::update_buffer_object(
 void SSAOStochasticUniformGridRenderer::Engine::draw_buffer_object(
     const kvs::StructuredVolumeObject* volume )
 {
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::Enable( GL_TEXTURE_2D );
+
     const size_t size = BaseClass::randomTextureSize();
     const int count = BaseClass::repetitionCount() * ::RandomNumber();
     const float offset_x = static_cast<float>( ( count ) % size );

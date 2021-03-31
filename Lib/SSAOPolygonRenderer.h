@@ -30,7 +30,7 @@ private:
 
 public:
     SSAOPolygonRenderer();
-    virtual ~SSAOPolygonRenderer() {}
+    virtual ~SSAOPolygonRenderer() { m_ao_buffer.release(); }
 
     void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 

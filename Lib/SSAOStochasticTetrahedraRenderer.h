@@ -42,6 +42,7 @@ public:
 
 public:
     SSAOStochasticTetrahedraRenderer();
+    virtual ~SSAOStochasticTetrahedraRenderer() {}
     void setEdgeFactor( const float factor );
     void setTransferFunction( const kvs::TransferFunction& transfer_function );
     void setSamplingStep( const float sampling_step );
@@ -71,6 +72,7 @@ private:
         std::string m_geom_pass_shader_geom_file;
     public:
         AmbientOcclusionBuffer( const Engine* engine ) : BaseClass(), m_engine( engine ) {}
+        virtual ~AmbientOcclusionBuffer() {}
         const std::string& geometryPassGeometryShaderFile() const { return m_geom_pass_shader_geom_file; }
         void setGeometryPassShaderFiles( const std::string& vert_file, const std::string& geom_file, const std::string& frag_file );
         void createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
@@ -99,6 +101,7 @@ private:
 
 public:
     Engine();
+    virtual ~Engine() { this->release(); }
     void release();
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );

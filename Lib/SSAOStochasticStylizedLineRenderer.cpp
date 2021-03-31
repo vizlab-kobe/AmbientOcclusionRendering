@@ -206,7 +206,6 @@ void SSAOStochasticStylizedLineRenderer::Engine::create(
     kvs::Light* light )
 {
     auto* line = kvs::LineObject::DownCast( object );
-
     BaseClass::attachObject( line );
     BaseClass::createRandomTexture();
 

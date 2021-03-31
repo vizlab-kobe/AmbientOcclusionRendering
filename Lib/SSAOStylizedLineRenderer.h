@@ -30,7 +30,7 @@ private:
 
 public:
     SSAOStylizedLineRenderer();
-    virtual ~SSAOStylizedLineRenderer() {}
+    virtual ~SSAOStylizedLineRenderer() { m_ao_buffer.release(); }
 
     void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 

@@ -28,6 +28,7 @@ public:
 
 public:
     SSAOStochasticPolygonRenderer();
+    virtual ~SSAOStochasticPolygonRenderer() {}
 
     void setEdgeFactor( const float factor );
     void setDepthOffset( const kvs::Vec2& offset );
@@ -59,6 +60,7 @@ private:
 
 public:
     Engine();
+    virtual ~Engine() { this->release(); }
     void release();
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );

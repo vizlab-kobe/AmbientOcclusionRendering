@@ -37,59 +37,6 @@ inline int RandomNumber()
     return C * R.randInteger();
 }
 
-/*===========================================================================*/
-/**
- *  @brief  Normalizes value array.
- *  @param  volume [in] pointer to the volume object
- *  @param  min_value [in] minimum value of the volume data
- *  @param  max_value [in] maximum value of the volume data
- *  @return normalized value array
- */
-/*===========================================================================*/
-template <typename T>
-kvs::AnyValueArray NormalizeValues(
-    const kvs::StructuredVolumeObject* volume,
-    const kvs::Real32 min_value,
-    const kvs::Real32 max_value )
-{
-    const kvs::Real32 scale = 1.0f / ( max_value - min_value );
-    const size_t nnodes = volume->numberOfNodes();
-    const T* src = static_cast<const T*>( volume->values().data() );
-
-    kvs::ValueArray<kvs::Real32> data( nnodes );
-    kvs::Real32* dst = data.data();
-    for ( size_t i = 0; i < nnodes; i++ )
-    {
-        *(dst++) = static_cast<kvs::Real32>(( *(src++) - min_value ) * scale);
-    }
-
-    return kvs::AnyValueArray( data );
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Returns unsigned value array converted from signed value array.
- *  @param  volume [in] pointer to the volume object
- *  @return unsigned value array
- */
-/*===========================================================================*/
-template <typename DstType, typename SrcType>
-kvs::AnyValueArray SignedToUnsigned( const kvs::StructuredVolumeObject* volume )
-{
-    const SrcType min = kvs::Value<SrcType>::Min();
-    const size_t nvalues = volume->values().size();
-    const SrcType* src = static_cast<const SrcType*>( volume->values().data() );
-
-    kvs::ValueArray<DstType> data( nvalues );
-    DstType* dst = data.data();
-    for ( size_t i = 0; i < nvalues; i++ )
-    {
-        *(dst++) = static_cast<DstType>( *(src++) - min );
-    }
-
-    return kvs::AnyValueArray( data );
-}
-
 } // end of namespace
 
 
@@ -201,6 +148,8 @@ void SSAOStochasticUniformGridRenderer::Engine::release()
 
     m_volume_buffer.release();
     m_bounding_cube_buffer.release();
+
+    m_bounding_render_pass.release();
 
     // Release AO buffer resources
     m_ao_buffer.release();
@@ -368,10 +317,9 @@ void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
     auto& geom_pass = m_ao_buffer.geometryPassShader();
     {
         kvs::ProgramObject::Binder bind( geom_pass );
-//        geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
+        geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
         geom_pass.setUniform( "ModelViewProjectionMatrixInverse", PM_inverse );
         geom_pass.setUniform( "random_texture_size_inv", 1.0f / randomTextureSize() );
-//        geom_pass.setUniform( "ModelViewMatrix", M );
 
         const float f = camera->back();
         const float n = camera->front();
@@ -390,10 +338,6 @@ void SSAOStochasticUniformGridRenderer::Engine::setup_shader_program(
     auto& occl_pass = m_ao_buffer.occlusionPassShader();
     {
         kvs::ProgramObject::Binder bind( occl_pass );
-//        const kvs::Vec3 L = kvs::WorldCoordinate( light->position() ).toObjectCoordinate( object ).position();
-//        const kvs::Vec3 C = kvs::WorldCoordinate( camera->position() ).toObjectCoordinate( object ).position();
-//        occl_pass.setUniform( "light_position", L );
-//        occl_pass.setUniform( "camera_position", C );
         occl_pass.setUniform( "ModelViewMatrix", M );
     }
 
@@ -567,6 +511,9 @@ void SSAOStochasticUniformGridRenderer::Engine::update_buffer_object(
 void SSAOStochasticUniformGridRenderer::Engine::draw_buffer_object(
     const kvs::StructuredVolumeObject* volume )
 {
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::Enable( GL_TEXTURE_2D );
+
     const size_t size = BaseClass::randomTextureSize();
     const int count = BaseClass::repetitionCount() * ::RandomNumber();
     const float offset_x = static_cast<float>( ( count ) % size );
