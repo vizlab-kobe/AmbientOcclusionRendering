@@ -277,10 +277,11 @@ void StochasticRenderingCompositor::engines_create()
 /*===========================================================================*/
 void StochasticRenderingCompositor::engines_update()
 {
-    typedef StochasticRendererBase Renderer;
+    m_ao_buffer.updateShaderProgram( this->shader(), true );
 
-    kvs::Camera* camera = m_scene->camera();
-    kvs::Light* light = m_scene->light();
+    using Renderer = local::StochasticRendererBase;
+    auto* camera = m_scene->camera();
+    auto* light = m_scene->light();
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
@@ -305,13 +306,12 @@ void StochasticRenderingCompositor::engines_update()
 /*===========================================================================*/
 void StochasticRenderingCompositor::engines_setup()
 {
-    typedef StochasticRendererBase Renderer;
+    m_ao_buffer.setupShaderProgram( this->shader() );
 
-    kvs::Camera* camera = m_scene->camera();
-    kvs::Light* light = m_scene->light();
+    using Renderer = local::StochasticRendererBase;
+    auto* camera = m_scene->camera();
+    auto* light = m_scene->light();
     const bool reset_count = !m_enable_refinement;
-
-    m_ao_buffer.updateShaderProgram( this->shader(), true );
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )

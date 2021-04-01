@@ -137,12 +137,12 @@ public:
         m_edge_slider.sliderReleased( [&] ()
         {
             auto* scene = m_view.screen().scene();
-            const std::string renderer_name = "Renderer" + kvs::String::From( index );
             for ( size_t index = 0; index < 2; ++index )
             {
                 if ( m_model.ao )
                 {
                     using Renderer = local::Model::AORenderer;
+                    const std::string renderer_name = "Renderer" + kvs::String::From( index );
                     auto* renderer = Renderer::DownCast( scene->renderer( renderer_name ) );
                     renderer->setEdgeFactor( m_model.edge );
                 }

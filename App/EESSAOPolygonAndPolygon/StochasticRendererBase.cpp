@@ -46,8 +46,8 @@ void StochasticRendererBase::exec(
         BaseClass::engine().update( object, camera, light );
 
         const auto enable_shading = kvs::RendererBase::isShadingEnabled();
-        m_ao_buffer.createFramebuffer( frame_width, frame_height );
-        m_ao_buffer.createShaderProgram( BaseClass::shader(), enable_shading );
+        m_ao_buffer.updateFramebuffer( frame_width, frame_height );
+        m_ao_buffer.updateShaderProgram( BaseClass::shader(), enable_shading );
     }
 
     if ( BaseClass::isObjectChanged( object ) )
@@ -61,6 +61,7 @@ void StochasticRendererBase::exec(
     }
 
     BaseClass::setupEngine( object, camera, light );
+    m_ao_buffer.setupShaderProgram( BaseClass::shader() );
 
     // Ensemble rendering.
     const auto m = kvs::OpenGL::ModelViewMatrix();

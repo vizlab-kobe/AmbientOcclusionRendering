@@ -213,7 +213,10 @@ void SSAOStochasticUniformGridRenderer::Engine::create(
  *  @param  light [in] pointer to the light
  */
 /*===========================================================================*/
-void SSAOStochasticUniformGridRenderer::Engine::update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+void SSAOStochasticUniformGridRenderer::Engine::update(
+    kvs::ObjectBase* object,
+    kvs::Camera* camera,
+    kvs::Light* light )
 {
     const float dpr = camera->devicePixelRatio();
     const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );

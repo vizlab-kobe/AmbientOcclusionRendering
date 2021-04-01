@@ -18,41 +18,49 @@ class AmbientOcclusionBuffer
 {
 private:
     // Occlusion pass shader
-    std::string m_occl_pass_shader_vert_file; ///< vertex shader file for occlusion pass
-    std::string m_occl_pass_shader_frag_file; ///< fragment shader file for occlusion pass
-    kvs::ProgramObject m_occl_pass_shader; ///< shader program for occlusion-pass (2nd pass)
+    std::string m_occl_pass_shader_vert_file = "SSAO_occl_pass.vert"; ///< vertex shader file for occlusion pass
+    std::string m_occl_pass_shader_frag_file = "SSAO_occl_pass.frag"; ///< fragment shader file for occlusion pass
+    kvs::ProgramObject m_occl_pass_shader{}; ///< shader program for occlusion-pass (2nd pass)
 
     // Framebuffer for SSAO
-    GLuint m_bound_id; ///< Bound framebuffer ID
-    kvs::FrameBufferObject m_framebuffer; ///< framebuffer object
-    kvs::Texture2D m_color_texture; ///< color texture
-    kvs::Texture2D m_position_texture; ///< texture for storing position information
-    kvs::Texture2D m_normal_texture; ///< texture for storing normal vector
-    kvs::Texture2D m_depth_texture; ///< depth texture
+    GLuint m_bound_id = 0; ///< Bound framebuffer ID
+    kvs::FrameBufferObject m_framebuffer{}; ///< framebuffer object
+    kvs::Texture2D m_color_texture{}; ///< color texture
+    kvs::Texture2D m_position_texture{}; ///< texture for storing position information
+    kvs::Texture2D m_normal_texture{}; ///< texture for storing normal vector
+    kvs::Texture2D m_depth_texture{}; ///< depth texture
 
     // Sampling point parameters
-    kvs::Real32 m_sampling_sphere_radius; ///< radius of sphere used for point sampling
-    size_t m_nsamples; ///< number of sampling points
+    kvs::Real32 m_sampling_sphere_radius = 0.5f; ///< radius of sphere used for point sampling
+    size_t m_nsamples = 256; ///< number of sampling points
 
 public:
-    AmbientOcclusionBuffer();
-    virtual ~AmbientOcclusionBuffer() {}
+    AmbientOcclusionBuffer() = default;
+    virtual ~AmbientOcclusionBuffer() { this->release(); }
 
-    void setOcclusionPassShaderFiles( const std::string& vert_file, const std::string& frag_file );
+    void setOcclusionPassShaderFiles(
+        const std::string& vert_file,
+        const std::string& frag_file )
+    {
+        m_occl_pass_shader_vert_file = vert_file;
+        m_occl_pass_shader_frag_file = frag_file;
+    }
+
     void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
 
     const std::string& occlusionPassVertexShaderFile() const { return m_occl_pass_shader_vert_file; }
     const std::string& occlusionPassFragmentShaderFile() const { return m_occl_pass_shader_frag_file; }
-    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
-    size_t numberOfSamplingPoints() const { return m_nsamples; }
-
     kvs::ProgramObject& occlusionPassShader() { return m_occl_pass_shader; }
+
     kvs::FrameBufferObject& framebuffer() { return m_framebuffer; }
     kvs::Texture2D& colorTexture() { return m_color_texture; }
     kvs::Texture2D& positionTexture() { return m_position_texture; }
     kvs::Texture2D& normalTexture() { return m_normal_texture; }
     kvs::Texture2D& depthTexture() { return m_depth_texture; }
+
+    kvs::Real32 samplingSphereRadius() const { return m_sampling_sphere_radius; }
+    size_t numberOfSamplingPoints() const { return m_nsamples; }
 
     void bind();
     void unbind();

@@ -37,52 +37,6 @@ namespace AmbientOcclusionRendering
 
 /*===========================================================================*/
 /**
- *  @brief  Constructs an ambient occlusion buffer.
- */
-/*===========================================================================*/
-AmbientOcclusionBuffer::AmbientOcclusionBuffer():
-    m_geom_pass_shader_vert_file( "SSAO_geom_pass.vert" ),
-    m_geom_pass_shader_frag_file( "SSAO_geom_pass.frag" ),
-    m_occl_pass_shader_vert_file( "SSAO_occl_pass.vert" ),
-    m_occl_pass_shader_frag_file( "SSAO_occl_pass.frag" ),
-    m_bound_id( 0 ),
-    m_sampling_sphere_radius( 0.5f ),
-    m_nsamples( 256 )
-{
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Sets geometry pass shader files.
- *  @param  vert_file [in] vertex shader file
- *  @param  frag_file [in] fragment shader file
- */
-/*===========================================================================*/
-void AmbientOcclusionBuffer::setGeometryPassShaderFiles(
-    const std::string& vert_file,
-    const std::string& frag_file )
-{
-    m_geom_pass_shader_vert_file = vert_file;
-    m_geom_pass_shader_frag_file = frag_file;
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Sets occlusion pass shader files.
- *  @param  vert_file [in] vertex shader file
- *  @param  frag_file [in] fragment shader file
- */
-/*===========================================================================*/
-void AmbientOcclusionBuffer::setOcclusionPassShaderFiles(
-    const std::string& vert_file,
-    const std::string& frag_file )
-{
-    m_occl_pass_shader_vert_file = vert_file;
-    m_occl_pass_shader_frag_file = frag_file;
-}
-
-/*===========================================================================*/
-/**
  *  @brief  Binds AO buffer to draw the object with geom pass shader.
  */
 /*===========================================================================*/
@@ -321,27 +275,12 @@ void AmbientOcclusionBuffer::createFramebuffer( const size_t width, const size_t
 /*===========================================================================*/
 void AmbientOcclusionBuffer::updateFramebuffer( const size_t width, const size_t height )
 {
-    // Release
     m_color_texture.release();
     m_position_texture.release();
     m_normal_texture.release();
     m_depth_texture.release();
     m_framebuffer.release();
-
     this->createFramebuffer( width, height );
-    /*
-    // Create
-    m_color_texture.create( width, height );
-    m_position_texture.create( width, height );
-    m_normal_texture.create( width, height );
-    m_depth_texture.create( width, height );
-
-    // Attach
-    m_framebuffer.attachColorTexture( m_color_texture, 0 );
-    m_framebuffer.attachColorTexture( m_position_texture, 1 );
-    m_framebuffer.attachColorTexture( m_normal_texture, 2 );
-    m_framebuffer.attachDepthTexture( m_depth_texture );
-    */
 }
 
 /*===========================================================================*/
