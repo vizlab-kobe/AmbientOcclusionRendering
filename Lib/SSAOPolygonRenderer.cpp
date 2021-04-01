@@ -20,7 +20,7 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 SSAOPolygonRenderer::SSAOPolygonRenderer()
 {
-    m_ao_buffer.setGeometryPassShaderFiles(
+    BaseClass::renderPass().setShaderFiles(
         "SSAO_geom_pass.vert",
         "SSAO_geom_pass.frag" );
 
@@ -37,7 +37,10 @@ SSAOPolygonRenderer::SSAOPolygonRenderer()
  *  @param  light [in] pointer to the light
  */
 /*===========================================================================*/
-void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light )
+void SSAOPolygonRenderer::exec(
+    kvs::ObjectBase* object,
+    kvs::Camera* camera,
+    kvs::Light* light )
 {
     kvs::IgnoreUnusedVariable( light );
 
@@ -78,7 +81,7 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
     this->setup_shader_program();
 
     m_ao_buffer.bind();
-    this->draw_buffer_object( polygon );
+    BaseClass::drawBufferObject( camera );
     m_ao_buffer.unbind();
     m_ao_buffer.draw();
 
@@ -92,9 +95,10 @@ void SSAOPolygonRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camera, kv
 /*===========================================================================*/
 void SSAOPolygonRenderer::create_shader_program()
 {
-    m_ao_buffer.createShaderProgram(
-        BaseClass::shadingModel(),
-        BaseClass::isShadingEnabled() );
+    const auto& model = BaseClass::shadingModel();
+    const auto enabled = BaseClass::isShadingEnabled();
+    BaseClass::renderPass().create( model, false );
+    m_ao_buffer.createShaderProgram( model, enabled );
 }
 
 /*===========================================================================*/
@@ -104,9 +108,10 @@ void SSAOPolygonRenderer::create_shader_program()
 /*===========================================================================*/
 void SSAOPolygonRenderer::update_shader_program()
 {
-    m_ao_buffer.updateShaderProgram(
-        BaseClass::shadingModel(),
-        BaseClass::isShadingEnabled() );
+    const auto& model = BaseClass::shadingModel();
+    const auto enabled = BaseClass::isShadingEnabled();
+    BaseClass::renderPass().create( model, false );
+    m_ao_buffer.updateShaderProgram( model, enabled );
 }
 
 /*===========================================================================*/
@@ -116,6 +121,17 @@ void SSAOPolygonRenderer::update_shader_program()
 /*===========================================================================*/
 void SSAOPolygonRenderer::setup_shader_program()
 {
+    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
+    const kvs::Mat4 PM = P * M;
+    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+    auto& geom_pass = BaseClass::renderPass().shaderProgram();
+    geom_pass.bind();
+    geom_pass.setUniform( "ModelViewMatrix", M );
+    geom_pass.setUniform( "ModelViewProjectionMatrix", PM );
+    geom_pass.setUniform( "NormalMatrix", N );
+    geom_pass.unbind();
+
     m_ao_buffer.setupShaderProgram( BaseClass::shadingModel() );
 }
 
@@ -145,27 +161,6 @@ void SSAOPolygonRenderer::update_framebuffer(
     const size_t height )
 {
     m_ao_buffer.updateFramebuffer( width, height );
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Draws buffer object.
- *  @param  polygon [in] pointer to the polygon object
- */
-/*===========================================================================*/
-void SSAOPolygonRenderer::draw_buffer_object( const kvs::PolygonObject* polygon )
-{
-    // Depth offset
-    const auto depth_offset = BaseClass::depthOffset();
-    if ( !kvs::Math::IsZero( depth_offset[0] ) )
-    {
-        kvs::OpenGL::SetPolygonOffset( depth_offset[0], depth_offset[1] );
-        kvs::OpenGL::Enable( GL_POLYGON_OFFSET_FILL );
-    }
-
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
-    kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-    BaseClass::bufferObject().draw( polygon );
 }
 
 } // end of namespace AmbientOcclusionRendering
