@@ -24,7 +24,7 @@ namespace AmbientOcclusionRendering
 /*===========================================================================*/
 SSAOStylizedLineRenderer::SSAOStylizedLineRenderer()
 {
-    m_ao_buffer.setGeometryPassShaderFiles(
+    BaseClass::renderPass().setShaderFiles(
         "SSAO_stylized_geom_pass.vert",
         "SSAO_stylized_geom_pass.frag" );
 
@@ -79,7 +79,7 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
     this->setup_shader_program();
 
     m_ao_buffer.bind();
-    this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
+    BaseClass::drawBufferObject( camera );
     m_ao_buffer.unbind();
     m_ao_buffer.draw();
 
@@ -93,9 +93,10 @@ void SSAOStylizedLineRenderer::exec( kvs::ObjectBase* object, kvs::Camera* camer
 /*===========================================================================*/
 void SSAOStylizedLineRenderer::create_shader_program()
 {
-    m_ao_buffer.createShaderProgram(
-        BaseClass::shadingModel(),
-        BaseClass::isShadingEnabled() );
+    const auto& model = BaseClass::shadingModel();
+    const auto enabled = BaseClass::isShadingEnabled();
+    BaseClass::renderPass().create( model, false );
+    m_ao_buffer.createShaderProgram( model, enabled );
 }
 
 /*===========================================================================*/
@@ -105,9 +106,10 @@ void SSAOStylizedLineRenderer::create_shader_program()
 /*===========================================================================*/
 void SSAOStylizedLineRenderer::update_shader_program()
 {
-    m_ao_buffer.updateShaderProgram(
-        BaseClass::shadingModel(),
-        BaseClass::isShadingEnabled() );
+    const auto& model = BaseClass::shadingModel();
+    const auto enabled = BaseClass::isShadingEnabled();
+    BaseClass::renderPass().create( model, false );
+    m_ao_buffer.updateShaderProgram( model, enabled );
 }
 
 /*===========================================================================*/
@@ -117,14 +119,19 @@ void SSAOStylizedLineRenderer::update_shader_program()
 /*===========================================================================*/
 void SSAOStylizedLineRenderer::setup_shader_program()
 {
-    m_ao_buffer.setupShaderProgram( BaseClass::shadingModel() );
-
-    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
+    const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
+    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+    auto& geom_pass = BaseClass::renderPass().shaderProgram();
     geom_pass.bind();
-    geom_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
-    geom_pass.setUniform( "shape_texture", 0 );
-    geom_pass.setUniform( "diffuse_texture", 1 );
+    geom_pass.setUniform( "ModelViewMatrix", M );
+    geom_pass.setUniform( "ProjectionMatrix", P );
+    geom_pass.setUniform( "NormalMatrix", N );
+    geom_pass.setUniform( "shape_texture", 0 ); // *
+    geom_pass.setUniform( "diffuse_texture", 1 ); // *
     geom_pass.unbind();
+
+    m_ao_buffer.setupShaderProgram( BaseClass::shadingModel() );
 }
 
 /*===========================================================================*/
@@ -153,16 +160,6 @@ void SSAOStylizedLineRenderer::update_framebuffer(
     const size_t height )
 {
     m_ao_buffer.updateFramebuffer( width, height );
-}
-
-void SSAOStylizedLineRenderer::draw_buffer_object( const kvs::LineObject* line )
-{
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
-    kvs::OpenGL::Enable( GL_TEXTURE_2D );
-    kvs::OpenGL::Enable( GL_BLEND );
-    kvs::OpenGL::SetBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-    kvs::Texture::SetEnv( GL_TEXTURE_ENV_MODE, GL_REPLACE );
-    BaseClass::bufferObject().draw( line );
 }
 
 } // end of namespace AmbientOcclusionRendering

@@ -26,7 +26,7 @@ class SSAOStylizedLineRenderer : public kvs::StylizedLineRenderer
     kvsModuleBaseClass( kvs::StylizedLineRenderer );
 
 private:
-    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
+    test::AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
     SSAOStylizedLineRenderer();
@@ -46,8 +46,6 @@ private:
 
     void create_framebuffer( const size_t width, const size_t height );
     void update_framebuffer( const size_t width, const size_t height );
-
-    void draw_buffer_object( const kvs::LineObject* line );
 };
 
 } // end of namespace AmbientOcclusionRendering
