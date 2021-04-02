@@ -10,8 +10,10 @@
 #include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
 #include "Input.h"
 #include "Streamline.h"
-#include "SSAOStochasticPolygonRenderer.h"
-#include "SSAOStochasticTubeRenderer.h"
+//#include "SSAOStochasticPolygonRenderer.h"
+//#include "SSAOStochasticTubeRenderer.h"
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
 
 
 namespace local
@@ -20,10 +22,12 @@ namespace local
 class Model : public local::Input
 {
 public:
-    using AOIsosurfaceRenderer = local::SSAOStochasticPolygonRenderer;
+//    using AOIsosurfaceRenderer = local::SSAOStochasticPolygonRenderer;
+    using AOIsosurfaceRenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using IsosurfaceRenderer = kvs::StochasticPolygonRenderer;
 
-    using AOStreamlineRenderer = local::SSAOStochasticTubeRenderer;
+//    using AOStreamlineRenderer = local::SSAOStochasticTubeRenderer;
+    using AOStreamlineRenderer = AmbientOcclusionRendering::SSAOStochasticTubeRenderer;
     using StreamlineRenderer = StochasticStreamline::StochasticTubeRenderer;
 
 private:
