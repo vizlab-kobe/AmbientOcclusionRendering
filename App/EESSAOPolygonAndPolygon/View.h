@@ -2,7 +2,8 @@
 #include <kvs/Application>
 #include <kvs/Screen>
 #include "Model.h"
-#include "StochasticRenderingCompositor.h"
+//#include "StochasticRenderingCompositor.h"
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticRenderingCompositor.h>
 
 
 namespace local
@@ -10,10 +11,14 @@ namespace local
 
 class View
 {
+public:
+//    using Compositor = local::StochasticRenderingCompositor;
+    using Compositor = AmbientOcclusionRendering::SSAOStochasticRenderingCompositor;
+
 private:
     local::Model& m_model;
     kvs::Screen m_screen;
-    local::StochasticRenderingCompositor m_compositor;
+    Compositor m_compositor;
 
 public:
     View( kvs::Application& app, local::Model& model ):
@@ -26,7 +31,7 @@ public:
     }
 
     kvs::Screen& screen() { return m_screen; }
-    local::StochasticRenderingCompositor& compositor() { return m_compositor; }
+    Compositor& compositor() { return m_compositor; }
 
     void show()
     {
