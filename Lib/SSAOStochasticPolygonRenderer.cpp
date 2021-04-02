@@ -7,6 +7,7 @@
 #include <kvs/Assert>
 #include <kvs/Message>
 #include <kvs/Xorshift128>
+#include <kvs/IgnoreUnusedVariable>
 
 
 namespace
@@ -57,20 +58,9 @@ namespace AmbientOcclusionRendering
  */
 /*===========================================================================*/
 SSAOStochasticPolygonRenderer::SSAOStochasticPolygonRenderer():
-    StochasticRendererBase( new Engine() )
+    SSAOStochasticRendererBase( new Engine() )
 {
 }
-
-/*===========================================================================*/
-/**
- *  @brief  Sets a polygon offset.
- *  @param  offset [in] offset value
- */
-/*===========================================================================*/
-//void SSAOStochasticPolygonRenderer::setPolygonOffset( const float offset )
-//{
-//    static_cast<Engine&>( engine() ).setPolygonOffset( offset );
-//}
 
 void SSAOStochasticPolygonRenderer::setDepthOffset( const kvs::Vec2& offset )
 {
@@ -95,62 +85,14 @@ void SSAOStochasticPolygonRenderer::setEdgeFactor( const float factor )
 
 /*===========================================================================*/
 /**
- *  @brief  Sets radius of sampling sphere.
- *  @param  radius [in] radius of sampling sphere
- */
-/*===========================================================================*/
-void SSAOStochasticPolygonRenderer::setSamplingSphereRadius( const float radius )
-{
-    static_cast<Engine&>( engine() ).setSamplingSphereRadius( radius );
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Sets number of sampling points
- *  @param  nsamples [in] number of sampling points
- */
-/*===========================================================================*/
-void SSAOStochasticPolygonRenderer::setNumberOfSamplingPoints( const size_t nsamples )
-{
-    static_cast<Engine&>( engine() ).setNumberOfSamplingPoints( nsamples );
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Returns radius of sampling sphere.
- *  @return radius of sampling sphere
- */
-/*===========================================================================*/
-kvs::Real32 SSAOStochasticPolygonRenderer::samplingSphereRadius() const
-{
-    return static_cast<const Engine&>( engine() ).samplingSphereRadius();
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Returns number of sampling points
- *  @return number of sampling points
- */
-/*===========================================================================*/
-size_t SSAOStochasticPolygonRenderer::numberOfSamplingPoints() const
-{
-    return static_cast<const Engine&>( engine() ).numberOfSamplingPoints();
-}
-
-/*===========================================================================*/
-/**
  *  @brief  Constructs a new Engine class.
  */
 /*===========================================================================*/
 SSAOStochasticPolygonRenderer::Engine::Engine()
 {
-    m_ao_buffer.setGeometryPassShaderFiles(
+    m_render_pass.setShaderFiles(
         "SSAO_SR_polygon_geom_pass.vert",
         "SSAO_SR_polygon_geom_pass.frag" );
-
-    m_ao_buffer.setOcclusionPassShaderFiles(
-        "SSAO_occl_pass.vert",
-        "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -160,8 +102,8 @@ SSAOStochasticPolygonRenderer::Engine::Engine()
 /*===========================================================================*/
 void SSAOStochasticPolygonRenderer::Engine::release()
 {
-    m_ao_buffer.release();
     m_buffer_object.release();
+    m_render_pass.release();
 }
 
 /*===========================================================================*/
@@ -180,18 +122,11 @@ void SSAOStochasticPolygonRenderer::Engine::create(
     auto* polygon = kvs::PolygonObject::DownCast( object );
     const bool has_normal = polygon->normals().size() > 0;
     BaseClass::setShadingEnabled( has_normal );
-
     BaseClass::attachObject( object );
     BaseClass::createRandomTexture();
 
-    // Create shader program
-    m_ao_buffer.createShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
-
-    // Create framebuffer
-    const float dpr = camera->devicePixelRatio();
-    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
-    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
+    // Create render pass
+    m_render_pass.create( BaseClass::shader(), false );
 
     // Create buffer object
     this->create_buffer_object( polygon );
@@ -210,15 +145,6 @@ void SSAOStochasticPolygonRenderer::Engine::update(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    // Update shader program
-    m_ao_buffer.updateShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
-
-    // Update framebuffer
-    const float dpr = camera->devicePixelRatio();
-    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
-    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
-
     // Update buffer object
     this->update_buffer_object( kvs::PolygonObject::DownCast( object ) );
 }
@@ -236,14 +162,20 @@ void SSAOStochasticPolygonRenderer::Engine::setup(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    // Setup shader program
-    m_ao_buffer.setupShaderProgram( this->shader() );
+    kvs::IgnoreUnusedVariable( object );
+    kvs::IgnoreUnusedVariable( camera );
+    kvs::IgnoreUnusedVariable( light );
 
-    // Setup additional variables in geom pass shader
-    auto& geom_pass = m_ao_buffer.geometryPassShader();
-    geom_pass.bind();
+    const auto M = kvs::OpenGL::ModelViewMatrix();
+    const auto P = kvs::OpenGL::ProjectionMatrix();
+    const auto N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+
+    auto& geom_pass = m_render_pass.shaderProgram();
+    kvs::ProgramObject::Binder bind( geom_pass );
+    geom_pass.setUniform( "ModelViewMatrix", M );
+    geom_pass.setUniform( "ModelViewProjectionMatrix", P * M );
+    geom_pass.setUniform( "NormalMatrix", N );
     geom_pass.setUniform( "edge_factor", m_edge_factor );
-    geom_pass.unbind();
 }
 
 /*===========================================================================*/
@@ -270,10 +202,9 @@ void SSAOStochasticPolygonRenderer::Engine::draw(
     kvs::OpenGL::SetPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
     // Draw buffer object
-    m_ao_buffer.bind();
+    auto& geom_pass = m_render_pass.shaderProgram();
+    kvs::ProgramObject::Binder bind( geom_pass );
     this->draw_buffer_object( kvs::PolygonObject::DownCast( object ) );
-    m_ao_buffer.unbind();
-    m_ao_buffer.draw();
 }
 
 /*===========================================================================*/
@@ -288,7 +219,7 @@ void SSAOStochasticPolygonRenderer::Engine::create_buffer_object(
     // Create buffer object
     const auto nvertices = ::NumberOfVertices( polygon );
     const auto indices = BaseClass::randomIndices( nvertices );
-    auto location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
+    auto location = m_render_pass.shaderProgram().attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
     m_buffer_object.create( polygon );
 }
@@ -323,7 +254,7 @@ void SSAOStochasticPolygonRenderer::Engine::draw_buffer_object(
     const kvs::Vec2 random_offset( offset_x, offset_y );
 
     // Update variables in geom pass shader
-    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    auto& geom_pass = m_render_pass.shaderProgram();
     geom_pass.setUniform( "random_texture", 0 );
     geom_pass.setUniform( "random_offset", random_offset );
     geom_pass.setUniform( "random_texture_size_inv", 1.0f / size );
