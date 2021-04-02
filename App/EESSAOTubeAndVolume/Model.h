@@ -10,8 +10,6 @@
 #include <StochasticStreamline/Lib/StochasticTubeRenderer.h>
 #include "Input.h"
 #include "Streamline.h"
-#include "SSAOStochasticUniformGridRenderer.h"
-#include "SSAOStochasticTubeRenderer.h"
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticUniformGridRenderer.h>
 
@@ -22,11 +20,9 @@ namespace local
 class Model : public local::Input
 {
 public:
-//    using AORaycastingRenderer = local::SSAOStochasticUniformGridRenderer;
     using AORaycastingRenderer = AmbientOcclusionRendering::SSAOStochasticUniformGridRenderer;
     using RaycastingRenderer = kvs::StochasticUniformGridRenderer;
 
-//    using AOStreamlineRenderer = local::SSAOStochasticTubeRenderer;
     using AOStreamlineRenderer = AmbientOcclusionRendering::SSAOStochasticTubeRenderer;
     using StreamlineRenderer = StochasticStreamline::StochasticTubeRenderer;
 
