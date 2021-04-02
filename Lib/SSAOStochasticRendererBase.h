@@ -5,7 +5,7 @@
 #include <kvs/StochasticRendererBase>
 #include <kvs/StochasticRenderingEngine>
 #include "AmbientOcclusionBuffer.h"
-//#include "StochasticRenderingCompositor.h"
+#include "SSAOStochasticRenderingCompositor.h"
 
 
 namespace AmbientOcclusionRendering
@@ -14,7 +14,7 @@ namespace AmbientOcclusionRendering
 class SSAOStochasticRendererBase : public kvs::StochasticRendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticRendererBase, Renderer );
-//    friend class local::StochasticRenderingCompositor;
+    friend class SSAOStochasticRenderingCompositor;
 
 private:
     using BaseClass = kvs::StochasticRendererBase;
