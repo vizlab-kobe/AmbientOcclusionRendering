@@ -20,7 +20,7 @@ namespace AmbientOcclusionRendering
 class SSAOStochasticPolygonRenderer : public SSAOStochasticRendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticPolygonRenderer, Renderer );
-    kvsModuleBaseClass( kvs::StochasticRendererBase );
+    kvsModuleBaseClass( SSAOStochasticRendererBase );
 
 public:
     class Engine;

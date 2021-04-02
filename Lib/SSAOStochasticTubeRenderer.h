@@ -11,16 +11,21 @@
 #include <kvs/StochasticRendererBase>
 #include <kvs/TransferFunction>
 #include <kvs/StylizedLineRenderer>
-#include "AmbientOcclusionBuffer.h"
+#include "SSAOStochasticRendererBase.h"
 
 
 namespace AmbientOcclusionRendering
 {
 
-class SSAOStochasticTubeRenderer : public kvs::StochasticRendererBase
+/*===========================================================================*/
+/**
+ *  @brief  SSAO stochastic tube renderer class.
+ */
+/*===========================================================================*/
+class SSAOStochasticTubeRenderer : public SSAOStochasticRendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticTubeRenderer, Renderer );
-    kvsModuleBaseClass( kvs::StochasticRendererBase );
+    kvsModuleBaseClass( SSAOStochasticRendererBase );
 
 public:
     class Engine;
@@ -28,38 +33,41 @@ public:
 public:
     SSAOStochasticTubeRenderer();
     virtual ~SSAOStochasticTubeRenderer() {}
+
     void setEdgeFactor( const float factor );
     void setTransferFunction( const kvs::TransferFunction& tfunc );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
-    void setSamplingSphereRadius( const float radius );
-    void setNumberOfSamplingPoints( const size_t nsamples );
     const kvs::TransferFunction& transferFunction() const;
     kvs::Real32 radiusSize() const;
     kvs::Real32 haloSize() const;
-    kvs::Real32 samplingSphereRadius() const;
-    size_t numberOfSamplingPoints() const;
 };
 
+/*===========================================================================*/
+/**
+ *  @brief  Engine class for SSAO stochastic tube renderer.
+ */
+/*===========================================================================*/
 class SSAOStochasticTubeRenderer::Engine : public kvs::StochasticRenderingEngine
 {
     using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::StylizedLineRenderer::BufferObject;
+    using RenderPass = kvs::StylizedLineRenderer::RenderPass;
 
 private:
-    float m_edge_factor; ///< edge enhancement factor
-    kvs::Real32 m_radius_size;
-    kvs::Real32 m_halo_size;
-    BufferObject m_buffer_object;
+    float m_edge_factor = 0.0f; ///< edge enhancement factor
 
-    bool m_tfunc_changed; ///< flag for changing transfer function
-    kvs::TransferFunction m_tfunc; ///< transfer function
-    kvs::Texture1D m_tfunc_texture; ///< transfer function texture
-    AmbientOcclusionBuffer m_ao_buffer;
+    bool m_tfunc_changed = true; ///< flag for changing transfer function
+    kvs::TransferFunction m_tfunc{}; ///< transfer function
+    kvs::Texture1D m_tfunc_texture{}; ///< transfer function texture
+
+    BufferObject m_buffer_object{};
+    RenderPass m_render_pass{ m_buffer_object };
 
 public:
     Engine();
     virtual ~Engine() { this->release(); }
+
     void release();
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
@@ -68,15 +76,11 @@ public:
 
     void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
     void setTransferFunction( const kvs::TransferFunction& tfunc ) { m_tfunc = tfunc; m_tfunc_changed = true; }
-    void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
-    void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
+    void setRadiusSize( const kvs::Real32 size ) { m_render_pass.setRadiusSize( size ); }
+    void setHaloSize( const kvs::Real32 size ) { m_render_pass.setHaloSize( size ); }
     const kvs::TransferFunction& transferFunction() const { return m_tfunc; }
-    kvs::Real32 radiusSize() const { return m_radius_size; }
-    kvs::Real32 haloSize() const { return m_halo_size; }
-    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
+    kvs::Real32 radiusSize() const { return m_render_pass.radiusSize(); }
+    kvs::Real32 haloSize() const { return m_render_pass.haloSize(); }
 
 private:
     void create_transfer_function_texture();
