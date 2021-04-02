@@ -16,7 +16,7 @@
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
 #include <kvs/RayCastingRenderer>
-#include "AmbientOcclusionBuffer.h"
+#include "SSAOStochasticRendererBase.h"
 
 
 namespace AmbientOcclusionRendering
@@ -27,10 +27,10 @@ namespace AmbientOcclusionRendering
  *  @brief  Stochastic uniform grid renderer class.
  */
 /*===========================================================================*/
-class SSAOStochasticUniformGridRenderer : public kvs::StochasticRendererBase
+class SSAOStochasticUniformGridRenderer : public SSAOStochasticRendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticUniformGridRenderer, Renderer );
-    kvsModuleBaseClass( kvs::StochasticRendererBase );
+    kvsModuleBaseClass( SSAOStochasticRendererBase );
 
 public:
     class Engine;
@@ -38,15 +38,12 @@ public:
 public:
     SSAOStochasticUniformGridRenderer();
     virtual ~SSAOStochasticUniformGridRenderer() {}
+
     void setEdgeFactor( const float factor );
     void setSamplingStep( const float step );
     void setTransferFunction( const kvs::TransferFunction& transfer_function );
     const kvs::TransferFunction& transferFunction() const;
     float samplingStep() const;
-    void setSamplingSphereRadius( const float radius );
-    void setNumberOfSamplingPoints( const size_t nsamples );
-    kvs::Real32 samplingSphereRadius() const;
-    size_t numberOfSamplingPoints() const;
 };
 
 /*===========================================================================*/
@@ -59,6 +56,7 @@ class SSAOStochasticUniformGridRenderer::Engine : public kvs::StochasticRenderin
 public:
     using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::glsl::RayCastingRenderer::BufferObject;
+    using RenderPass = kvs::glsl::RayCastingRenderer::RenderPass;
     using BoundingBufferObject = kvs::glsl::RayCastingRenderer::BoundingBufferObject;
     using BoundingRenderPass = kvs::glsl::RayCastingRenderer::BoundingRenderPass;
 
@@ -77,15 +75,12 @@ private:
     kvs::Texture2D m_entry_texture{}; ///< entry point texture
     kvs::Texture2D m_exit_texture{}; ///< exit point texture
 
-    // Buffer object
+    // Buffer objects and render passes
     BufferObject m_volume_buffer{}; ///< volume buffer object
+    RenderPass m_render_pass{ m_volume_buffer };
+
     BoundingBufferObject m_bounding_cube_buffer{}; ///< bounding cube buffer
-
-    // Render pass
     BoundingRenderPass m_bounding_render_pass{ m_bounding_cube_buffer };
-
-    // AO buffer
-    AmbientOcclusionBuffer m_ao_buffer{}; ///< ambient occlusion buffer
 
 public:
     Engine();
@@ -107,12 +102,10 @@ public:
     float samplingStep() const { return m_step; }
     const kvs::TransferFunction& transferFunction() const { return m_transfer_function; }
 
-    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
-
 private:
+    void create_transfer_function_texture();
+    void update_transfer_function_texture();
+
     void create_shader_program( const kvs::StructuredVolumeObject* volume );
     void update_shader_program( const kvs::StructuredVolumeObject* volume );
     void setup_shader_program(
