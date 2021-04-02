@@ -64,9 +64,11 @@ class SSAOStochasticTetrahedraRenderer::Engine : public kvs::StochasticRendering
     using BaseClass = kvs::StochasticRenderingEngine;
 
 private:
-    class AmbientOcclusionBuffer : public AmbientOcclusionRendering::AmbientOcclusionBuffer
+//    class AmbientOcclusionBuffer : public AmbientOcclusionRendering::AmbientOcclusionBuffer
+    class AmbientOcclusionBuffer : public Deprecated::AmbientOcclusionBuffer
     {
-        using BaseClass = AmbientOcclusionRendering::AmbientOcclusionBuffer;
+//        using BaseClass = AmbientOcclusionRendering::AmbientOcclusionBuffer;
+        using BaseClass = Deprecated::AmbientOcclusionBuffer;
     private:
         const Engine* m_engine;
         std::string m_geom_pass_shader_geom_file;

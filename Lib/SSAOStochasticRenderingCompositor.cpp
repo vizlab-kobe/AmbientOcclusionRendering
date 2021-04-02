@@ -17,12 +17,11 @@
 #include <kvs/ObjectManager>
 #include <kvs/RendererManager>
 #include <kvs/IDManager>
-#include "SSAOStochasticRendererBase.h"
 #include <kvs/ParticleBasedRenderer>
-
 #include <kvs/ColorImage>
 #include <kvs/GrayImage>
 #include <kvs/String>
+#include "SSAOStochasticRendererBase.h"
 
 
 namespace AmbientOcclusionRendering
@@ -197,8 +196,6 @@ void SSAOStochasticRenderingCompositor::check_window_resized()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::check_object_changed()
 {
-//    typedef StochasticRendererBase Renderer;
-//    using Renderer = local::StochasticRendererBase;
     using Renderer = SSAOStochasticRendererBase;
 
     const size_t size = m_scene->IDManager()->size();
@@ -248,7 +245,7 @@ kvs::Mat4 SSAOStochasticRenderingCompositor::object_xform()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::engines_create()
 {
-    typedef SSAOStochasticRendererBase Renderer;
+    using Renderer = SSAOStochasticRendererBase;
 
     const size_t size = m_scene->IDManager()->size();
     for ( size_t i = 0; i < size; i++ )
@@ -338,7 +335,7 @@ void SSAOStochasticRenderingCompositor::engines_setup()
 /*===========================================================================*/
 void SSAOStochasticRenderingCompositor::engines_draw()
 {
-    typedef SSAOStochasticRendererBase Renderer;
+    using Renderer = SSAOStochasticRendererBase;
 
     kvs::Camera* camera = m_scene->camera();
     kvs::Light* light = m_scene->light();

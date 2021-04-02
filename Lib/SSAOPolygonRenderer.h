@@ -26,7 +26,7 @@ class SSAOPolygonRenderer : public kvs::glsl::PolygonRenderer
     kvsModuleBaseClass( kvs::glsl::PolygonRenderer );
 
 private:
-    test::AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
+    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
     SSAOPolygonRenderer();

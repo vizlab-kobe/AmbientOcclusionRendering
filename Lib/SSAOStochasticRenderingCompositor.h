@@ -28,7 +28,7 @@ class Scene;
 class SSAOStochasticRenderingCompositor : public kvs::TrackballInteractor
 {
 private:
-    kvs::Timer m_timer;
+    kvs::Timer m_timer; ///< timer
     kvs::Scene* m_scene; ///< pointer to the scene
     size_t m_window_width; ///< window width
     size_t m_window_height; ///< window height
@@ -40,16 +40,19 @@ private:
     kvs::Vec3 m_light_position; ///< light position used for LOD control
     kvs::Vec3 m_camera_position; ///< camera position used for LOD control
     kvs::EnsembleAverageBuffer m_ensemble_buffer; ///< ensemble averaging buffer
-    kvs::Shader::ShadingModel* m_shader;
-//    local::AmbientOcclusionBuffer m_ao_buffer;
-    test::AmbientOcclusionBuffer m_ao_buffer;
+    kvs::Shader::ShadingModel* m_shader; ///< shader
+    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
 
 public:
+    SSAOStochasticRenderingCompositor() = delete;
     SSAOStochasticRenderingCompositor( kvs::Scene* scene );
+
     const kvs::Timer& timer() const { return m_timer; }
+    const kvs::Shader::ShadingModel& shader() const { return *m_shader; }
     size_t repetitionLevel() const { return m_repetition_level; }
     bool isEnabledLODControl() const { return m_enable_lod; }
     bool isEnabledRefinement() const { return m_enable_refinement; }
+
     void setRepetitionLevel( const size_t repetition_level ) { m_repetition_level = repetition_level; }
     void setEnabledLODControl( const bool enable ) { m_enable_lod = enable; }
     void setEnabledRefinement( const bool enable ) { m_enable_refinement = enable; }
@@ -57,17 +60,17 @@ public:
     void enableRefinement() { this->setEnabledRefinement( true ); }
     void disableLODControl() { this->setEnabledLODControl( false ); }
     void disableRefinement() { this->setEnabledRefinement( false ); }
-    const kvs::Shader::ShadingModel& shader() const { return *m_shader; }
-    void update();
     void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
     template <typename ShadingType>
     void setShader( const ShadingType shader );
 
+    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
+    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
+
+    void update();
+
 private:
-    SSAOStochasticRenderingCompositor();
     void draw();
     void check_window_created();
     void check_window_resized();

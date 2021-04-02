@@ -9,9 +9,6 @@
 namespace AmbientOcclusionRendering
 {
 
-namespace test
-{
-
 /*===========================================================================*/
 /**
  *  @brief  Ambient occlusion buffer class.
@@ -80,8 +77,9 @@ public:
     kvs::ValueArray<GLfloat> generatePoints( const float radius, const size_t nsamples );
 };
 
-} // end of namespace test
 
+namespace Deprecated
+{
 
 /*===========================================================================*/
 /**
@@ -167,5 +165,7 @@ public:
 
     kvs::ValueArray<GLfloat> generatePoints( const float radius, const size_t nsamples );
 };
+
+} // end of namespace Deprecated
 
 } // end of namespace AmbientOcclusionRendering

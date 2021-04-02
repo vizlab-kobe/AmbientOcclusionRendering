@@ -18,7 +18,7 @@ class SSAOStochasticRendererBase : public kvs::StochasticRendererBase
 
 private:
     using BaseClass = kvs::StochasticRendererBase;
-    test::AmbientOcclusionBuffer m_ao_buffer; /// ambient occlusion buffer
+    AmbientOcclusionBuffer m_ao_buffer; /// ambient occlusion buffer
 
 public:
     SSAOStochasticRendererBase( kvs::StochasticRenderingEngine* engine ):

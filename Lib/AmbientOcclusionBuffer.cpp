@@ -35,9 +35,6 @@ inline void Draw()
 namespace AmbientOcclusionRendering
 {
 
-namespace test
-{
-
 void AmbientOcclusionBuffer::bind()
 {
     // Gaurded bind.
@@ -234,8 +231,8 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
     return sampling_points;
 }
 
-} // end of namespace test
-
+namespace Deprecated
+{
 
 /*===========================================================================*/
 /**
@@ -520,5 +517,7 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
 
     return sampling_points;
 }
+
+} // end of nsamples Deprecated
 
 } // end of namespace AmbientOcclusionRendering
