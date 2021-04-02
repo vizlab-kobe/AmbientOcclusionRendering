@@ -6,6 +6,7 @@
 #include <kvs/FragmentShader>
 #include <kvs/Xorshift128>
 #include <kvs/String>
+#include <kvs/IgnoreUnusedVariable>
 
 
 namespace
@@ -36,7 +37,7 @@ namespace AmbientOcclusionRendering
  */
 /*===========================================================================*/
 SSAOStochasticStylizedLineRenderer::SSAOStochasticStylizedLineRenderer():
-    StochasticRendererBase( new Engine() )
+    SSAOStochasticRendererBase( new Engine() )
 {
 }
 
@@ -86,28 +87,6 @@ void SSAOStochasticStylizedLineRenderer::setHaloSize( const kvs::Real32 size )
 
 /*===========================================================================*/
 /**
- *  @brief  Sets radius of sampling sphere.
- *  @param  radius [in] radius of sampling sphere
- */
-/*===========================================================================*/
-void SSAOStochasticStylizedLineRenderer::setSamplingSphereRadius( const float radius )
-{
-    static_cast<Engine&>( engine() ).setSamplingSphereRadius( radius );
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Sets number of sampling points.
- *  @param  nsamples [in] number of sampling points
- */
-/*===========================================================================*/
-void SSAOStochasticStylizedLineRenderer::setNumberOfSamplingPoints( const size_t nsamples )
-{
-    static_cast<Engine&>( engine() ).setNumberOfSamplingPoints( nsamples );
-}
-
-/*===========================================================================*/
-/**
  *  @brief  Returns line opacity.
  *  @return line opacity
  */
@@ -141,44 +120,14 @@ kvs::Real32 SSAOStochasticStylizedLineRenderer::haloSize() const
 
 /*===========================================================================*/
 /**
- *  @brief  Returns radius of sampling sphere.
- *  @return radius of sampling sphere
- */
-/*===========================================================================*/
-kvs::Real32 SSAOStochasticStylizedLineRenderer::samplingSphereRadius()
-{
-    return static_cast<const Engine&>( engine() ).samplingSphereRadius();
-}
-
-/*===========================================================================*/
-/**
- *  @brief  Returns number of sampling points.
- *  @return number of sampling points
- */
-/*===========================================================================*/
-size_t SSAOStochasticStylizedLineRenderer::numberOfSamplingPoints()
-{
-    return static_cast<const Engine&>( engine() ).numberOfSamplingPoints();
-}
-
-/*===========================================================================*/
-/**
  *  @brief  Creates a new Engine class.
  */
 /*===========================================================================*/
-SSAOStochasticStylizedLineRenderer::Engine::Engine():
-    m_edge_factor( 0.0f ),
-    m_line_opacity( 255 ),
-    m_radius_size( 0.05f ),
-    m_halo_size( 0.0f )
+SSAOStochasticStylizedLineRenderer::Engine::Engine()
 {
-    m_ao_buffer.setGeometryPassShaderFiles(
+    m_render_pass.setShaderFiles(
         "SSAO_SR_stylized_geom_pass.vert",
         "SSAO_SR_stylized_geom_pass.frag" );
-
-    m_ao_buffer.setOcclusionPassShaderFiles(
-        "SSAO_occl_pass.vert",
-        "SSAO_occl_pass.frag" );
 }
 
 /*===========================================================================*/
@@ -189,7 +138,7 @@ SSAOStochasticStylizedLineRenderer::Engine::Engine():
 void SSAOStochasticStylizedLineRenderer::Engine::release()
 {
     m_buffer_object.release();
-    m_ao_buffer.release();
+    m_render_pass.release();
 }
 
 /*===========================================================================*/
@@ -209,14 +158,7 @@ void SSAOStochasticStylizedLineRenderer::Engine::create(
     BaseClass::attachObject( line );
     BaseClass::createRandomTexture();
 
-    // Create shader program
-    m_ao_buffer.createShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
-
-    // Create framebuffer
-    const float dpr = camera->devicePixelRatio();
-    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
-    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_ao_buffer.createFramebuffer( framebuffer_width, framebuffer_height );
+    m_render_pass.create( BaseClass::shader(), false );
 
     // Create buffer object
     this->create_buffer_object( line );
@@ -235,15 +177,6 @@ void SSAOStochasticStylizedLineRenderer::Engine::update(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    // Update shader program
-    m_ao_buffer.updateShaderProgram( BaseClass::shader(), BaseClass::isShadingEnabled() );
-
-    // Update framebuffer
-    const float dpr = camera->devicePixelRatio();
-    const size_t framebuffer_width = static_cast<size_t>( camera->windowWidth() * dpr );
-    const size_t framebuffer_height = static_cast<size_t>( camera->windowHeight() * dpr );
-    m_ao_buffer.updateFramebuffer( framebuffer_width, framebuffer_height );
-
     // Update buffer object
     this->update_buffer_object( kvs::LineObject::DownCast( object ) );
 }
@@ -261,16 +194,21 @@ void SSAOStochasticStylizedLineRenderer::Engine::setup(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    // Setup shader program
-    m_ao_buffer.setupShaderProgram( this->shader() );
+    kvs::IgnoreUnusedVariable( object );
+    kvs::IgnoreUnusedVariable( camera );
+    kvs::IgnoreUnusedVariable( light );
 
-    // Setup additional variables in geom pass shader
-    auto& geom_pass = m_ao_buffer.geometryPassShader();
-    geom_pass.bind();
-    geom_pass.setUniform( "ProjectionMatrix", kvs::OpenGL::ProjectionMatrix() );
+    // Setup shader program
+    auto& geom_pass = m_render_pass.shaderProgram();
+    kvs::ProgramObject::Binder bind( geom_pass );
+    const auto M = kvs::OpenGL::ModelViewMatrix();
+    const auto P = kvs::OpenGL::ProjectionMatrix();
+    const auto N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+    geom_pass.setUniform( "ModelViewMatrix", M );
+    geom_pass.setUniform( "ProjectionMatrix", P );
+    geom_pass.setUniform( "NormalMatrix", N );
     geom_pass.setUniform( "opacity", m_line_opacity / 255.0f );
     geom_pass.setUniform( "edge_factor", m_edge_factor );
-    geom_pass.unbind();
 }
 
 /*===========================================================================*/
@@ -286,10 +224,12 @@ void SSAOStochasticStylizedLineRenderer::Engine::draw(
     kvs::Camera* camera,
     kvs::Light* light )
 {
-    m_ao_buffer.bind();
+    kvs::OpenGL::Enable( GL_DEPTH_TEST );
+    kvs::OpenGL::Enable( GL_TEXTURE_2D );
+
+    auto& geom_pass = m_render_pass.shaderProgram();
+    kvs::ProgramObject::Binder bind( geom_pass );
     this->draw_buffer_object( kvs::LineObject::DownCast( object ) );
-    m_ao_buffer.unbind();
-    m_ao_buffer.draw();
 }
 
 /*===========================================================================*/
@@ -301,21 +241,18 @@ void SSAOStochasticStylizedLineRenderer::Engine::draw(
 void SSAOStochasticStylizedLineRenderer::Engine::create_buffer_object(
     const kvs::LineObject* line )
 {
+    auto& geom_pass = m_render_pass.shaderProgram();
+
     // Create random index array
-    const size_t nvertices = line->numberOfVertices() * 2;
-    const auto tex_size = randomTextureSize();
-    kvs::ValueArray<kvs::UInt16> indices( nvertices * 2 );
-    for ( size_t i = 0; i < nvertices; i++ )
-    {
-        const unsigned int count = i * 12347;
-        indices[ 2 * i + 0 ] = static_cast<kvs::UInt16>( ( count ) % tex_size );
-        indices[ 2 * i + 1 ] = static_cast<kvs::UInt16>( ( count / tex_size ) % tex_size );
-    }
+    const auto nvertices = line->numberOfVertices() * 2;
+    const auto indices = BaseClass::randomIndices( nvertices );
+    const auto indices_location = geom_pass.attributeLocation( "random_index" );
+    m_buffer_object.manager().setVertexAttribArray( indices, indices_location, 2 );
 
     // Create buffer object
-    auto location = m_ao_buffer.geometryPassShader().attributeLocation( "random_index" );
-    m_buffer_object.manager().setVertexAttribArray( indices, location, 2 );
-    m_buffer_object.create( line, m_halo_size, m_radius_size );
+    const auto halo_size = m_render_pass.haloSize();
+    const auto radius_size = m_render_pass.radiusSize();
+    m_buffer_object.create( line, halo_size, radius_size );
 }
 
 /*===========================================================================*/
@@ -340,9 +277,6 @@ void SSAOStochasticStylizedLineRenderer::Engine::update_buffer_object(
 void SSAOStochasticStylizedLineRenderer::Engine::draw_buffer_object(
     const kvs::LineObject* line )
 {
-    kvs::OpenGL::Enable( GL_DEPTH_TEST );
-    kvs::OpenGL::Enable( GL_TEXTURE_2D );
-
     // Random factors
     const size_t size = BaseClass::randomTextureSize();
     const int count = BaseClass::repetitionCount() * ::RandomNumber();
@@ -351,7 +285,7 @@ void SSAOStochasticStylizedLineRenderer::Engine::draw_buffer_object(
     const kvs::Vec2 random_offset( offset_x, offset_y );
 
     // Update variables in geom pass shader
-    auto& geom_pass = m_ao_buffer.geometryPassShader();
+    auto& geom_pass = m_render_pass.shaderProgram();
     geom_pass.setUniform( "shape_texture", 0 );
     geom_pass.setUniform( "diffuse_texture", 1 );
     geom_pass.setUniform( "random_texture", 2 );

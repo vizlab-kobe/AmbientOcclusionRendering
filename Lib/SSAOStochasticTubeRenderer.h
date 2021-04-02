@@ -91,4 +91,4 @@ private:
     void draw_buffer_object( const kvs::LineObject* line );
 };
 
-} // end of namespace local
+} // end of namespace AmbientOcclusionRendering

@@ -10,7 +10,7 @@
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
 #include <kvs/StylizedLineRenderer>
-#include "AmbientOcclusionBuffer.h"
+#include "SSAOStochasticRendererBase.h"
 
 
 namespace AmbientOcclusionRendering
@@ -21,10 +21,10 @@ namespace AmbientOcclusionRendering
  *  @brief  SSAO stochastic stylized line renderer class.
  */
 /*===========================================================================*/
-class SSAOStochasticStylizedLineRenderer : public kvs::StochasticRendererBase
+class SSAOStochasticStylizedLineRenderer : public SSAOStochasticRendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticStylizedLineRenderer, Renderer );
-    kvsModuleBaseClass( kvs::StochasticRendererBase );
+    kvsModuleBaseClass( SSAOStochasticRendererBase );
 
 public:
     class Engine;
@@ -32,17 +32,14 @@ public:
 public:
     SSAOStochasticStylizedLineRenderer();
     virtual ~SSAOStochasticStylizedLineRenderer() {}
+
     void setEdgeFactor( const float factor );
     /*KVS_DEPRECATED*/ void setOpacity( const kvs::UInt8 opacity );
     void setRadiusSize( const kvs::Real32 size );
     void setHaloSize( const kvs::Real32 size );
-    void setSamplingSphereRadius( const float radius );
-    void setNumberOfSamplingPoints( const size_t nsamples );
     /*KVS_DEPRECATED*/ kvs::UInt8 opacity() const;
     kvs::Real32 radiusSize() const;
     kvs::Real32 haloSize() const;
-    kvs::Real32 samplingSphereRadius();
-    size_t numberOfSamplingPoints();
 };
 
 /*===========================================================================*/
@@ -54,18 +51,19 @@ class SSAOStochasticStylizedLineRenderer::Engine : public kvs::StochasticRenderi
 {
     using BaseClass = kvs::StochasticRenderingEngine;
     using BufferObject = kvs::StylizedLineRenderer::BufferObject;
+    using RenderPass = kvs::StylizedLineRenderer::RenderPass;
 
 private:
-    float m_edge_factor; ///< edge enhancement factor
-    kvs::UInt8 m_line_opacity; ///< line opacity
-    kvs::Real32 m_radius_size; ///< radius size of tube
-    kvs::Real32 m_halo_size; ///< halo size of tube
-    BufferObject m_buffer_object; ///< geometry buffer object
-    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
+    float m_edge_factor = 0.0f; ///< edge enhancement factor
+    kvs::UInt8 m_line_opacity = 255; ///< line opacity
+
+    BufferObject m_buffer_object{}; ///< geometry buffer object
+    RenderPass m_render_pass{ m_buffer_object }; ///< geometry pass
 
 public:
     Engine();
     virtual ~Engine() { this-> release(); }
+
     void release();
     void create( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
     void update( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
@@ -74,15 +72,11 @@ public:
 
     void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
     void setOpacity( const kvs::UInt8 opacity ){ m_line_opacity = opacity; }
-    void setRadiusSize( const kvs::Real32 size ) { m_radius_size = size; }
-    void setHaloSize( const kvs::Real32 size ) { m_halo_size = size; }
+    void setRadiusSize( const kvs::Real32 size ) { m_render_pass.setRadiusSize( size ); }
+    void setHaloSize( const kvs::Real32 size ) { m_render_pass.setHaloSize( size ); }
     kvs::UInt8 opacity() const { return m_line_opacity; }
-    kvs::Real32 radiusSize() const { return m_radius_size; }
-    kvs::Real32 haloSize() const { return m_halo_size; }
-    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
+    kvs::Real32 radiusSize() const { return m_render_pass.radiusSize(); }
+    kvs::Real32 haloSize() const { return m_render_pass.haloSize(); }
 
 private:
     void create_buffer_object( const kvs::LineObject* line );

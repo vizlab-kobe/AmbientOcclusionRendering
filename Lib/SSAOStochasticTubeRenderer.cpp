@@ -214,11 +214,12 @@ void SSAOStochasticTubeRenderer::Engine::create_buffer_object( const kvs::LineOb
     const auto indices_location = geom_pass.attributeLocation( "random_index" );
     m_buffer_object.manager().setVertexAttribArray( indices, indices_location, 2 );
 
+    const auto values = ::QuadVertexValues( line );
+    const auto values_location = geom_pass.attributeLocation( "value" );
+    m_buffer_object.manager().setVertexAttribArray( values, values_location, 1 );
+
     const auto halo_size = m_render_pass.haloSize();
     const auto radius_size = m_render_pass.radiusSize();
-    const auto values_location = geom_pass.attributeLocation( "value" );
-    const auto values = ::QuadVertexValues( line );
-    m_buffer_object.manager().setVertexAttribArray( values, values_location, 1 );
     m_buffer_object.create( line, halo_size, radius_size );
 }
 
