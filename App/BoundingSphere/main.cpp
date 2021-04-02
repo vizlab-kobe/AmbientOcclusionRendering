@@ -15,16 +15,20 @@
 #include <kvs/StructuredVolumeImporter>
 #include <kvs/DivergingColorMap>
 #include "Streamline.h"
-#include "SSAOStochasticPolygonRenderer.h"
-#include "SSAOStochasticTubeRenderer.h"
+//#include "SSAOStochasticPolygonRenderer.h"
+//#include "SSAOStochasticTubeRenderer.h"
 #include <kvs/StochasticRenderingCompositor>
-#include "StochasticRenderingCompositor.h"
+//#include "StochasticRenderingCompositor.h"
 #include <kvs/StructuredVectorToScalar>
 #include <kvs/Isosurface>
 #include <kvs/PolygonToPolygon>
 #include <kvs/PaintEventListener>
 #include <iostream>
 #include <cmath>
+
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticTubeRenderer.h>
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
+#include <AmbientOcclusionRendering/Lib/SSAOStochasticRenderingCompositor.h>
 
 
 kvs::Vec3i min_coord( 0, 0, 0 );
@@ -248,11 +252,13 @@ int main( int argc, char** argv )
     kvs::PolygonObject* polygon = createBoundingSphere();
     
     // Declare SSAOStochasticPolygonRenderer
-    local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
+//    local::SSAOStochasticPolygonRenderer* polygon_renderer = new local::SSAOStochasticPolygonRenderer();
+    auto* polygon_renderer = new AmbientOcclusionRendering::SSAOStochasticPolygonRenderer();
     polygon_renderer->setName( "PolygonRenderer" );
 
     // Declare SSAOStochasticTubeRenderer
-    local::SSAOStochasticTubeRenderer* tube_renderer = new local::SSAOStochasticTubeRenderer();
+//    local::SSAOStochasticTubeRenderer* tube_renderer = new local::SSAOStochasticTubeRenderer();
+    auto* tube_renderer = new AmbientOcclusionRendering::SSAOStochasticTubeRenderer();
     tube_renderer->setName( "StochasticTubeRenderer" );
     tube_renderer->setTransferFunction( kvs::DivergingColorMap::CoolWarm( 256 ) );
     
@@ -261,7 +267,8 @@ int main( int argc, char** argv )
     screen.registerObject( streamline, tube_renderer );
 
     // Declare StochasticRenderingCompositor.
-    local::StochasticRenderingCompositor compositor( screen.scene() );
+//    local::StochasticRenderingCompositor compositor( screen.scene() );
+    AmbientOcclusionRendering::SSAOStochasticRenderingCompositor compositor( screen.scene() );
     compositor.setRepetitionLevel( 1 );
     compositor.enableLODControl();
     compositor.setShader( kvs::Shader::BlinnPhong() );
@@ -368,7 +375,8 @@ int main( int argc, char** argv )
     edge_slider.sliderReleased( [&] ()
     {
       auto* scene = screen.scene();
-      auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
+//      auto* renderer = local::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
+      auto* renderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer::DownCast( scene->renderer( "PolygonRenderer" ) );
       renderer->setEdgeFactor( edge );
     } );
 
@@ -388,7 +396,8 @@ int main( int argc, char** argv )
     edge2_slider.sliderReleased( [&] ()
     {
       auto* scene = screen.scene();
-      auto*renderer2 = local::SSAOStochasticTubeRenderer::DownCast( scene->renderer( "StochasticTubeRenderer" ) );
+//      auto*renderer2 = local::SSAOStochasticTubeRenderer::DownCast( scene->renderer( "StochasticTubeRenderer" ) );
+      auto*renderer2 = AmbientOcclusionRendering::SSAOStochasticTubeRenderer::DownCast( scene->renderer( "StochasticTubeRenderer" ) );
       renderer2->setEdgeFactor( edge2 );
     } );
 
