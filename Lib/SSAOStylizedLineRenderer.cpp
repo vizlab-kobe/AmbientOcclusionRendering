@@ -119,9 +119,9 @@ void SSAOStylizedLineRenderer::update_shader_program()
 /*===========================================================================*/
 void SSAOStylizedLineRenderer::setup_shader_program()
 {
-    const kvs::Mat4 M = kvs::OpenGL::ModelViewMatrix();
-    const kvs::Mat4 P = kvs::OpenGL::ProjectionMatrix();
-    const kvs::Mat3 N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
+    const auto M = kvs::OpenGL::ModelViewMatrix();
+    const auto P = kvs::OpenGL::ProjectionMatrix();
+    const auto N = kvs::Mat3( M[0].xyz(), M[1].xyz(), M[2].xyz() );
     auto& geom_pass = BaseClass::renderPass().shaderProgram();
     geom_pass.bind();
     geom_pass.setUniform( "ModelViewMatrix", M );
