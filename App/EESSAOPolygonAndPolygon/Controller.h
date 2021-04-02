@@ -47,10 +47,6 @@ public:
         m_view( view )
     {
         // Initial values for isosurface.
-//        auto* isosurface_volume = m_model.import( Input::MappingMethod::Isosurface );
-//        const auto isosurface_min_value = isosurface_volume->minValue();
-//        const auto isosurface_max_value = isosurface_volume->maxValue();
-//        const auto isovalue = ( isosurface_max_value + isosurface_min_value ) * 0.02f;
         kvs::Real32 min_values[2] = { 0.0f, 0.0f };
         kvs::Real32 max_values[2] = { 0.0f, 0.0f };
         kvs::Real32 isovalues[2] = { 0.0f, 0.0f };

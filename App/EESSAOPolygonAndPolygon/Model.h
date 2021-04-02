@@ -7,9 +7,8 @@
 #include <kvs/RendererBase>
 #include <kvs/StochasticPolygonRenderer>
 #include <kvs/String>
-#include "Input.h"
-//#include "SSAOStochasticPolygonRenderer.h"
 #include <AmbientOcclusionRendering/Lib/SSAOStochasticPolygonRenderer.h>
+#include "Input.h"
 
 
 namespace local
@@ -18,7 +17,6 @@ namespace local
 class Model : public local::Input
 {
 public:
-//    using AORenderer = local::SSAOStochasticPolygonRenderer;
     using AORenderer = AmbientOcclusionRendering::SSAOStochasticPolygonRenderer;
     using Renderer = kvs::StochasticPolygonRenderer;
 
