@@ -21,7 +21,7 @@
 #include <kvs/VertexBufferObjectManager>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
-#include "AmbientOcclusionBuffer.h"
+#include "SSAOStochasticRendererBase.h"
 
 
 namespace AmbientOcclusionRendering
@@ -32,10 +32,10 @@ namespace AmbientOcclusionRendering
  *  @brief  Stochastic tetrahedra renderer class.
  */
 /*===========================================================================*/
-class SSAOStochasticTetrahedraRenderer : public kvs::StochasticRendererBase
+class SSAOStochasticTetrahedraRenderer : public SSAOStochasticRendererBase
 {
     kvsModule( AmbientOcclusionRendering::SSAOStochasticTetrahedraRenderer, Renderer );
-    kvsModuleBaseClass( kvs::StochasticRendererBase );
+    kvsModuleBaseClass( SSAOStochasticRendererBase );
 
 public:
     class Engine;
@@ -43,15 +43,12 @@ public:
 public:
     SSAOStochasticTetrahedraRenderer();
     virtual ~SSAOStochasticTetrahedraRenderer() {}
+
     void setEdgeFactor( const float factor );
-    void setTransferFunction( const kvs::TransferFunction& transfer_function );
     void setSamplingStep( const float sampling_step );
+    void setTransferFunction( const kvs::TransferFunction& transfer_function );
     const kvs::TransferFunction& transferFunction() const;
     float samplingStep() const;
-    void setSamplingSphereRadius( const float radius );
-    void setNumberOfSamplingPoints( const size_t nsamples );
-    kvs::Real32 samplingSphereRadius() const;
-    size_t numberOfSamplingPoints() const;
 };
 
 /*===========================================================================*/
@@ -62,25 +59,6 @@ public:
 class SSAOStochasticTetrahedraRenderer::Engine : public kvs::StochasticRenderingEngine
 {
     using BaseClass = kvs::StochasticRenderingEngine;
-
-private:
-//    class AmbientOcclusionBuffer : public AmbientOcclusionRendering::AmbientOcclusionBuffer
-    class AmbientOcclusionBuffer : public Deprecated::AmbientOcclusionBuffer
-    {
-//        using BaseClass = AmbientOcclusionRendering::AmbientOcclusionBuffer;
-        using BaseClass = Deprecated::AmbientOcclusionBuffer;
-    private:
-        const Engine* m_engine;
-        std::string m_geom_pass_shader_geom_file;
-    public:
-        AmbientOcclusionBuffer( const Engine* engine ) : BaseClass(), m_engine( engine ) {}
-        virtual ~AmbientOcclusionBuffer() {}
-        const std::string& geometryPassGeometryShaderFile() const { return m_geom_pass_shader_geom_file; }
-        void setGeometryPassShaderFiles( const std::string& vert_file, const std::string& geom_file, const std::string& frag_file );
-        void createShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
-        void updateShaderProgram( const kvs::Shader::ShadingModel& shading_model, const bool shading_enabled );
-        void setupShaderProgram( const kvs::Shader::ShadingModel& shading_model );
-    };
 
 private:
     float m_edge_factor; ///< edge enhancement factor
@@ -99,7 +77,12 @@ private:
 
     float m_sampling_step; ///< sampling step
     float m_maxT; ///< maximum value of T
-    AmbientOcclusionBuffer m_ao_buffer; ///< ambient occlusion buffer
+
+    // Render pass (geom pass)
+    std::string m_vert_shader_file;
+    std::string m_frag_shader_file;
+    std::string m_geom_shader_file;
+    kvs::ProgramObject m_shader_program; ///< shader program
 
 public:
     Engine();
@@ -120,11 +103,6 @@ public:
 
     float samplingStep() const { return m_sampling_step; }
     const kvs::TransferFunction& transferFunction() const { return m_transfer_function; }
-
-    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 
 private:
     void create_preintegration_texture();
