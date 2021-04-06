@@ -21,6 +21,7 @@
 #include <kvs/VertexBufferObjectManager>
 #include <kvs/StochasticRenderingEngine>
 #include <kvs/StochasticRendererBase>
+#include <kvs/StochasticTetrahedraRenderer>
 #include "SSAOStochasticRendererBase.h"
 
 
@@ -58,31 +59,24 @@ public:
 /*===========================================================================*/
 class SSAOStochasticTetrahedraRenderer::Engine : public kvs::StochasticRenderingEngine
 {
+    using TetEngine = kvs::StochasticTetrahedraRenderer::Engine;
+public:
     using BaseClass = kvs::StochasticRenderingEngine;
+    using TransferFunctionBuffer = TetEngine::TransferFunctionBuffer;
+    using PreIntegrationBuffer = TetEngine::PreIntegrationBuffer;
+    using DecompositionBuffer = TetEngine::DecompositionBuffer;
+    using BufferObject = TetEngine::BufferObject;
+    using RenderPass = TetEngine::RenderPass;
 
 private:
-    float m_edge_factor; ///< edge enhancement factor
-
-    // Transfer function
-    bool m_transfer_function_changed; ///< flag for changin transfer function
-    kvs::TransferFunction m_transfer_function; ///< transfer function
-    kvs::Texture2D m_preintegration_texture; ///< pre-integration texture
-    kvs::Texture2D m_decomposition_texture; ///< texture for the tetrahedral decomposition
-    kvs::Texture1D m_transfer_function_texture; ///< transfer function texture
-    kvs::Texture1D m_T_texture; ///< T function for pre-integration
-    kvs::Texture1D m_inv_T_texture; ///< inverse function of T for pre-integration
-
-    // Buffer object
-    kvs::VertexBufferObjectManager m_vbo_manager; ///< vertex buffer object manager
-
-    float m_sampling_step; ///< sampling step
-    float m_maxT; ///< maximum value of T
-
-    // Render pass (geom pass)
-    std::string m_vert_shader_file;
-    std::string m_frag_shader_file;
-    std::string m_geom_shader_file;
-    kvs::ProgramObject m_shader_program; ///< shader program
+    bool m_transfer_function_changed = true; ///< flag for changin transfer function
+    kvs::TransferFunction m_transfer_function{}; ///< transfer function
+    TransferFunctionBuffer m_transfer_function_buffer{}; ///< transfer function buffer
+    PreIntegrationBuffer m_preintegration_buffer{}; ///< pre-integration buffer
+    DecompositionBuffer m_decomposition_buffer{}; ///< decomposition buffer
+    BufferObject m_buffer_object{ this }; ///< buffer object
+    RenderPass m_render_pass{ m_buffer_object }; ///< render pass (geometry pass for SSAO)
+    kvs::Real32 m_edge_factor = 0.0f; ///< edge enhancement factor
 
 public:
     Engine();
@@ -94,18 +88,20 @@ public:
     void draw( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
     void setEdgeFactor( const float factor ) { m_edge_factor = factor; }
-    void setSamplingStep( const float sampling_step ) { m_sampling_step = sampling_step; }
+    void setSamplingStep( const float step ) { m_render_pass.setSamplingStep( step ); }
     void setTransferFunction( const kvs::TransferFunction& transfer_function )
     {
         m_transfer_function = transfer_function;
         m_transfer_function_changed = true;
     }
 
-    float samplingStep() const { return m_sampling_step; }
+    float samplingStep() const { return m_render_pass.samplingStep(); }
     const kvs::TransferFunction& transferFunction() const { return m_transfer_function; }
 
 private:
-    void create_preintegration_texture();
+    void create_transfer_function_texture();
+    void update_transfer_function_texture();
+
     void create_decomposition_texture();
 
     void create_buffer_object( const kvs::UnstructuredVolumeObject* volume );
