@@ -108,7 +108,7 @@ void AmbientOcclusionBuffer::createShaderProgram(
             default: break; // NO SHADING
             }
 
-            if ( kvs::OpenGL::Boolean( GL_LIGHT_MODEL_TWO_SIDE ) == GL_TRUE )
+            if ( shading_model.two_side_lighting )
             {
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
@@ -349,7 +349,7 @@ void AmbientOcclusionBuffer::createShaderProgram(
             default: break; // NO SHADING
             }
 
-            if ( kvs::OpenGL::Boolean( GL_LIGHT_MODEL_TWO_SIDE ) == GL_TRUE )
+            if ( shading_model.two_side_lighting )
             {
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }

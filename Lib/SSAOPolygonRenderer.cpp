@@ -95,8 +95,9 @@ void SSAOPolygonRenderer::exec(
 /*===========================================================================*/
 void SSAOPolygonRenderer::create_shader_program()
 {
-    const auto& model = BaseClass::shadingModel();
     const auto enabled = BaseClass::isShadingEnabled();
+    auto& model = BaseClass::shadingModel();
+    model.two_side_lighting = BaseClass::isTwoSideLightingEnabled();
     BaseClass::renderPass().create( model, false );
     m_ao_buffer.createShaderProgram( model, enabled );
 }
@@ -108,8 +109,9 @@ void SSAOPolygonRenderer::create_shader_program()
 /*===========================================================================*/
 void SSAOPolygonRenderer::update_shader_program()
 {
-    const auto& model = BaseClass::shadingModel();
     const auto enabled = BaseClass::isShadingEnabled();
+    auto& model = BaseClass::shadingModel();
+    model.two_side_lighting = BaseClass::isTwoSideLightingEnabled();
     BaseClass::renderPass().create( model, false );
     m_ao_buffer.updateShaderProgram( model, enabled );
 }
