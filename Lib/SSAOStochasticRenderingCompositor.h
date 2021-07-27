@@ -44,8 +44,7 @@ protected:
     virtual void onWindowResized();
     virtual void updateEngines();
     virtual void setupEngines();
-    virtual void bindBuffer();
-    virtual void unbindBuffer();
+    virtual void ensembleRenderPass( kvs::EnsembleAverageBuffer& buffer );
 };
 
 } // end of namespace AmbientOcclusionRendering

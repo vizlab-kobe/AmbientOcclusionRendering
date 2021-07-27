@@ -72,7 +72,7 @@ public:
         m_lod_check_box.stateChanged( [&] ()
         {
             m_model.lod = m_lod_check_box.state();
-            m_view.compositor().setEnabledLODControl( m_model.lod );
+            m_view.compositor().setLODControlEnabled( m_model.lod );
         } );
 
         // Repeat

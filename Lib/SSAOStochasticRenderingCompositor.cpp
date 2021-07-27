@@ -51,17 +51,18 @@ void SSAOStochasticRenderingCompositor::setupEngines()
     BaseClass::setupEngines();
 }
 
-void SSAOStochasticRenderingCompositor::bindBuffer()
+void SSAOStochasticRenderingCompositor::ensembleRenderPass( kvs::EnsembleAverageBuffer& buffer )
 {
-    BaseClass::bindBuffer();
-    m_ao_buffer.bind();
-}
+    buffer.bind();
+    {
+        m_ao_buffer.bind();
+        this->drawEngines();
+        m_ao_buffer.unbind();
+        m_ao_buffer.draw();
+    }
+    buffer.unbind();
+    buffer.add();
 
-void SSAOStochasticRenderingCompositor::unbindBuffer()
-{
-    m_ao_buffer.unbind();
-    m_ao_buffer.draw();
-    BaseClass::unbindBuffer();
 }
 
 } // end of namespace local
