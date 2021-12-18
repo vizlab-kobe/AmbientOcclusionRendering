@@ -68,6 +68,12 @@ void main()
     vec3 shaded_color = ShadingNone( shading, color.rgb * occlusion );
 #endif
 
+#if defined( ENABLE_DRAWING_OCCLUSION_FACTOR )
+    // Draw occlusion factor as a fragment color
+    gl_FragColor = vec4( occlusion, occlusion, occlusion, 1.0 );
+#else
     gl_FragColor = vec4( shaded_color, 1.0 );
+#endif
+
     gl_FragDepth = LookupTexture2D( depth_texture, gl_TexCoord[0].st ).z;
 }

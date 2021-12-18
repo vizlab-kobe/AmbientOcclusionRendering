@@ -36,6 +36,7 @@ public:
 
     void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
+    void setDrawingOcclusionFactorEnabled( const bool enabled = true ) { m_ao_buffer.setDrawingOcclusionFactorEnabled( enabled ); }
     kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 

@@ -113,6 +113,11 @@ void AmbientOcclusionBuffer::createShaderProgram(
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
             frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
+
+            if ( m_drawing_occlusion_factor )
+            {
+                frag.define( "ENABLE_DRAWING_OCCLUSION_FACTOR" );
+            }
         }
 
         m_occl_pass_shader.build( vert, frag );

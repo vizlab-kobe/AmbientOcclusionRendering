@@ -33,6 +33,7 @@ private:
     // Sampling point parameters
     kvs::Real32 m_sampling_sphere_radius = 0.5f; ///< radius of sphere used for point sampling
     size_t m_nsamples = 256; ///< number of sampling points
+    bool m_drawing_occlusion_factor = false; ///< flag for drawing occlusion factor
 
 public:
     AmbientOcclusionBuffer() = default;
@@ -48,6 +49,7 @@ public:
 
     void setSamplingSphereRadius( const kvs::Real32 radius ) { m_sampling_sphere_radius = radius; }
     void setNumberOfSamplingPoints( const size_t nsamples ) { m_nsamples = nsamples; }
+    void setDrawingOcclusionFactorEnabled( const bool enabled = true ) { m_drawing_occlusion_factor = enabled; }
 
     const std::string& occlusionPassVertexShaderFile() const { return m_occl_pass_shader_vert_file; }
     const std::string& occlusionPassFragmentShaderFile() const { return m_occl_pass_shader_frag_file; }

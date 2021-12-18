@@ -36,6 +36,11 @@ public:
         m_ao_buffer.setNumberOfSamplingPoints( nsamples );
     }
 
+    void setDrawingOcclusionFactorEnabled( const bool enabled = true )
+    {
+        m_ao_buffer.setDrawingOcclusionFactorEnabled( enabled );
+    }
+
     kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
     size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
 };
