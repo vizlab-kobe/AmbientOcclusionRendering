@@ -2,26 +2,27 @@
 #include "shading.h"
 #include "texture.h"
 
-// NUMBER_OF_SAMPLING_POINTS is set from SSAO renderer.
-
 // Uniform parameters.
 uniform sampler2D color_texture;
 uniform sampler2D position_texture;
 uniform sampler2D normal_texture;
 uniform sampler2D depth_texture;
-uniform vec3 sampling_points[ NUMBER_OF_SAMPLING_POINTS ];
+uniform sampler1D kernel_texture;
+uniform int kernel_size;
 uniform ShadingParameter shading;
 
 // Uniform variables (OpenGL variables).
 uniform mat4 ProjectionMatrix;
 
 
-float OcclusionFactor( vec4 position, int nsamples )
+float OcclusionFactor( vec4 position )
 {
     int count = 0;
-    for ( int i = 0; i < nsamples ; i++ )
+    float index = 0.0f;
+    float dindex = 1.0f / float( kernel_size - 1 );
+    for ( int i = 0; i < kernel_size ; i++, index += dindex )
     {
-        vec3 p = sampling_points[i];
+        vec3 p = LookupTexture1D( kernel_texture, index ).xyz;
         if ( p.x != 0 && p.y != 0 && p.z != 0 )
         {
             vec4 q = ProjectionMatrix * ( position + vec4( p, 0.0 ) );
@@ -30,7 +31,7 @@ float OcclusionFactor( vec4 position, int nsamples )
         }
     }
 
-    return clamp( float( count )  * 2.0 / float( nsamples ), 0.0, 1.0 );
+    return clamp( float( count )  * 2.0 / float( kernel_size ), 0.0, 1.0 );
 }
 
 void main()
@@ -49,12 +50,11 @@ void main()
     vec3 N = normalize( normal );
 
     // Ambient occlusion.
-    int nsamples = NUMBER_OF_SAMPLING_POINTS;
-    float occlusion = OcclusionFactor( position, nsamples );
+    float occlusion = OcclusionFactor( position );
 
     // Shading.
 #if   defined( ENABLE_LAMBERT_SHADING )
-    vec3 shaded_color = SSAOShadingLambert( shading, color.rgb, L, N, occlusion  );
+    vec3 shaded_color = SSAOShadingLambert( shading, color.rgb, L, N, occlusion );
 
 #elif defined( ENABLE_PHONG_SHADING )
     vec3 V = normalize( -position.xyz );

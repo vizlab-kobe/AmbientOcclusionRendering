@@ -33,6 +33,8 @@ private:
     // Sampling point parameters
     kvs::Real32 m_sampling_sphere_radius = 0.5f; ///< radius of sphere used for point sampling
     size_t m_nsamples = 256; ///< number of sampling points
+    kvs::Texture1D m_kernel_texture{}; /// sampling point texture
+
     bool m_drawing_occlusion_factor = false; ///< flag for drawing occlusion factor
 
 public:
@@ -76,10 +78,12 @@ public:
     void updateFramebuffer( const size_t width, const size_t height );
     void renderOcclusionPass() { this->draw(); }
 
+    void createKernelTexture( const float radius, const size_t nsamples );
+    void updateKernelTexture( const float radius, const size_t nsamples );
     kvs::ValueArray<GLfloat> generatePoints( const float radius, const size_t nsamples );
 };
 
-
+#if 0
 namespace Deprecated
 {
 
@@ -169,5 +173,6 @@ public:
 };
 
 } // end of namespace Deprecated
+#endif
 
 } // end of namespace AmbientOcclusionRendering

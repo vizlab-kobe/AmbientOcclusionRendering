@@ -67,10 +67,12 @@ void AmbientOcclusionBuffer::draw()
     kvs::Texture::Binder unit1( m_position_texture, 1 );
     kvs::Texture::Binder unit2( m_normal_texture, 2 );
     kvs::Texture::Binder unit3( m_depth_texture, 3 );
+    kvs::Texture::Binder unit4( m_kernel_texture, 4 );
     m_occl_pass_shader.setUniform( "color_texture", 0 );
     m_occl_pass_shader.setUniform( "position_texture", 1 );
     m_occl_pass_shader.setUniform( "normal_texture", 2 );
     m_occl_pass_shader.setUniform( "depth_texture", 3 );
+    m_occl_pass_shader.setUniform( "kernel_texture", 4 );
 
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
     kvs::OpenGL::Enable( GL_TEXTURE_2D );
@@ -88,6 +90,9 @@ void AmbientOcclusionBuffer::release()
     m_position_texture.release();
     m_normal_texture.release();
     m_depth_texture.release();
+
+    // Release kernel texture resources
+    m_kernel_texture.release();
 }
 
 void AmbientOcclusionBuffer::createShaderProgram(
@@ -112,7 +117,6 @@ void AmbientOcclusionBuffer::createShaderProgram(
             {
                 frag.define("ENABLE_TWO_SIDE_LIGHTING");
             }
-            frag.define( "NUMBER_OF_SAMPLING_POINTS " + kvs::String::ToString( m_nsamples ) );
 
             if ( m_drawing_occlusion_factor )
             {
@@ -123,13 +127,9 @@ void AmbientOcclusionBuffer::createShaderProgram(
         m_occl_pass_shader.build( vert, frag );
     }
 
-    const size_t nsamples = m_nsamples;
-    const float radius = m_sampling_sphere_radius;
-    const size_t dim = 3;
-    const auto sampling_points = this->generatePoints( radius, nsamples );
-
+    this->createKernelTexture( m_sampling_sphere_radius, m_nsamples );
     m_occl_pass_shader.bind();
-    m_occl_pass_shader.setUniform( "sampling_points", sampling_points, dim );
+    m_occl_pass_shader.setUniform( "kernel_size", int( m_nsamples ) );
     m_occl_pass_shader.unbind();
 }
 
@@ -208,6 +208,27 @@ void AmbientOcclusionBuffer::updateFramebuffer(
     this->createFramebuffer( width, height );
 }
 
+void AmbientOcclusionBuffer::createKernelTexture(
+    const float radius,
+    const size_t nsamples )
+{
+    m_kernel_texture.setWrapS( GL_CLAMP_TO_EDGE );
+    m_kernel_texture.setMagFilter( GL_NEAREST );
+    m_kernel_texture.setMinFilter( GL_NEAREST );
+    m_kernel_texture.setPixelFormat( GL_RGB32F_ARB, GL_RGB, GL_FLOAT );
+
+    auto samples = this->generatePoints( radius, nsamples );
+    m_kernel_texture.create( nsamples, samples.data() );
+}
+
+void AmbientOcclusionBuffer::updateKernelTexture(
+    const float radius,
+    const size_t nsamples )
+{
+    m_kernel_texture.release();
+    this->createKernelTexture( radius, nsamples );
+}
+
 kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
     const float radius,
     const size_t nsamples )
@@ -236,6 +257,8 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
     return sampling_points;
 }
 
+
+#if 0
 namespace Deprecated
 {
 
@@ -524,5 +547,6 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
 }
 
 } // end of nsamples Deprecated
+#endif
 
 } // end of namespace AmbientOcclusionRendering
