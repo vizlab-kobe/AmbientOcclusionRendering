@@ -75,8 +75,8 @@ public:
             renderer->setName( "Renderer" );
             renderer->setRepetitionLevel( Input::repeats );
             renderer->setLODControlEnabled( Input::lod );
-            renderer->setSamplingSphereRadius( Input::radius );
-            renderer->setNumberOfSamplingPoints( Input::points );
+            renderer->setKernelRadius( Input::radius );
+            renderer->setKernelSize( Input::points );
             renderer->setEdgeFactor( Input::edge );
             renderer->enableShading();
             return renderer;

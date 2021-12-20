@@ -48,8 +48,8 @@ struct Model
             renderer->setRepetitionLevel( repeats );
             renderer->setLODControlEnabled( lod );
             renderer->enableShading();
-            renderer->setSamplingSphereRadius( radius );
-            renderer->setNumberOfSamplingPoints( points );
+            renderer->setKernelRadius( radius );
+            renderer->setKernelSize( points );
             renderer->setEdgeFactor( edge );
             return renderer;
         }

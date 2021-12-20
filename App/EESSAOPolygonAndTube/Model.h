@@ -169,8 +169,8 @@ private:
             auto* renderer = new AORenderer();
             renderer->setName( "IsosurfaceRenderer" );
             renderer->setRepetitionLevel( Input::repeats );
-            renderer->setSamplingSphereRadius( Input::radius );
-            renderer->setNumberOfSamplingPoints( Input::points );
+            renderer->setKernelRadius( Input::radius );
+            renderer->setKernelSize( Input::points );
             renderer->setEdgeFactor( Input::edge );
             renderer->setLODControlEnabled( Input::lod );
             renderer->enableShading();
@@ -200,8 +200,8 @@ private:
 //            renderer->setShader( kvs::Shader::BlinnPhong() );
             renderer->setRepetitionLevel( Input::repeats );
             renderer->setLODControlEnabled( Input::lod );
-            renderer->setSamplingSphereRadius( Input::radius );
-            renderer->setNumberOfSamplingPoints( Input::points );
+            renderer->setKernelRadius( Input::radius );
+            renderer->setKernelSize( Input::points );
             renderer->setEdgeFactor( Input::edge );
             renderer->enableShading();
             return renderer;

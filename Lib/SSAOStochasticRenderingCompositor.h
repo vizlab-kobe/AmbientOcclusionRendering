@@ -27,17 +27,24 @@ public:
     SSAOStochasticRenderingCompositor( kvs::Scene* scene ): BaseClass( scene ) {}
     virtual ~SSAOStochasticRenderingCompositor() { if ( m_shader ) delete m_shader; }
 
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
     const kvs::Shader::ShadingModel& shader() const { return *m_shader; }
 
-    void setSamplingSphereRadius( const float radius ) { m_ao_buffer.setSamplingSphereRadius( radius ); }
-    void setNumberOfSamplingPoints( const size_t nsamples ) { m_ao_buffer.setNumberOfSamplingPoints( nsamples ); }
     template <typename ShadingType> void setShader( const ShadingType shader )
     {
         if ( m_shader ) { delete m_shader; }
         m_shader = new ShadingType( shader );
     }
+
+    void setKernelRadius( const float radius ) { m_ao_buffer.setKernelRadius( radius ); }
+    void setKernelSize( const size_t nsamples ) { m_ao_buffer.setKernelSize( nsamples ); }
+    void setDrawingOcclusionFactorEnabled( const bool enabled = true ) { m_ao_buffer.setDrawingOcclusionFactorEnabled( enabled ); }
+    kvs::Real32 kernelRadius() const { return m_ao_buffer.kernelRadius(); }
+    size_t kernelSize() const { return m_ao_buffer.kernelSize(); }
+
+    KVS_DEPRECATED( void setSamplingSphereRadius( const float radius ) ) { this->setKernelRadius( radius ); }
+    KVS_DEPRECATED( void setNumberOfSamplingPoints( const size_t nsamples ) ) { this->setKernelSize( nsamples ); }
+    KVS_DEPRECATED( kvs::Real32 samplingSphereRadius() const ) { return this->kernelRadius(); }
+    KVS_DEPRECATED( size_t numberOfSamplingPoints() const ) { return this->kernelSize(); }
 
 protected:
     virtual void onWindowCreated();

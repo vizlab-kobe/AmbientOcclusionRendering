@@ -152,8 +152,8 @@ private:
             renderer->setName( "RaycastingRenderer" );
             renderer->setTransferFunction( Input::tfuncs[Input::Method::Raycasting] );
             renderer->setRepetitionLevel( Input::repeats );
-            renderer->setSamplingSphereRadius( Input::radius );
-            renderer->setNumberOfSamplingPoints( Input::points );
+            renderer->setKernelRadius( Input::radius );
+            renderer->setKernelSize( Input::points );
             renderer->setEdgeFactor( Input::edge );
             renderer->setLODControlEnabled( Input::lod );
             renderer->enableShading();

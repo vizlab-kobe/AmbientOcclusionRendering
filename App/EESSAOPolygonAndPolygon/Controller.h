@@ -103,7 +103,7 @@ public:
         } );
         m_radius_slider.sliderReleased( [&] ()
         {
-            m_view.compositor().setSamplingSphereRadius( m_model.radius );
+            m_view.compositor().setKernelRadius( m_model.radius );
         } );
 
         // Points
@@ -117,7 +117,7 @@ public:
         } );
         m_points_slider.sliderReleased( [&] ()
         {
-            m_view.compositor().setNumberOfSamplingPoints( m_model.points );
+            m_view.compositor().setKernelSize( m_model.points );
         } );
 
         // Edge

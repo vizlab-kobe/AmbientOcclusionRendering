@@ -4,6 +4,7 @@
 #include <kvs/Light>
 #include <kvs/StochasticRendererBase>
 #include <kvs/StochasticRenderingEngine>
+#include <kvs/Deprecated>
 #include "AmbientOcclusionBuffer.h"
 #include "SSAOStochasticRenderingCompositor.h"
 
@@ -26,23 +27,16 @@ public:
 
     virtual void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
 
-    void setSamplingSphereRadius( const float radius )
-    {
-        m_ao_buffer.setSamplingSphereRadius( radius );
-    }
+    void setKernelRadius( const float radius ) { m_ao_buffer.setKernelRadius( radius ); }
+    void setKernelSize( const size_t nsamples ) { m_ao_buffer.setKernelSize( nsamples ); }
+    void setDrawingOcclusionFactorEnabled( const bool enabled = true ) { m_ao_buffer.setDrawingOcclusionFactorEnabled( enabled ); }
+    kvs::Real32 kernelRadius() const { return m_ao_buffer.kernelRadius(); }
+    size_t kernelSize() const { return m_ao_buffer.kernelSize(); }
 
-    void setNumberOfSamplingPoints( const size_t nsamples )
-    {
-        m_ao_buffer.setNumberOfSamplingPoints( nsamples );
-    }
-
-    void setDrawingOcclusionFactorEnabled( const bool enabled = true )
-    {
-        m_ao_buffer.setDrawingOcclusionFactorEnabled( enabled );
-    }
-
-    kvs::Real32 samplingSphereRadius() const { return m_ao_buffer.samplingSphereRadius(); }
-    size_t numberOfSamplingPoints() const { return m_ao_buffer.numberOfSamplingPoints(); }
+    KVS_DEPRECATED( void setSamplingSphereRadius( const float radius ) ) { this->setKernelRadius( radius ); }
+    KVS_DEPRECATED( void setNumberOfSamplingPoints( const size_t nsamples ) ) { this->setKernelSize( nsamples ); }
+    KVS_DEPRECATED( kvs::Real32 samplingSphereRadius() const ) { return this->kernelRadius(); }
+    KVS_DEPRECATED( size_t numberOfSamplingPoints() const ) { return this->kernelSize(); }
 };
 
 } // end of namespace AmbientOcclusionRendering

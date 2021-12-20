@@ -46,8 +46,8 @@ struct Model
         {
             auto* renderer = new SSAORenderer();
             renderer->setName( "Renderer" );
-            renderer->setSamplingSphereRadius( radius );
-            renderer->setNumberOfSamplingPoints( points );
+            renderer->setKernelRadius( radius );
+            renderer->setKernelSize( points );
             renderer->enableShading();
             return renderer;
         }

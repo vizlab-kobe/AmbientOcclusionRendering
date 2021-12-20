@@ -68,8 +68,8 @@ struct Model
         {
             auto* renderer = new SSAORenderer();
             renderer->setName( "Renderer" );
-            renderer->setSamplingSphereRadius( radius );
-            renderer->setNumberOfSamplingPoints( points );
+            renderer->setKernelRadius( radius );
+            renderer->setKernelSize( points );
 //            renderer->setShadingModel( kvs::Shader::BlinnPhong() );
             renderer->enableShading();
             return renderer;
