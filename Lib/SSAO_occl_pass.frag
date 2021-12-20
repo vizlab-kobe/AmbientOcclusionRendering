@@ -64,6 +64,7 @@ void main()
     vec3 bitangent = cross( normal, tangent );
     mat3 tbn = mat3( tangent, bitangent, normal );
     float occlusion = OcclusionFactor( position, tbn );
+
 //    float intensity = 2.0;
 //    occlusion = clamp( pow( occlusion, intensity ), 0.0, 1.0 );
 
