@@ -68,11 +68,20 @@ void AmbientOcclusionBuffer::draw()
     kvs::Texture::Binder unit2( m_normal_texture, 2 );
     kvs::Texture::Binder unit3( m_depth_texture, 3 );
     kvs::Texture::Binder unit4( m_kernel_texture, 4 );
+    kvs::Texture::Binder unit5( m_noise_texture, 5 );
     m_occl_pass_shader.setUniform( "color_texture", 0 );
     m_occl_pass_shader.setUniform( "position_texture", 1 );
     m_occl_pass_shader.setUniform( "normal_texture", 2 );
     m_occl_pass_shader.setUniform( "depth_texture", 3 );
     m_occl_pass_shader.setUniform( "kernel_texture", 4 );
+    m_occl_pass_shader.setUniform( "noise_texture", 5 );
+
+    const kvs::Vec2 noise_scale(
+        m_depth_texture.width() / static_cast<float>( m_noise_size ),
+        m_depth_texture.height() / static_cast<float>( m_noise_size ) );
+    m_occl_pass_shader.setUniform( "noise_scale", noise_scale );
+    m_occl_pass_shader.setUniform( "kernel_radius", m_kernel_radius );
+    m_occl_pass_shader.setUniform( "kernel_bias", m_kernel_bias );
 
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
     kvs::OpenGL::Enable( GL_TEXTURE_2D );
@@ -93,6 +102,7 @@ void AmbientOcclusionBuffer::release()
 
     // Release kernel texture resources
     m_kernel_texture.release();
+    m_noise_texture.release();
 }
 
 void AmbientOcclusionBuffer::createShaderProgram(
@@ -215,10 +225,19 @@ void AmbientOcclusionBuffer::createKernelTexture(
     m_kernel_texture.setWrapS( GL_CLAMP_TO_EDGE );
     m_kernel_texture.setMagFilter( GL_NEAREST );
     m_kernel_texture.setMinFilter( GL_NEAREST );
-    m_kernel_texture.setPixelFormat( GL_RGB32F_ARB, GL_RGB, GL_FLOAT );
+    m_kernel_texture.setPixelFormat( GL_RGB16F_ARB, GL_RGB, GL_FLOAT );
 
     auto samples = this->generatePoints( radius, nsamples );
     m_kernel_texture.create( nsamples, samples.data() );
+
+    m_noise_texture.setWrapS( GL_REPEAT );
+    m_noise_texture.setWrapS( GL_REPEAT );
+    m_noise_texture.setMagFilter( GL_NEAREST );
+    m_noise_texture.setMinFilter( GL_NEAREST );
+    m_noise_texture.setPixelFormat( GL_RGB16F_ARB, GL_RGB, GL_FLOAT );
+
+    auto noises = this->generateNoises( m_noise_size );
+    m_noise_texture.create( m_noise_size, m_noise_size, noises.data() );
 }
 
 void AmbientOcclusionBuffer::updateKernelTexture(
@@ -226,6 +245,7 @@ void AmbientOcclusionBuffer::updateKernelTexture(
     const size_t nsamples )
 {
     m_kernel_texture.release();
+    m_noise_texture.release();
     this->createKernelTexture( radius, nsamples );
 }
 
@@ -235,26 +255,42 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
 {
     kvs::Xorshift128 rand;
     kvs::ValueArray<GLfloat> sampling_points( 3 * nsamples );
-    for ( size_t i = 0; i < nsamples ; i++ )
+    for ( size_t i = 0; i < nsamples ; ++i )
     {
-        const float pi = 3.1415926f;
+        kvs::Vec3 sample(
+            rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
+            rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
+            rand() );             // in [ 0.0, 1.0]
+        if ( sample.length() > 1.0f ) { --i; continue; }
 
-        const float r = radius * rand();
-        const float t = 2.0f * pi * rand();
-        const float cp = 2.0f * rand() - 1.0f;
-        const float sp = std::sqrt( 1.0f - cp * cp );
-        const float ct = std::cos( t );
-        const float st = std::sin( t );
-        const float x = r * sp * ct;
-        const float y = r * sp * st;
-        const float z = r * cp;
+        float scale = i / static_cast<float>( nsamples );
+        scale = 0.1f + 0.9f * scale * scale; // lerp
+        sample *= scale;
 
-        sampling_points[ 3 * i + 0 ] = x;
-        sampling_points[ 3 * i + 1 ] = y;
-        sampling_points[ 3 * i + 2 ] = z;
+        sampling_points[ 3 * i + 0 ] = sample.x();
+        sampling_points[ 3 * i + 1 ] = sample.y();
+        sampling_points[ 3 * i + 2 ] = sample.z();
     }
 
     return sampling_points;
+}
+
+kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generateNoises( const size_t noise_size )
+{
+    kvs::Xorshift128 rand;
+    const size_t size = m_noise_size * m_noise_size;
+    kvs::ValueArray<GLfloat> noises( size * 3 );
+    for ( size_t i = 0; i < size; ++i )
+    {
+        kvs::Vec3 noise(
+            rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
+            rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
+            0 );
+        noises[ 3 * i + 0 ] = noise.x();
+        noises[ 3 * i + 1 ] = noise.y();
+        noises[ 3 * i + 2 ] = noise.z();
+    }
+    return noises;
 }
 
 } // end of namespace AmbientOcclusionRendering

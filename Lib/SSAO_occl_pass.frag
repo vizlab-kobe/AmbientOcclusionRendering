@@ -8,30 +8,39 @@ uniform sampler2D position_texture;
 uniform sampler2D normal_texture;
 uniform sampler2D depth_texture;
 uniform sampler1D kernel_texture;
+uniform sampler2D noise_texture;
 uniform int kernel_size;
+uniform float kernel_radius;
+uniform float kernel_bias;
+uniform vec2 noise_scale;
+
 uniform ShadingParameter shading;
 
 // Uniform variables (OpenGL variables).
 uniform mat4 ProjectionMatrix;
 
 
-float OcclusionFactor( vec4 position )
+float OcclusionFactor( vec4 position, mat3 tbn )
 {
-    int count = 0;
+    float bias = 0.0001;
+    float occlusion = 0.0;
     float index = 0.0f;
-    float dindex = 1.0f / float( kernel_size - 1 );
+    float dindex = 1.0f / float( kernel_size - 1.0 );
     for ( int i = 0; i < kernel_size ; i++, index += dindex )
     {
-        vec3 p = LookupTexture1D( kernel_texture, index ).xyz;
-        if ( p.x != 0 && p.y != 0 && p.z != 0 )
-        {
-            vec4 q = ProjectionMatrix * ( position + vec4( p, 0.0 ) );
-            q = q * 0.5 / q.w + 0.5;
-            if ( q.z < LookupTexture2D( depth_texture, q.xy ).z ) count++;
-        }
+        vec3 p = tbn * LookupTexture1D( kernel_texture, index ).xyz;
+        p = p * kernel_radius + position.xyz;
+
+        vec4 q = ProjectionMatrix * vec4( p, 1.0 );
+        q.xyz /= q.w;
+        q.xyz = q.xyz * 0.5 + 0.5; // to clip coord.
+
+        float depth = LookupTexture2D( depth_texture, q.xy ).z;
+        float range_check = 1.0 - smoothstep( 0.0, 1.0, kernel_radius / abs( p.z - depth ) );
+        occlusion += ( q.z - kernel_bias >= depth ? 1.0 : 0.0 ) * range_check;
     }
 
-    return clamp( float( count )  * 2.0 / float( kernel_size ), 0.0, 1.0 );
+    return 1.0 - occlusion / kernel_size;
 }
 
 void main()
@@ -50,7 +59,13 @@ void main()
     vec3 N = normalize( normal );
 
     // Ambient occlusion.
-    float occlusion = OcclusionFactor( position );
+    vec3 random_vec = LookupTexture2D( noise_texture, gl_TexCoord[0].st * noise_scale ).xyz;
+    vec3 tangent = normalize( random_vec - normal * dot( random_vec, normal ) );
+    vec3 bitangent = cross( normal, tangent );
+    mat3 tbn = mat3( tangent, bitangent, normal );
+    float occlusion = OcclusionFactor( position, tbn );
+//    float intensity = 2.0;
+//    occlusion = clamp( pow( occlusion, intensity ), 0.0, 1.0 );
 
     // Shading.
 #if   defined( ENABLE_LAMBERT_SHADING )
