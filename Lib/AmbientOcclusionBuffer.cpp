@@ -2,6 +2,7 @@
 #include <kvs/OpenGL>
 #include <kvs/ValueArray>
 #include <kvs/Xorshift128>
+#include <kvs/MersenneTwister>
 #include <cmath>
 
 
@@ -82,6 +83,7 @@ void AmbientOcclusionBuffer::draw()
     m_occl_pass_shader.setUniform( "noise_scale", noise_scale );
     m_occl_pass_shader.setUniform( "kernel_radius", m_kernel_radius );
     m_occl_pass_shader.setUniform( "kernel_bias", m_kernel_bias );
+    m_occl_pass_shader.setUniform( "intensity", m_intensity );
 
     kvs::OpenGL::Enable( GL_DEPTH_TEST );
     kvs::OpenGL::Enable( GL_TEXTURE_2D );
@@ -225,7 +227,7 @@ void AmbientOcclusionBuffer::createKernelTexture(
     m_kernel_texture.setWrapS( GL_CLAMP_TO_EDGE );
     m_kernel_texture.setMagFilter( GL_NEAREST );
     m_kernel_texture.setMinFilter( GL_NEAREST );
-    m_kernel_texture.setPixelFormat( GL_RGB16F_ARB, GL_RGB, GL_FLOAT );
+    m_kernel_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGB, GL_FLOAT );
 
     auto samples = this->generatePoints( radius, nsamples );
     m_kernel_texture.create( nsamples, samples.data() );
@@ -234,7 +236,7 @@ void AmbientOcclusionBuffer::createKernelTexture(
     m_noise_texture.setWrapS( GL_REPEAT );
     m_noise_texture.setMagFilter( GL_NEAREST );
     m_noise_texture.setMinFilter( GL_NEAREST );
-    m_noise_texture.setPixelFormat( GL_RGB16F_ARB, GL_RGB, GL_FLOAT );
+    m_noise_texture.setPixelFormat( GL_RGBA32F_ARB, GL_RGB, GL_FLOAT );
 
     auto noises = this->generateNoises( m_noise_size );
     m_noise_texture.create( m_noise_size, m_noise_size, noises.data() );
@@ -253,7 +255,9 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
     const float radius,
     const size_t nsamples )
 {
-    kvs::Xorshift128 rand;
+    auto lerp = [] ( float a, float b, float f ) { return a + f * ( b - 1 ); };
+
+    kvs::MersenneTwister rand( nsamples );
     kvs::ValueArray<GLfloat> sampling_points( 3 * nsamples );
     for ( size_t i = 0; i < nsamples ; ++i )
     {
@@ -261,10 +265,11 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
             rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
             rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
             rand() );             // in [ 0.0, 1.0]
-        if ( sample.length() > 1.0f ) { --i; continue; }
+        sample.normalize();
+        sample *= rand();
 
         float scale = i / static_cast<float>( nsamples );
-        scale = 0.1f + 0.9f * scale * scale; // lerp
+        scale = lerp( 0.1f, 1.0f, scale * scale );
         sample *= scale;
 
         sampling_points[ 3 * i + 0 ] = sample.x();
@@ -277,7 +282,7 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generatePoints(
 
 kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generateNoises( const size_t noise_size )
 {
-    kvs::Xorshift128 rand;
+    kvs::MersenneTwister rand( noise_size );
     const size_t size = m_noise_size * m_noise_size;
     kvs::ValueArray<GLfloat> noises( size * 3 );
     for ( size_t i = 0; i < size; ++i )
@@ -286,6 +291,7 @@ kvs::ValueArray<GLfloat> AmbientOcclusionBuffer::generateNoises( const size_t no
             rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
             rand() * 2.0f - 1.0f, // in [-1.0, 1.0]
             0 );
+        noise.normalize();
         noises[ 3 * i + 0 ] = noise.x();
         noises[ 3 * i + 1 ] = noise.y();
         noises[ 3 * i + 2 ] = noise.z();

@@ -36,6 +36,7 @@ private:
     size_t m_kernel_size = 256; ///< number of sampling points
     float m_kernel_bias = 0.0f; ///< tolerance factor for depth comparison
     kvs::Texture1D m_kernel_texture{}; ///< sampling point texture
+    float m_intensity = 1.0f; ///< occlusion intensity
     size_t m_noise_size = 4; ///< noise texture size: m_noise_size x m_noise_size
     kvs::Texture2D m_noise_texture{}; ///< noise texture used to rotate the kernel
 
@@ -56,6 +57,7 @@ public:
     void setKernelRadius( const kvs::Real32 radius ) { m_kernel_radius = radius; }
     void setKernelSize( const size_t nsamples ) { m_kernel_size = nsamples; }
     void setKernelBias( const float bias ) { m_kernel_bias = bias; }
+    void setIntensity( const float intensity ) { m_intensity = intensity; }
     void setDrawingOcclusionFactorEnabled( const bool enabled = true ) { m_drawing_occlusion_factor = enabled; }
 
     const std::string& occlusionPassVertexShaderFile() const { return m_occl_pass_shader_vert_file; }
@@ -71,6 +73,7 @@ public:
     kvs::Real32 kernelRadius() const { return m_kernel_radius; }
     size_t kernelSize() const { return m_kernel_size; }
     float kernelBias() const { return m_kernel_bias; }
+    float intensity() const { return m_intensity; }
 
     void bind();
     void unbind();

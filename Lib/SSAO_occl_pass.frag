@@ -12,6 +12,7 @@ uniform sampler2D noise_texture;
 uniform int kernel_size;
 uniform float kernel_radius;
 uniform float kernel_bias;
+uniform float intensity;
 uniform vec2 noise_scale;
 
 uniform ShadingParameter shading;
@@ -22,10 +23,9 @@ uniform mat4 ProjectionMatrix;
 
 float OcclusionFactor( vec4 position, mat3 tbn )
 {
-    float bias = 0.0001;
     float occlusion = 0.0;
     float index = 0.0f;
-    float dindex = 1.0f / float( kernel_size - 1.0 );
+    float dindex = 1.0f / float( kernel_size );
     for ( int i = 0; i < kernel_size ; i++, index += dindex )
     {
         vec3 p = tbn * LookupTexture1D( kernel_texture, index ).xyz;
@@ -59,14 +59,13 @@ void main()
     vec3 N = normalize( normal );
 
     // Ambient occlusion.
-    vec3 random_vec = LookupTexture2D( noise_texture, gl_TexCoord[0].st * noise_scale ).xyz;
+    vec3 random_vec = LookupTexture2D( noise_texture, gl_TexCoord[0].st / noise_scale ).xyz;
     vec3 tangent = normalize( random_vec - normal * dot( random_vec, normal ) );
     vec3 bitangent = cross( normal, tangent );
     mat3 tbn = mat3( tangent, bitangent, normal );
-    float occlusion = OcclusionFactor( position, tbn );
 
-//    float intensity = 2.0;
-//    occlusion = clamp( pow( occlusion, intensity ), 0.0, 1.0 );
+    float occlusion = OcclusionFactor( position, tbn );
+    occlusion = clamp( pow( occlusion, intensity ), 0.0, 1.0 );
 
     // Shading.
 #if   defined( ENABLE_LAMBERT_SHADING )
@@ -86,7 +85,7 @@ void main()
 
 #if defined( ENABLE_DRAWING_OCCLUSION_FACTOR )
     // Draw occlusion factor as a fragment color
-    gl_FragColor = vec4( occlusion, occlusion, occlusion, 1.0 );
+    gl_FragColor = vec4( vec3( occlusion ), 1.0 );
 #else
     gl_FragColor = vec4( shaded_color, 1.0 );
 #endif
