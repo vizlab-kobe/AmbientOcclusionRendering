@@ -59,7 +59,7 @@ void main()
     vec3 N = normalize( normal );
 
     // Ambient occlusion.
-    vec3 random_vec = LookupTexture2D( noise_texture, gl_TexCoord[0].st / noise_scale ).xyz;
+    vec3 random_vec = LookupTexture2D( noise_texture, gl_TexCoord[0].st * noise_scale ).xyz;
     vec3 tangent = normalize( random_vec - normal * dot( random_vec, normal ) );
     vec3 bitangent = cross( normal, tangent );
     mat3 tbn = mat3( tangent, bitangent, normal );

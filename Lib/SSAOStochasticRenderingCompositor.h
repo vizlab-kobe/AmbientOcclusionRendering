@@ -27,6 +27,9 @@ public:
     SSAOStochasticRenderingCompositor( kvs::Scene* scene ): BaseClass( scene ) {}
     virtual ~SSAOStochasticRenderingCompositor() { if ( m_shader ) delete m_shader; }
 
+    const AmbientOcclusionBuffer& aoBuffer() const { return m_ao_buffer; }
+    AmbientOcclusionBuffer& aoBuffer() { return m_ao_buffer; }
+
     const kvs::Shader::ShadingModel& shader() const { return *m_shader; }
 
     template <typename ShadingType> void setShader( const ShadingType shader )

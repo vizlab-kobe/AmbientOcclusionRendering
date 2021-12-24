@@ -23,8 +23,10 @@ struct Model
     using Renderer = kvs::glsl::PolygonRenderer;
 
     bool ssao = true; ///< SSAO flag
-    float radius = 0.5f; ///< radius of point sampling region for SSAM
+    bool occlusion = false; ///< occlusion factor drawing flag
+    float radius = 3.0f; ///< radius of point sampling region for SSAM
     size_t points = 256; ///< number of points used for SSAO
+    float intensity = 2.0f; ///< SSAO intensity
 
     kvs::PolygonObject* import( const std::string filename ) const
     {
@@ -46,8 +48,10 @@ struct Model
         {
             auto* renderer = new SSAORenderer();
             renderer->setName( "Renderer" );
-            renderer->setKernelRadius( radius );
-            renderer->setKernelSize( points );
+            renderer->aoBuffer().setKernelRadius( radius );
+            renderer->aoBuffer().setKernelSize( points );
+            renderer->aoBuffer().setIntensity( intensity );
+            renderer->aoBuffer().setDrawingOcclusionFactorEnabled( occlusion );
             renderer->enableShading();
             return renderer;
         }
@@ -97,12 +101,24 @@ int main( int argc, char** argv )
         screen.scene()->replaceRenderer( "Renderer", model.renderer() );
     } );
 
+    kvs::CheckBox occlusion_check_box( &screen );
+    occlusion_check_box.setCaption( "Occlusion factor" );
+    occlusion_check_box.setState( model.occlusion );
+    occlusion_check_box.setMargin( 10 );
+    occlusion_check_box.anchorToBottom( &ssao_check_box );
+    occlusion_check_box.show();
+    occlusion_check_box.stateChanged( [&] ()
+    {
+        model.occlusion = occlusion_check_box.state();
+        screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+    } );
+
     kvs::Slider radius_slider( &screen );
     radius_slider.setCaption( "Radius: " + kvs::String::From( model.radius ) );
     radius_slider.setValue( model.radius );
-    radius_slider.setRange( 0.1, 5.0 );
+    radius_slider.setRange( 0.1, 10.0 );
     radius_slider.setMargin( 10 );
-    radius_slider.anchorToBottom( &ssao_check_box );
+    radius_slider.anchorToBottom( &occlusion_check_box );
     radius_slider.show();
     radius_slider.sliderMoved( [&] ()
     {
@@ -140,6 +156,26 @@ int main( int argc, char** argv )
         }
     } );
 
+    kvs::Slider intensity_slider( &screen );
+    intensity_slider.setCaption( "Intensity: " + kvs::String::From( model.intensity ) );
+    intensity_slider.setValue( model.intensity );
+    intensity_slider.setRange( 1, 10 );
+    intensity_slider.setMargin( 10 );
+    intensity_slider.anchorToBottom( &points_slider );
+    intensity_slider.show();
+    intensity_slider.sliderMoved( [&] ()
+    {
+        model.intensity = int( intensity_slider.value() );
+        intensity_slider.setCaption( "Intensity: " + kvs::String::From( model.intensity ) );
+    } );
+    intensity_slider.sliderReleased( [&] ()
+    {
+        if ( model.ssao )
+        {
+            screen.scene()->replaceRenderer( "Renderer", model.renderer() );
+        }
+    } );
+
     // Events.
     kvs::KeyPressEventListener key_event( [&] ( kvs::KeyEvent* event )
     {
@@ -151,6 +187,7 @@ int main( int argc, char** argv )
             ssao_check_box.setVisible( !visible );
             radius_slider.setVisible( !visible );
             points_slider.setVisible( !visible );
+            intensity_slider.setVisible( !visible );
             screen.redraw();
             break;
         }

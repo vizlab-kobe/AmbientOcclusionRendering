@@ -77,10 +77,8 @@ void AmbientOcclusionBuffer::draw()
     m_occl_pass_shader.setUniform( "kernel_texture", 4 );
     m_occl_pass_shader.setUniform( "noise_texture", 5 );
 
-    const kvs::Vec2 noise_scale(
-        m_depth_texture.width() / static_cast<float>( m_noise_size ),
-        m_depth_texture.height() / static_cast<float>( m_noise_size ) );
-    m_occl_pass_shader.setUniform( "noise_scale", noise_scale );
+    const auto noise_scale = 1.0f / static_cast<float>( m_noise_size );
+    m_occl_pass_shader.setUniform( "noise_scale", kvs::Vec2( noise_scale, noise_scale ) );
     m_occl_pass_shader.setUniform( "kernel_radius", m_kernel_radius );
     m_occl_pass_shader.setUniform( "kernel_bias", m_kernel_bias );
     m_occl_pass_shader.setUniform( "intensity", m_intensity );

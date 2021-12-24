@@ -58,6 +58,7 @@ void main()
     }
 
     vec3 normal = side_vec * tex.x - tex.y * up_vec;
+//    vec3 normal = normalize( side_vec * tex.x - tex.y * up_vec );
 
     gl_FragData[0] = color;
     gl_FragData[1] = vec4( position.xyz, 1.0 );

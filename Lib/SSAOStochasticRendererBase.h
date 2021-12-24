@@ -26,6 +26,8 @@ public:
         kvs::StochasticRendererBase( engine ) {}
 
     virtual void exec( kvs::ObjectBase* object, kvs::Camera* camera, kvs::Light* light );
+    const AmbientOcclusionBuffer& aoBuffer() const { return m_ao_buffer; }
+    AmbientOcclusionBuffer& aoBuffer() { return m_ao_buffer; }
 
     void setKernelRadius( const float radius ) { m_ao_buffer.setKernelRadius( radius ); }
     void setKernelSize( const size_t nsamples ) { m_ao_buffer.setKernelSize( nsamples ); }

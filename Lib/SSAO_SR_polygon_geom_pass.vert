@@ -41,6 +41,6 @@ void main()
     gl_FrontColor = gl_Color;
 
     position = ( ModelViewMatrix * gl_Vertex ).xyz;
-    normal = NormalMatrix * gl_Normal;
+    normal = normalize( NormalMatrix * gl_Normal );
     index = random_index;
 }
