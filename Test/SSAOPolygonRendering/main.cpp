@@ -79,7 +79,6 @@ int main( int argc, char** argv )
     kvs::Application app( argc, argv );
     kvs::Screen screen( &app );
     screen.setTitle( "SSAOPolygonRenderer" );
-    screen.setBackgroundColor( kvs::RGBColor::White() );
     screen.show();
 
     // Parameters.
